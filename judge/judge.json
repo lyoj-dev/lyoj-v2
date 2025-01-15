@@ -1,0 +1,34 @@
+{
+    "thread": 8,
+    "mysql": {
+        "server": "127.0.0.1",
+        "port": 3306,
+        "user": "root",
+        "passwd": "",
+        "database": "judge"
+    },
+    "spj": [
+        {
+            "title": "忽略行末空格",
+            "path": "../spj/1"
+        }
+    ],
+    "languages": [
+        {
+            "type": 0,
+            "name": "C++14 O2 (g++ 13.3.0)",
+            "mode": "cpp",
+            "source_path": "main.cpp",
+            "command": "g++ main.cpp -omain -std=c++14 -O2 -lm -DONLINE_JUDGE",
+            "exec_command": "./main"
+        }, {
+            "type": 1,
+            "name": "Python3 (3.12.3)",
+            "mode": "python",
+            "source_path": "main.py",
+            "command": "",
+            "exec_command": "python3 main.py"
+        }
+    ],
+    "sock": "../judge.sock"
+}

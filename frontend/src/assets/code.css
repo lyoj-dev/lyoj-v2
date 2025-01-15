@@ -1,0 +1,44 @@
+.markdown *:not(code, code ul, code li) {
+    margin: revert!important;
+}
+.markdown ul {
+    padding: revert!important;
+}
+
+.hljs {
+    background-color: var(--color-background-mute)!important;
+    border-radius: 10px;
+    padding: 10px 0px;
+    width: 100%;
+}
+
+pre:is(.hljs) {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+code {
+    font-family: 'Cascadia Mono', monospace!important;
+    border-radius: 0px;
+}
+code ul {
+    margin: 0px 0px 0px 20px!important;
+    list-style: decimal;
+}
+code li {
+    font-family: 'Cascadia Mono', monospace!important;
+    border-left: 2px solid var(--color-background-soft)!important;
+    padding: 0px 10px!important;
+    line-height: 25px;
+    width: 100%;
+    box-sizing: border-box;
+    height: 25px;
+    font-size: 15px;
+    border-top-left-radius: 0px!important;
+    border-bottom-left-radius: 0px!important;
+    overflow-x: none!important;
+    overflow-y: none!important;
+}
+code li::marker {
+    color: var(--color-text)!important;
+}

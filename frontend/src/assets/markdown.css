@@ -1,0 +1,46 @@
+.markdown-text blockquote {
+    color: #666;
+    border-left: 4px solid #666;
+    padding-left: 20px;
+    margin-left: 0;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.markdown-text ul, .markdown-text ol {
+    padding-left: 2em;
+}
+
+.markdown-text table {
+    display: block;
+    width: 100%;
+    overflow: auto;
+    word-break: normal;
+    word-break: keep-all;
+    margin-top: 0;
+    margin-bottom: 16px;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+.markdown-text table thead tr {
+    border-top: 1px solid #ccc;
+}
+
+.markdown-text table th, .markdown-text table td {
+    padding: 6px 13px;
+    border: 1px solid #ddd;
+}
+
+.markdown-text table th {
+    font-weight: bold;
+}
+
+.markdown-text {
+    padding-bottom: 5px!important;
+}
+
+.markdown-text *:not(table, code ul) {
+    margin-top: revert!important;
+    margin-bottom: revert!important;
+}
