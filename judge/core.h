@@ -283,9 +283,8 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
     single["outputIgnored"] = 0;
     const int lim = 128;
     if (single["output"].asString().size() > lim) 
-        single["output"] = single["output"].asString().substr(0, lim) + "...",
-        single["outputIgnored"] = single["output"].asString().size() - lim;
-    cout << single << endl;
+        single["outputIgnored"] = single["output"].asString().size() - lim,
+        single["output"] = single["output"].asString().substr(0, lim) + "...";
 	if (ret) {
 		single["time"] = t, single["memory"] = m;
 		sum_t += t, max_m = max(max_m, m);

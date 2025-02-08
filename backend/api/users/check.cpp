@@ -1,14 +1,11 @@
-auto ConfigurationsLanguages = [](client_conn conn, http_request request, param argv) {
-    Json::Value judge = json_decode(readFile("../judge/judge.json"));
+auto UsersCheck = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
-
     Json::Value object;
     object["code"] = 200;
     object["msg"] = http_code[200];
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
-    object["items"] = judge["languages"];
 
     string responseBody = json_encode(object);
     auto response = __api_default_response;

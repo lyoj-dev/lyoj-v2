@@ -1,8 +1,11 @@
 import Index from '@/views/Index.vue'
 import ProblemsList from '@/views/Problems/List.vue'
-import ProblemDetails from '@/views/Problems/Details.vue'
+import ProblemsDetails from '@/views/Problems/Details.vue'
+import ProblemsEdit from '@/views/Problems/Edit.vue'
 import SubmissionsList from '@/views/Submissions/List.vue'
 import SubmissionsDetails from '@/views/Submissions/Details.vue'
+import Login from '@/views/Login.vue'
+import Logout from '@/views/Logout.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
 
@@ -26,7 +29,12 @@ export const router = createRouter({
     {
       path: '/problems/:id',
       name: 'problemsDetails',
-      component: ProblemDetails
+      component: ProblemsDetails
+    },
+    {
+      path: '/problems/:id/edit',
+      name: 'problemsEdit',
+      component: ProblemsEdit
     },
     {
       path: '/submissions/list',
@@ -37,6 +45,16 @@ export const router = createRouter({
       path: '/submissions/:id',
       name: 'submissionsDetails',
       component: SubmissionsDetails
+    }, 
+    {
+      path: '/login',
+      name: 'login',
+      component: Login
+    },
+    {
+      path: '/logout',
+      name: 'logout',
+      component: Logout
     }
   ],
 })
@@ -51,20 +69,4 @@ export function goto(name: string, query: any) {
 
 export function locate(url: string) {
   router.push(url);
-}
-
-export function get() {
-  var url = location.search;
-  var res: any = {};
-  if (url.indexOf("?") != -1) {
-    var str = url.substr(1);
-    var strs = str.split("&");
-    for (var i = 0; i < strs.length; i++) 
-      res[strs[i].split("=")[0]] = decodeURI(strs[i].split("=")[1]);
-  }
-  return res;
-}
-
-export function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
 }

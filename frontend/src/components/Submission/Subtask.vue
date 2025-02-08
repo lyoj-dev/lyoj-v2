@@ -16,7 +16,7 @@ const props = defineProps([ 'subtask', 'judgeDatas' ]);
                 &nbsp;
                 {{ statusList[subtask.status].text }}
             </p>
-            <p style="width: 18%">{{ t('pages.submissions.score') }}:&nbsp;{{ subtask.score }}</p>
+            <p style="width: 18%">{{ t('pages.submissions.score') }}：&nbsp;{{ subtask.score }}</p>
         </v-expansion-panel-title>
         <v-expansion-panel-text style="padding-bottom: 0px;">
             <v-expansion-panels style="width: 100%" variant="accordion" static>

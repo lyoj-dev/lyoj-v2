@@ -1,6 +1,6 @@
 export const config = {
-    apiBase: "http://192.168.0.12:8080",
-    wsBase: "ws://192.168.0.12:8080",
+    apiBase: "https://api-v2.lyoj.littleyang.icu",
+    wsBase: "wss://api-v2.lyoj.littleyang.icu",
     title: {
         short: "LYOJ",
         full: "LittleYang OnlineJudge"
@@ -67,37 +67,71 @@ export const statusList = [
     }
 ];
 
+export const statusCardList = [
+    {
+        icon: 'mdi-minus',
+        color: '#767676'
+    }, {
+        icon: 'mdi-check',
+        color: 'rgb(36, 140, 36)'
+    }, {
+        icon: 'mdi-close',
+        color: 'rgb(255, 0, 0)'
+    }
+]
+
 export const difficultyList = [
     {
-        title: "暂无评定",
-        color: "rgb(191,191,191)"
-    }, {
-        title: "入门",
+        t: 0,
+        r: 254,
+        g: 76,
+        b: 97,
         color: "rgb(254,76,97)"
     }, {
-        title: "普及-",
+        t: 1 / 6,
+        r: 243,
+        g: 156,
+        b: 17,
         color: "rgb(243,156,17)"
     }, {
-        title: "普及\/提高-",
+        t: 2 / 6,
+        r: 255,
+        g: 193,
+        b: 22,
         color: "rgb(255,193,22)"
     }, {
-        title: "普及+\/提高",
+        t: 3 / 6,
+        r: 82,
+        g: 196,
+        b: 26,
         color: "rgb(82,196,26)"
     }, {
-        title: "提高+\/省选-",
+        t: 4 / 6,
+        r: 52,
+        g: 152,
+        b: 219,
         color: "rgb(52,152,219)"
     }, {
-        title: "省选\/NOI-",
+        t: 5 / 6,
+        r: 157,
+        g: 61,
+        b: 207,
         color: "rgb(157,61,207)"
     }, {
-        title: "NOI\/NOI+\/CTSC",
+        t: 1,
+        r: 14,
+        g: 29,
+        b: 105,
         color: "rgb(14,29,105)"
     }
 ];
+export const maxDifficulty = 4000;
 
 export const tagsTypeList = [
     {
         title: "算法标签",
-        color: "rgb(41,73,180)"
+        color: "rgb(41, 73, 180)"
     }
 ]
+
+export const groupColor = "rgb(41, 73, 180)";

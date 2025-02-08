@@ -12,5 +12,6 @@
         "passwd": "",
         "database": "judge"
     },
-    "judge.sock": "../judge.sock"
+    "judge.sock": "../judge.sock",
+    "frontend": "http://192.168.56.102:8080"
 }

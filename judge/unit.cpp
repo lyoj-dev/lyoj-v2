@@ -125,6 +125,8 @@ int main(int argc, char** argv) {
         }
         writeLog(LOG_LEVEL_INFO, "Compile finished, used %dms.", (clock2() - st));
         if (info != "") res["info"] = res["info"].asString() + "In SPJ:\n" + info;
+    } else {
+        system2("cp \"" + judge["spj"][data["spj"]["type"].asInt() - 1]["path"].asString() + "\" ./spj");
     }
 
     // 构造子任务结果

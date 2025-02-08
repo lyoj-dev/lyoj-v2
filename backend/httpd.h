@@ -66,7 +66,7 @@ struct client_conn {
 };
 
 void exitRequest(client_conn&);
-void ws_exitRequest(client_conn&);
+void ws_exitRequest(client_conn&, bool);
 void putRequest(client_conn&, int, argvar);
 bool isCgi = false;
 string cgiRequest, cgiResponse;
@@ -191,7 +191,7 @@ ssize_t ws_send(client_conn __fd, string __buf, int opcode = 1) {
     else s = SSL_write(__fd.ssl, dat, pt);
     if (s == -1) {
         writeLog(LOG_LEVEL_WARNING, "Failed to send data frame! Error: %d", &errno);
-        ws_exitRequest(__fd);
+        ws_exitRequest(__fd, true);
         pthread_exit(NULL);
     } else if (s != pt) writeLog(LOG_LEVEL_WARNING, "The data wasn't send completely! Send %d/%d bytes.", s, pt);
     else writeLog(LOG_LEVEL_DEBUG, "Send %d bytes to client.", s);
@@ -383,7 +383,6 @@ void http_init() {
 
     /** 设置默认响应头 */
     __default_response["Server"] = "Web Server Version " + httpd_version;
-    __default_response["Access-Control-Allow-Origin"] = "*";
     __default_response["Connection"] = "Keep-Alive";
     __default_response["Content-Type"] = "text/html; charset=utf-8";
     __api_default_response = __default_response;
@@ -586,12 +585,14 @@ void exitRequest(client_conn& conn) {
  * 
  * @param conn 客户端连接符
  */
-void ws_exitRequest(client_conn& conn) {
-	string s;
-	s.push_back(1000 / 256);
-	s.push_back(1000 % 256);
-	s += "Remote server closed a connection proactively.";
-	ws_send(conn, s, 8);
+void ws_exitRequest(client_conn& conn, bool forceClose = false) {
+    if (!forceClose) {
+        string s;
+        s.push_back(1000 / 256);
+        s.push_back(1000 % 256);
+        s += "Remote server closed a connection proactively.";
+        ws_send(conn, s, 8);    
+    }
     #ifdef __linux__
     close(conn.conn);
     #elif __windows__

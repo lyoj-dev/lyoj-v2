@@ -1,37 +1,24 @@
-auto ProblemsSubmit = [](client_conn conn, http_request request, param argv) {
+auto ProblemsDelete = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
 
     if (request.method != "POST") quickSendMsg(405);
     if (userId == 0) quickSendMsg(401);
 
-    auto $_POST = json_decode(request.postdata);
     MYSQL mysql = quick_mysqli_connect();
 
     bool exist = atoi(mysqli_query(mysql, "SELECT COUNT(*) AS count FROM problem WHERE id = " + argv[0])[0]["count"].c_str());
     if (!exist) quickSendMsg(404);
 
     // 权限检查
-    auto res = mysqli_query(mysql, "SELECT langs, groups FROM problem WHERE id = " + argv[0]);
+    auto res = mysqli_query(mysql, "SELECT uid, groups FROM problem WHERE id = " + argv[0]);
     if (!hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
-    if (!hasIntersection(json_decode(res[0]["langs"]), { $_POST["lang"].asInt() })) quickSendMsg(403);
-
-    int id = atoi(mysqli_query(mysql, "SELECT MAX(id) AS count FROM submission")[0]["count"].c_str()) + 1;
-    int uid = userId;
-    int pid = atoi(argv[0].c_str());
-    int lang = $_POST["lang"].asInt();
-    string code = $_POST["code"].asString();
-    string result = "{}";
-    time_t time = std::time(NULL);
-    int status = Waiting;
-    int score = 0;
-    bool judged = false;
-    int contest = 0;
+    if (userId != atoi(res[0]["uid"].c_str())) quickSendMsg(403);
 
     mysqli_execute(
-        mysql,
-        "INSERT INTO submission VALUES (%d, %d, %d, %d, \"%s\", \"%s\", %d, %d, %d, %d, %d)",
-        id, uid, pid, lang, quote_encode(code).c_str(), result.c_str(), time, status, score, judged, contest
+        mysql, 
+        "UPDATE problem SET hidden = true, banned = true, groups = '[]' WHERE id = %d", 
+        atoi(argv[0].c_str())
     );
 
     Json::Value object;
@@ -39,7 +26,6 @@ auto ProblemsSubmit = [](client_conn conn, http_request request, param argv) {
     object["msg"] = http_code[200];
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
-    object["id"] = id;
 
     mysqli_close(mysql);
     string responseBody = json_encode(object);

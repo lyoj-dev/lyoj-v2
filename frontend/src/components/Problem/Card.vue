@@ -1,21 +1,55 @@
 <script setup lang="ts">
-import { difficultyList, tagsTypeList } from '@/config';
+import { difficultyList, maxDifficulty, statusCardList, tagsTypeList } from '@/config';
+import { i18n } from '@/i18n';
+import { goto, locate } from '@/router';
+import { loginAs } from '@/utils';
 
-const props = defineProps([ 'status', 'id', 'alias', 'title', 'tags', 'accepted', 'total', 'difficulty' ]);
+const t = i18n.global.t;
+const props = defineProps([ 'status', 'id', 'alias', 'title', 'tags', 'accepted', 'total', 'difficulty', 'allowEdit', 'allowDelete' ]);
+const emits = defineEmits([ 'addTag', 'deleteProblem' ]);
+
+function getColor(d: number) {
+    for (var i = 1; i < difficultyList.length; i++) {
+        if (d / maxDifficulty < difficultyList[i].t) {
+            var a = difficultyList[i - 1], b = difficultyList[i];
+            var r = (d / maxDifficulty - a.t) / (b.t - a.t) * (b.r - a.r) + a.r;
+            var g = (d / maxDifficulty - a.t) / (b.t - a.t) * (b.g - a.g) + a.g;
+            var b2 = (d / maxDifficulty - a.t) / (b.t - a.t) * (b.b - a.b) + a.b;
+            return 'rgb(' + r + ', ' + g + ', ' + b2 + ')';
+        }
+    }
+}
 </script>
 
 <template>
     <v-card class="d-flex ProblemCard card-radius">
-        <router-link :to="'/submissions/list'" class="ProblemCard-status"><v-icon
-            :icon="status == 0 ? 'mdi-check' : status == 1 ? 'mdi-close' : 'mdi-minus'"
-        ></v-icon></router-link>
+        <router-link 
+            :to="'/submissions/list' + (loginAs ? '?problems=[' + id + ']&users=[' + loginAs + ']' : '')" 
+            class="ProblemCard-status"
+            :style="'color: ' + statusCardList[status].color + '!important;'"
+        >
+            <v-icon
+                :icon="statusCardList[status].icon"
+            ></v-icon>
+        </router-link>
         <router-link :to="'/problems/' + id" class="ProblemCard-id">{{ alias }}</router-link>
         <router-link :to="'/problems/' + id" class="ProblemCard-problem">{{ title }}</router-link>
         <div class="ProblemCard-tags d-flex">
-            <v-chip v-for="tag in tags" :key="tag" size="small" :color="tagsTypeList[tag.type].color" variant="flat">{{ tag.title }}</v-chip>
+            <v-chip 
+                v-for="tag in tags" 
+                :key="tag" 
+                size="small" 
+                :color="tagsTypeList[tag.type].color" 
+                variant="flat"
+                @click="() => emits('addTag', tag.id)"
+            >{{ tag.title }}</v-chip>
         </div>
         <div class="ProblemCard-difficulty d-flex justify-center">
-            <v-chip :color="difficultyList[difficulty].color" size="small" variant="flat">{{ difficultyList[difficulty].title }}</v-chip>
+            <v-chip 
+                :color="getColor(difficulty)" 
+                size="small" 
+                variant="flat"
+            >{{ t('pages.problems.difficulty') }}：{{ difficulty }}</v-chip>
         </div>
         <v-progress-linear 
             :model-value="accepted / total * 100" 
@@ -24,6 +58,22 @@ const props = defineProps([ 'status', 'id', 'alias', 'title', 'tags', 'accepted'
             bg-color="currentColor" 
             class="ProblemCard-accepted"
         >{{ accepted }} / {{ total }}</v-progress-linear>
+        <div class="ProblemCard-actions d-flex justify-center align-center">
+            <v-btn 
+                class="ProblemCard-actionButton" 
+                :disabled="!allowEdit" 
+                icon="mdi-pen" 
+                size="x-small"
+                @click="locate('/problems/' + id + '/edit')"
+            ></v-btn>
+            <v-btn 
+                class="ProblemCard-actionButton" 
+                :disabled="!allowDelete" 
+                icon="mdi-trash-can" 
+                size="x-small"
+                @click="() => emits('deleteProblem', id, title)"
+            ></v-btn>
+        </div>
     </v-card>
 </template>
 
@@ -31,7 +81,7 @@ const props = defineProps([ 'status', 'id', 'alias', 'title', 'tags', 'accepted'
 .ProblemCard {
     color: var(--color-text)!important;
     background-color: var(--color-background)!important;
-    padding-left: 30px;
+    padding: 0px 30px;
     width: 100%;
     min-height: 50px;
     margin-bottom: 20px;
@@ -49,7 +99,7 @@ const props = defineProps([ 'status', 'id', 'alias', 'title', 'tags', 'accepted'
 }
 
 .ProblemCard-problem {
-    width: 38%;
+    width: 35%;
 }
 
 .ProblemCard-tags {
@@ -60,11 +110,21 @@ const props = defineProps([ 'status', 'id', 'alias', 'title', 'tags', 'accepted'
 }
 
 .ProblemCard-difficulty {
-    width: 12%;
+    width: 10%;
 }
 
 .ProblemCard-accepted {
     width: 10%;
     font-size: 12px;
+}
+
+.ProblemCard-actions {
+    width: 10%;
+    gap: 5px;
+}
+
+.ProblemCard-actionButton {
+    color: var(--color-text)!important;
+    background-color: var(--color-background-mute)!important;
 }
 </style>

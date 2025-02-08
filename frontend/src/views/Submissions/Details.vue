@@ -1,6 +1,6 @@
 <script lang="ts">
 import { computed, defineComponent, ref } from "vue";
-import { goto, get } from "@/router";
+import { goto } from "@/router";
 import { config } from '@/config.ts'
 import NProgress from 'nprogress';
 import SubmissionCard from '@/components/Submission/Card.vue'
@@ -9,16 +9,16 @@ import SubmissionCompileInfo from '@/components/Submission/CompileInfo.vue'
 import SubmissionData from '@/components/Submission/Data.vue'
 import SubmissionSubtask from '@/components/Submission/Subtask.vue'
 import { JudgeResultInfo } from "@/shared";
+import { myFetch } from "@/utils";
+import { onBeforeRouteLeave } from "vue-router";
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
     NProgress.inc();
-    var response = await fetch(config.apiBase + "/submissions/" + to.params.id);
-    if (response.status != 200) goto("error", { code: response.status });
-    var data = await response.json();
-    response = await fetch(config.apiBase + "/problems/" + data.item.pid + "/data");
-    if (response.status != 200) goto("error", { code: response.status });
-    var judgeData = await response.json();
+
+    var data = await myFetch(config.apiBase + "/submissions/" + to.params.id);
+    var judgeData = await myFetch(config.apiBase + "/problems/" + data.item.pid + "/data");
+    
     next((e: any) => e.loading({
         data: data,
         judgeData: judgeData
@@ -36,17 +36,17 @@ const judgeData: any = ref([]);
 const loaded = ref(false);
 const compiled = ref(false);
 const subtasks = computed(() => item.value.subtasks.slice(1));
+var ws: WebSocket;
 
 function loading(data: any) {
     item.value = data.data.item;
     judgeData.value = data.judgeData.items;
     compiled.value = !(item.value.statusType == 9 || item.value.statusType == 10);
-    console.log(item.value);
 
     if (item.value.judged == true) {
 
     } else {
-        var ws = new WebSocket(config.wsBase + "/submissions/" + item.value.id);
+        ws = new WebSocket(config.wsBase + "/submissions/" + item.value.id);
         ws.onmessage = function(e) {
             var json = JSON.parse(e.data);
 
@@ -56,7 +56,7 @@ function loading(data: any) {
                 item.value.score = json.score;
                 item.value.statusType = json.status;
                 item.value.status = JudgeResultInfo[json.status as number];
-                item.value.subtasks = json.subtasks;
+                if (json.subtasks != undefined) item.value.subtasks = json.subtasks;
             } else if (json.type == 2) {
                 item.value.subtasks[json.subtaskId].score = json.score;
                 item.value.subtasks[json.subtaskId].status = json.status;
@@ -82,6 +82,11 @@ function loading(data: any) {
     loaded.value = true;
 }
 defineExpose({ loading })
+
+onBeforeRouteLeave((to, from, next) => {
+    if (ws != undefined) ws.close();
+    next();
+});
 </script>
 
 <template>

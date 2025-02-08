@@ -1,27 +1,26 @@
 <script lang="ts">
-import { config } from '@/config';
+import { config, maxDifficulty } from '@/config';
 import { goto } from '@/router';
 import NProgress from 'nprogress';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, getCurrentInstance, ref } from 'vue';
 import ProblemCard from '@/components/Problem/Card.vue';
 import ProblemSearch from '@/components/Problem/Search.vue';
-import { appBarConfig } from '@/components/AppBar/config';
+import { myFetch, showMsg, sleep } from '@/utils';
+import { i18n } from '@/i18n';
+import { useRouter } from 'vue-router';
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
     NProgress.inc();
+    
     var url = config.apiBase + "/problems/list";
     if ("page" in to.query) url += "?page=" + to.query["page"];
     if ("title" in to.query) url += "&title=" + to.query["title"];
     if ("tags" in to.query) url += "&tags=" + to.query["tags"];
-    if ("difficulties" in to.query) url += "&difficulties=" + to.query["difficulties"];
-    var response = await fetch(url);
-    if (response.status != 200) goto("error", { code: response.status });
-    var json = await response.json();
-
-    var response = await fetch(config.apiBase + "/problems/listAllTags");
-    if (response.status != 200) goto("error", { code: response.status });
-    var tags = await response.json();
+    if ("minDiff" in to.query) url += "&minDiff=" + to.query["minDiff"];
+    if ("maxDiff" in to.query) url += "&maxDiff=" + to.query["maxDiff"];
+    var json = await myFetch(url);
+    var tags = await myFetch(config.apiBase + "/problems/listAllTags");
 
     next((e: any) => e.loading({
         data: json,
@@ -37,6 +36,9 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
+const t = i18n.global.t;
+const router = useRouter();
+
 const list: any = ref([]);
 const loaded = ref(false);
 const currPage = ref(1);
@@ -44,8 +46,9 @@ const currPage = ref(1);
 const tagsList: any = ref([]);
 
 const title = ref("");
-const tags = ref([]);
-const difficulties = ref([]);
+const tags: any = ref([]);
+const minDiff: any = ref(0);
+const maxDiff: any = ref(maxDifficulty);
 
 const originalQuery: any = ref({});
 
@@ -58,7 +61,8 @@ function loading(data: any) {
 
     if ("title" in data.query) title.value = data.query["title"];
     if ("tags" in data.query) tags.value = JSON.parse(data.query["tags"]);
-    if ("difficulties" in data.query) difficulties.value = JSON.parse(data.query["difficulties"]);
+    if ("minDiff" in data.query) minDiff.value = JSON.parse(data.query["minDiff"]);
+    if ("maxDiff" in data.query) maxDiff.value = JSON.parse(data.query["maxDiff"]);
 
     loaded.value = true;
 }
@@ -70,7 +74,8 @@ function search() {
     data.page = 1;
     if (title.value != "") data.title = title.value;
     if (tags.value.length) data.tags = JSON.stringify(tags.value);
-    if (difficulties.value.length) data.difficulties = JSON.stringify(difficulties.value);
+    if (minDiff.value != 0) data.minDiff = minDiff.value;
+    if (maxDiff.value != maxDifficulty) data.maxDiff = maxDiff.value;
     goto('problemsList', data);
 }
 
@@ -80,13 +85,33 @@ function jump() {
     data.page = currPage.value;
     goto('problemsList', data);
 }
+
+function addTag(id: number) {
+    if (tags.value.indexOf(id) == -1) tags.value.push(id);
+}
+
+async function deleteProblem(id: number, name: string) {
+    if (!confirm(t('pages.problems.deleteConfirm', { name: name }))) return;
+    var res = await myFetch(config.apiBase + "/problems/" + id + "/delete", { method: "POST" });
+    showMsg("success", t('pages.problems.deleteSuccess'));
+    await sleep(1000);
+    load(
+        router.currentRoute.value, 
+        router.currentRoute.value, 
+        (func: any) => func({ loading: (data: any) => {
+            loading(data);
+            NProgress.done();
+        }
+    }));
+}
 </script>
 
 <template>
     <div v-if="loaded">
         <ProblemSearch
             v-model:tags="tags"
-            v-model:difficulties="difficulties"
+            v-model:minDiff="minDiff"
+            v-model:maxDiff="maxDiff"
             v-model:title="title"
             :tagsList="tagsList"
             @search="search"
@@ -102,6 +127,10 @@ function jump() {
             :accepted="item.accepted"
             :total="item.total"
             :difficulty="item.difficulty"
+            :allowEdit="item.allowEdit"
+            :allowDelete="item.allowDelete"
+            @addTag="addTag"
+            @deleteProblem="deleteProblem"
         ></ProblemCard>
         <v-pagination
             v-model="currPage"

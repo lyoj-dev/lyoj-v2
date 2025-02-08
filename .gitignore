@@ -1,8 +1,10 @@
 *.sock
-recover
+recover*
 tmp
 spj/1
 problem
+problem2
+old_problem
 judge/insert
 judge/judge
 judge/log.txt
@@ -14,3 +16,8 @@ frontend/node_modules
 frontend/.vscode
 backend/main
 backend/make
+import*
+modify*
+*tag*
+fps
+newTags.json

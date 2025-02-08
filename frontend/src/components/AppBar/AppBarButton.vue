@@ -17,7 +17,12 @@ const active = computed(() => {
         :class="'d-flex align-center AppBarButton' + (active ? ' AppBarButton-active' : '')"
         :to="href"
     >
-        <v-icon :icon="icon" size="small" style="margin-top: 3px;"></v-icon>
+        <v-icon 
+            v-if="icon != ''"
+            :icon="icon" 
+            size="small" 
+            style="margin-top: 3px;"
+        ></v-icon>
         <p class="AppBarButton-title">&nbsp;{{ title }}</p>
     </router-link>
 </template>

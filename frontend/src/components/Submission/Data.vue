@@ -18,9 +18,9 @@ const props = defineProps([ 'id', 'data', 'reversed', 'judgeData' ]);
                 &nbsp;
                 {{ statusList[data.status].text }}
             </p>
-            <p style="width: 18%">{{ t('pages.submissions.score') }}:&nbsp;{{ data.score }}</p>
-            <p style="width: 18%">{{ t('pages.submissions.time') }}:&nbsp;{{ data.time }}ms</p>
-            <p style="width: 18%">{{ t('pages.submissions.memory') }}:&nbsp;{{ Math.round(data.memory / 1024) }}MB</p>
+            <p style="width: 18%">{{ t('pages.submissions.score') }}：&nbsp;{{ data.score }}</p>
+            <p style="width: 18%">{{ t('pages.submissions.time') }}：&nbsp;{{ data.time }}ms</p>
+            <p style="width: 18%">{{ t('pages.submissions.memory') }}：&nbsp;{{ Math.round(data.memory / 1024) }}MB</p>
         </v-expansion-panel-title>
         <v-expansion-panel-text style="padding-bottom: 0px; width: 100%">
             <div class="d-flex justify-space-between" style="padding: 0px 10px;">

@@ -4,11 +4,15 @@
 -- CREATE TABLE contest_signup (id int(255) NULL,uid int(255) NULL);
 -- CREATE TABLE crontab (id int(255) NULL,duration int(20) NULL,lasttime int(20) NULL,command longtext NULL,name longtext NULL);
 -- CREATE TABLE judger (id varchar(128) NULL,config longtext NULL,name longtext NULL,heartbeat int(20) NULL);
--- CREATE TABLE logindata (uid int(255) NULL,csrf longtext NULL,sessdata longtext NULL,time int(20) NULL);
+CREATE TABLE session (
+    uid int,
+    session longtext,
+    time int
+);
 CREATE TABLE problem (
     id int,
-    alias longtext,
-    title longtext,
+    alias text,
+    title text,
     bg longtext,
     descrip longtext,
     input longtext,
@@ -19,7 +23,9 @@ CREATE TABLE problem (
     banned boolean,
     difficulty int,
     tags longtext,
-    uid int
+    uid int,
+    groups longtext,
+    langs longtext
 );
 CREATE TABLE submission (
     id int,
@@ -36,12 +42,48 @@ CREATE TABLE submission (
 );
 CREATE TABLE tags (
     id int,
-    title longtext,
+    title text,
     type int
 );
-INSERT INTO tags VALUES (
-    0,
-    '',
+CREATE TABLE userGroup (
+    id int,
+    title text,
+    description longtext,
+    permission int
+);
+DELETE FROM userGroup WHERE id = 1 OR id = 2;
+INSERT INTO userGroup VALUES (
+    1,
+    'Default',
+    'Default group for all users',
     0
 );
--- CREATE TABLE user (id int(255) NULL,name varchar(255) NULL,passwd longtext NULL,title varchar(255) NULL,permission int(10) NULL,email longtext NULL,salt longtext NULL,salttime int(20) NULL,verify tinyint(1) NULL,verify_code varchar(200) NULL,rating int(255) NULL,uptime int(20) NULL,banned tinyint(1) NULL,passwd_token varchar(1024) NULL);
+INSERT INTO userGroup VALUES (
+    2,
+    'Admin',
+    'Administrators',
+    0
+);
+CREATE TABLE user (
+    id int,
+    title text,
+    realname text,
+    schoolId text,
+    institude text,
+    password text,
+    createTime int,
+    rating int,
+    groups longtext
+);
+DELETE FROM user WHERE id = 0;
+INSERT INTO user VALUES (
+    0,
+    'Anonymous',
+    '',
+    '',
+    '',
+    '',
+    0,
+    0,
+    '[1]'
+);

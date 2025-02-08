@@ -1,8 +1,8 @@
 <script lang="ts">
 import { config } from '@/config';
-import { goto, locate, sleep } from '@/router';
+import { locate } from '@/router';
 import NProgress from 'nprogress';
-import { defineComponent, inject, ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import markdownit from 'markdown-it'
 import markdownItKatex from '@vscode/markdown-it-katex'
 import hljs from 'highlight.js'
@@ -10,18 +10,16 @@ import { i18n } from '@/i18n';
 import ProblemTitle from '@/components/Problem/Title.vue';
 import ProblemCase from '@/components/Problem/Case.vue';
 import MonacoEditor from 'monaco-editor-vue3';
-import { red } from 'vuetify/util/colors';
+import { loginAs, myFetch, showMsg, sleep } from '@/utils';
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
     NProgress.inc();
-    var response = await fetch(config.apiBase + "/problems/" + to.params.id);
-    if (response.status != 200) goto("error", { code: response.status });
-    var data = await response.json();
-    var response = await fetch(config.apiBase + "/configurations/languages");
-    if (response.status != 200) goto("error", { code: response.status });
-    var languages = (await response.json()).items;
+
+    var data = await myFetch(config.apiBase + "/problems/" + to.params.id);
+    var languages = (await myFetch(config.apiBase + "/configurations/languages")).items;
     for (var i = 0; i < languages.length; i++) languages[i].id = i;
+    
     next((e: any) => e.loading({
         data: data,
         languages: languages
@@ -58,7 +56,6 @@ const md = markdownit({
     }
 });
 md.use(markdownItKatex);
-const showMsg: any = inject('showMsg');
 
 const item: any = ref({});
 const languages: any = ref([]);
@@ -66,33 +63,57 @@ const loaded = ref(false);
 
 const submitLanguage: any = ref(0);
 const submitCode = ref("");
+const enableBtn = ref(true);
 
 function loading(data: any) {
     item.value = data.data;
-    languages.value = data.languages;
+    languages.value = [];
+    submitCode.value = data.data.item.lastCode;
+    submitLanguage.value = data.data.item.lastLang;
     document.title = data.data.item.title + ' - ' + config.title.full;
+    for (var i = 0; i < data.languages.length; i++) {
+        for (var j = 0; j < data.data.item.langs.length; j++) {
+            if (data.languages[i].id == data.data.item.langs[j]) {
+                languages.value.push(data.languages[i]);
+                break;
+            }
+        }
+    }
+    enableBtn.value = languages.value.length;
 
     loaded.value = true;
 }
+defineExpose({ loading });
 
 async function submit() {
+    enableBtn.value = false;
     var data = {
         lang: submitLanguage.value,
         code: submitCode.value,
     };
 
-    var response = await fetch(config.apiBase + "/problems/" + item.value.item.id + "/submit", {
+    var res = await myFetch(config.apiBase + "/problems/" + item.value.item.id + "/submit", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify(data)
     });
-    if (response.status != 200) goto("error", { code: response.status });
-    var res = await response.json();
-    showMsg("success", t('pages.problems.submitSuccess'));
-    await sleep(1000);
-    locate("/submissions/" + res.id);
+    if (res.id != undefined && res.id != null && res.id > 0) {
+        showMsg("success", t('pages.problems.submitSuccess'));
+        await sleep(1000);
+        locate("/submissions/" + res.id);    
+    } else {
+        showMsg("success", t('pages.problems.submitFailed'));
+        enableBtn.value = true;
+        await sleep(1000);
+    }
 }
 
-defineExpose({ loading });
+function addTag(id: number) {
+
+}
+
+function addDifficulty(difficulty: number) {
+
+}
 </script>
 
 <template>
@@ -106,6 +127,8 @@ defineExpose({ loading });
             :maxTime="item.config.maxTime"
             :minMemory="item.config.minMemory"
             :maxMemory="item.config.maxMemory"
+            @addTag="addTag"
+            @addDifficulty="addDifficulty"
         ></ProblemTitle>
         <v-card class="ProblemVCard card-radius" v-if="item.item.bg != ''">
             <v-card-title>{{ t('pages.problems.background') }}</v-card-title>
@@ -138,28 +161,29 @@ defineExpose({ loading });
             <v-card-title>{{ t('pages.problems.hint') }}</v-card-title>
             <v-card-text class="markdown-text" v-html="md.render(item.item.hint)"></v-card-text>
         </v-card>
-        <v-card class="ProblemVCard card-radius">
+        <v-card class="ProblemVCard card-radius" v-if="loginAs != 0">
             <v-card-title>{{ t('pages.problems.submit') }}</v-card-title>
             <v-card-text>
                 <div class="d-flex align-center">
-                    <p>{{ t('pages.problems.languages') }}:&nbsp;</p>
+                    <p>{{ t('pages.problems.languages') }}：&nbsp;</p>
                     <v-select
                         v-model="submitLanguage"
                         :items="languages"
                         item-title="name"
                         item-value="id"
+                        density="compact"
                         hide-details
                     ></v-select>
                 </div>
                 <MonacoEditor
-                    :language="languages[submitLanguage].mode"
+                    :language="languages.length == 0 ? '' : languages[submitLanguage].mode"
                     theme="vs-dark"
                     height="500"
                     v-model:value="submitCode"
                     style="margin-top: 15px;"
                 ></MonacoEditor>
                 <div class="d-flex justify-center mt-3">
-                    <v-btn class="submitButton" @click="submit()" size="small">{{ t('pages.problems.submit') }}</v-btn>
+                    <v-btn class="submitButton" @click="submit()" :disabled="!enableBtn">{{ t('pages.problems.submit') }}</v-btn>
                 </div>
             </v-card-text>
         </v-card>

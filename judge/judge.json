@@ -10,16 +10,30 @@
     "spj": [
         {
             "title": "忽略行末空格",
-            "path": "../spj/1"
+            "path": "../../spj/1"
         }
     ],
     "languages": [
         {
             "type": 0,
-            "name": "C++14 O2 (g++ 13.3.0)",
+            "name": "GNU C++14 O2 (g++ 13.3.0)",
             "mode": "cpp",
             "source_path": "main.cpp",
             "command": "g++ main.cpp -omain -std=c++14 -O2 -lm -DONLINE_JUDGE",
+            "exec_command": "./main"
+        }, {
+            "type": 0,
+            "name": "GNU C++23 O2 (g++ 13.3.0)",
+            "mode": "cpp",
+            "source_path": "main.cpp",
+            "command": "g++ main.cpp -omain -std=c++23 -O2 -lm -DONLINE_JUDGE",
+            "exec_command": "./main"
+        }, {
+            "type": 0,
+            "name": "GNU C11 O2 (gcc 13.3.0)",
+            "mode": "c",
+            "source_path": "main.c",
+            "command": "gcc main.c -omain -std=c11 -O2 -lm -DONLINE_JUDGE",
             "exec_command": "./main"
         }, {
             "type": 1,
@@ -28,6 +42,34 @@
             "source_path": "main.py",
             "command": "",
             "exec_command": "python3 main.py"
+        }, {
+            "type": 0,
+            "name": "Java 8 (OpenJDK 1.8.0_442)",
+            "mode": "java",
+            "source_path": "main.java",
+            "command": "/usr/lib/jvm/java-8-openjdk-amd64/bin/javac main.java",
+            "exec_command": "/usr/lib/jvm/java-8-openjdk-amd64/bin/java main"
+        }, {
+            "type": 0,
+            "name": "Java 21 (OpenJDK 21.0.6)",
+            "mode": "java",
+            "source_path": "main.java",
+            "command": "/usr/lib/jvm/java-21-openjdk-amd64/bin/javac main.java",
+            "exec_command": "/usr/lib/jvm/java-21-openjdk-amd64/bin/java main"
+        }, {
+            "type": 1,
+            "name": "PHP 8 (PHP 8.3.6, Zend Engine v4.3.6)",
+            "mode": "php",
+            "source_path": "main.php",
+            "command": "",
+            "exec_command": "php main.php"
+        }, {
+            "type": 1,
+            "name": "JavaScript (Node.js 23.5.0)",
+            "mode": "javascript",
+            "source_path": "main.js",
+            "command": "",
+            "exec_command": "node main.js"
         }
     ],
     "sock": "../judge.sock"

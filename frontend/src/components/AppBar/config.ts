@@ -2,7 +2,7 @@ import { i18n } from '@/i18n';
 
 const t = i18n.global.t;
 
-export const appBarConfig = {
+export const appBarConfig: any = {
     left: [
         { title: "appbar.index", icon: "mdi-home", href: "/index" },
         { title: "appbar.problem", icon: "mdi-format-list-bulleted", href: "/problems/list" },
@@ -10,6 +10,6 @@ export const appBarConfig = {
         { title: "appbar.contest", icon: "mdi-calendar-blank", href: "/contest" }
     ],
     right: [
-        { title: "appbar.login", icon: "mdi-arrow-right-bold-circle", href: "/login" }
+
     ]
 };

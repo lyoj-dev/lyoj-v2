@@ -3,11 +3,12 @@ import { statusList } from '@/config';
 import { i18n } from '@/i18n';
 
 const problems: any = defineModel('problems');
+const users: any = defineModel('users');
 const languages: any = defineModel('languages');
 const status: any = defineModel('status');
 
 const t = i18n.global.t;
-const props = defineProps([ 'problemsList', 'languagesList' ]);
+const props = defineProps([ 'problemsList', 'usersList', 'languagesList' ]);
 const emits = defineEmits([ 'search' ]);
 const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.text, id: index }));
 </script>
@@ -18,7 +19,7 @@ const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.t
             <v-expansion-panel-title style="padding: 0px 20px; font-size: 1.25rem;">{{ t('pages.submissions.searchTitle') }}</v-expansion-panel-title>
             <v-expansion-panel-text>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.submissions.search.problems') }}:&nbsp;</p>
+                    <p>{{ t('pages.submissions.search.problems') }}：</p>
                     <v-autocomplete
                         v-model="problems"
                         :items="problemsList"
@@ -31,11 +32,11 @@ const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.t
                     ></v-autocomplete>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.submissions.search.users') }}:&nbsp;</p>
+                    <p>{{ t('pages.submissions.search.users') }}：</p>
                     <v-autocomplete
-                        v-model="problems"
-                        :items="problemsList"
-                        item-title="name"
+                        v-model="users"
+                        :items="usersList"
+                        item-title="title"
                         item-value="id"
                         density="compact"
                         multiple
@@ -44,7 +45,7 @@ const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.t
                     ></v-autocomplete>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.submissions.search.languages') }}:&nbsp;</p>
+                    <p>{{ t('pages.submissions.search.languages') }}：</p>
                     <v-autocomplete
                         v-model="languages"
                         :items="languagesList"
@@ -57,7 +58,7 @@ const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.t
                     ></v-autocomplete>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.submissions.search.status') }}:&nbsp;</p>
+                    <p>{{ t('pages.submissions.search.status') }}：</p>
                     <v-autocomplete
                         v-model="status"
                         :items="statusL"
@@ -73,7 +74,6 @@ const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.t
                     <v-btn 
                         @click="emits('search')" 
                         class="SubmissionSearch-button"
-                        size="small"
                     >{{ t('pages.submissions.search.searchButton') }}</v-btn>
                 </div>
             </v-expansion-panel-text>
@@ -93,5 +93,9 @@ const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.t
 .SubmissionSearch-button {
     color: var(--color-text)!important;
     background-color: var(--color-background-mute)!important;
+}
+
+p {
+    flex-shrink: 0;
 }
 </style>

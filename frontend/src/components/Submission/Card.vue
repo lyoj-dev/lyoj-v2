@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { statusList } from '@/config.ts'
 const props = defineProps([ 'id', 'pid', 'problem', 'uid', 'user', 'statusType', 'status', 'score' ]);
-console.log(props.statusType);
 </script>
 
 <template>

@@ -1,13 +1,18 @@
 auto ProblemsData = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
+    int userId = getUserId(request);
+    auto userInfo = getUserInfo(userId);
     const int lim = 128;
 
     auto res = mysqli_query(
         mysql, 
-        "SELECT * FROM problem WHERE id = %d", 
+        "SELECT groups FROM problem WHERE id = %d", 
         atoi(argv[0].c_str())
     );
     if (res.size() == 0) quickSendMsg(404);
+
+    // 权限检查
+    if (!hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
 
     Json::Value config = json_decode(readFile("../problem/" + argv[0] + "/config.json"));
     map<int, int> subtasks = { { 0, 0 } };
@@ -19,7 +24,7 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
 
         ifstream fin("../problem/" + argv[0] + "/" + config["datas"][i]["input"].asString());
         fin.seekg(0, ios::end);
-        int len = fin.tellg();
+        int len = fin.tellg(); len = max(0, len);
         fin.seekg(0, ios::beg);
         char* ch = new char[min(lim, len)];
         fin.read(ch, min(lim, len));
@@ -29,7 +34,7 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
 
         fin.open("../problem/" + argv[0] + "/" + config["datas"][i]["output"].asString());
         fin.seekg(0, ios::end);
-        len = fin.tellg();
+        len = fin.tellg(); len = max(0, len);
         fin.seekg(0, ios::beg);
         delete[] ch;
         ch = new char[min(lim, len)];
@@ -47,12 +52,16 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
     Json::Value object;
     object["code"] = 200;
     object["msg"] = http_code[200];
+    object["loginAs"] = userId;
+    object["loginInfo"] = userInfo;
     object["items"] = datas;
 
     mysqli_close(mysql);
     string responseBody = json_encode(object);
-    __api_default_response["Content-Length"] = to_string(responseBody.size());
-    putRequest(conn, 200, __api_default_response);
+    auto response = __api_default_response;
+    response["Access-Control-Allow-Origin"] = request.argv["origin"];
+    response["Content-Length"] = to_string(responseBody.size());
+    putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);
 };

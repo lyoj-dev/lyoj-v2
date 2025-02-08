@@ -2,11 +2,11 @@
 import hljs from 'highlight.js'
 import { i18n } from '@/i18n';
 import SubmissionCodeInfo from './CodeInfo.vue';
-import { computed, inject } from 'vue';
+import { computed } from 'vue';
+import { showMsg } from '@/utils';
 
 const t = i18n.global.t;
 const props = defineProps([ 'code', 'langCode', 'time', 'memory', 'langName', 'date' ]);
-const showMsg: any = inject('showMsg');
 
 function highlight(str: string, lang: string) {
     var code: string = '<pre class="hljs" style="margin: 0px!important;"><code><ul>';

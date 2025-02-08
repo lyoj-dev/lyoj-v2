@@ -1,13 +1,11 @@
-auto ProblemsListAll = [](client_conn conn, http_request request, param argv) {
+auto UsersListAllGroups = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
-    
-    string where = hasIntersection("groups", userInfo["groups"], false);
+
     auto res = mysqli_query(
         mysql, 
-        "SELECT id, alias, title FROM problem WHERE %s ORDER BY id DESC",
-        where.c_str()
+        "SELECT * FROM userGroup ORDER BY id ASC"
     );
 
     Json::Value object;
@@ -19,8 +17,9 @@ auto ProblemsListAll = [](client_conn conn, http_request request, param argv) {
     for (int i = 0; i < res.size(); i++) {
         Json::Value single;
         single["id"] = atoi(res[i]["id"].c_str());
-        single["alias"] = res[i]["alias"];
         single["title"] = res[i]["title"];
+        single["description"] = res[i]["description"];
+        single["permission"] = atoi(res[i]["permission"].c_str());
         object["items"].append(single);
     }
 

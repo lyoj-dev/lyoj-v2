@@ -45,3 +45,20 @@ enum WebSocketDataType {
     DetailedSubmissionLongConnection = 2,
     SimpleSubmissionsLongConnection = 3
 };
+
+enum UserPermission {
+    ProblemEdit = 1 << 0,
+    ProblemEditOthers = (1 << 0) | (1 << 1),
+    ProblemDelete = 1 << 2,
+    ProblemDeleteOthers = (1 << 2) | (1 << 3),
+    ProblemListPage = 1 << 4,
+    ProblemSubmit = 1 << 5,
+    SubmissionListPage = 1 << 6,
+    SubmissionDetailsPage = 1 << 7,
+    SubmissionCode = 1 << 8,
+    SubmissionCodeOthers =  (1 << 8) | (1 << 9),
+    SubmissionRejudge = 1 << 10,
+    SubmissionRejudgeOthers = (1 << 10) | (1 << 11),
+    SubmissionData = 1 << 12,
+    AdminPage = 1 << 13
+};

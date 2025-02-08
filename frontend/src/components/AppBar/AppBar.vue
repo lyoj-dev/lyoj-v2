@@ -6,10 +6,11 @@ import { useRoute } from 'vue-router';
 import AppBarButton from './AppBarButton.vue';
 import { storage } from '@/settings';
 import { config } from '@/config.ts';
+import { loginAs, loginInfo } from '@/utils.ts';
 
 const t = i18n.global.t;
 const route = useRoute();
-const title = ref("");
+const title = ref(config.title.short);
 const locale = ref(storage.value.locale);
 
 var items: string[] = [];
@@ -37,11 +38,19 @@ function setLocale(val: string) {
                 <img src="/favicon.png" class="AppBar-left-favicon"/>
                 <p class="AppBar-left-title">&nbsp;{{ title }}</p>
             </div>
+
             <AppBarButton 
                 v-for="item in appBarConfig.left"
                 :title="t(item.title)"
                 :icon="item.icon"
                 :href="item.href"
+            ></AppBarButton>
+
+            <AppBarButton
+                v-if="loginAs != 0 && (loginInfo.permission & (1 << 13)) != 0"
+                :title="t('appbar.admin')"
+                icon="mdi-cog"
+                href="/admin"
             ></AppBarButton>
         </div>
         <div class="d-flex AppBar-right">
@@ -51,6 +60,26 @@ function setLocale(val: string) {
                 :icon="item.icon"
                 :href="item.href"
             ></AppBarButton>
+
+            <AppBarButton
+                v-if="loginAs == 0"
+                :title="t('appbar.login')"
+                icon="mdi-arrow-right-bold-circle"
+                href="/login"
+            ></AppBarButton>
+            <AppBarButton
+                v-if="loginAs != 0"
+                :title="loginInfo.title"
+                icon=""
+                :href="'/users/' + loginAs"
+            ></AppBarButton>
+            <AppBarButton
+                v-if="loginAs != 0"
+                :title="t('appbar.logout')"
+                icon="mdi-arrow-left-bold-circle"
+                href="/logout"
+            ></AppBarButton>
+
             <div class="d-flex align-center AppBar-language">
                 <v-icon icon="mdi-earth" size="small" style="margin-top: 3px;"></v-icon>
                 <p>&nbsp;</p>
@@ -108,23 +137,27 @@ function setLocale(val: string) {
 </style>
 
 <style lang="css">
-.v-input__control {
+.AppBar .v-input__control {
     height: 30px;
 }
-.v-field__field {
+.v-overlay-container .v-field__field,
+.AppBar .v-field__field {
     font-size: 14px;
     height: 30px;
 }
-.v-field__input {
+.v-overlay-container .v-field__input,
+.AppBar .v-field__input {
     min-height: 30px!important;
     padding-top: 0px!important;
     padding-bottom: 0px!important;
 }
-.v-selection-control__input, .v-selection-control__wrapper {
+.v-overlay-container .v-selection-control__input, .v-overlay-container .v-selection-control__wrapper,
+.AppBar .v-selection-control__input, .AppBar .v-selection-control__wrapper {
     width: 32px!important;
     height: 24px!important;
 }
-.v-list-item {
+.v-overlay-container .v-list-item,
+.AppBar .v-list-item {
     min-height: 20px!important;
 }
 </style>

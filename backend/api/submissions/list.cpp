@@ -1,22 +1,30 @@
 auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     auto $_GET = getParam(request);
+    int userId = getUserId(request);
+    auto userInfo = getUserInfo(userId);
 
-    string where = "1";
+    string where = hasIntersection("p.groups", userInfo["groups"], false);
     if ($_GET.find("problems") != $_GET.end()) {
-        where += " AND pid in (";
+        where += " AND s.pid in (";
         Json::Value problems = json_decode($_GET["problems"]);
         for (int i = 0; i < problems.size(); i++) where += (i ? "," : "") + to_string(problems[i].asInt());
         where += ")";
     }
+    if ($_GET.find("users") != $_GET.end()) {
+        where += " AND s.uid in (";
+        Json::Value users = json_decode($_GET["users"]);
+        for (int i = 0; i < users.size(); i++) where += (i ? "," : "") + to_string(users[i].asInt());
+        where += ")";
+    }
     if ($_GET.find("languages") != $_GET.end()) {
-        where += " AND lang in (";
+        where += " AND s.lang in (";
         Json::Value languages = json_decode($_GET["languages"]);
         for (int i = 0; i < languages.size(); i++) where += (i ? "," : "") + to_string(languages[i].asInt());
         where += ")";
     }
     if ($_GET.find("status") != $_GET.end()) {
-        where += " AND judged = true AND status in (";
+        where += " AND s.judged = true AND status in (";
         Json::Value status = json_decode($_GET["status"]);
         for (int i = 0; i < status.size(); i++) where += (i ? "," : "") + to_string(status[i].asInt());
         where += ")";
@@ -25,7 +33,9 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
     int page = $_GET.find("page") == $_GET.end() ? 1 : atoi($_GET["page"].c_str());
     int pageCount = (atoi(mysqli_query(
         mysql, 
-        "SELECT COUNT(*) AS count FROM submission WHERE %s",
+        "SELECT COUNT(*) AS count FROM submission AS s "
+        "INNER JOIN problem AS p ON s.pid = p.id "
+        "WHERE %s",
         where.c_str()
     )[0]["count"].c_str()) + 9) / 10;
     if (page < 1) page = 1;
@@ -33,7 +43,11 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
 
     auto res = pageCount ? mysqli_query(
         mysql, 
-        "SELECT id, uid, pid, judged FROM submission WHERE %s ORDER BY id DESC LIMIT 10 OFFSET %d", 
+        "SELECT s.id, s.uid, s.pid, s.judged FROM submission AS s "
+        "INNER JOIN problem AS p ON s.pid = p.id "
+        "WHERE %s "
+        "ORDER BY id DESC "
+        "LIMIT 10 OFFSET %d", 
         where.c_str(),
         (page - 1) * 10
     ) : vector<map<string, string> >();
@@ -43,6 +57,13 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
         mysql,
         "SELECT id, title FROM problem WHERE id in (%s)",
         problemList.c_str()
+    ) : vector<map<string, string> >();
+    string userList = "";
+    for (int i = 0; i < res.size(); i++) userList += (i ? "," : "") + res[i]["uid"];
+    auto users = pageCount ? mysqli_query(
+        mysql,
+        "SELECT id, title FROM user WHERE id in (%s)",
+        userList.c_str()
     ) : vector<map<string, string> >();
 
     Json::Value fetchData;
@@ -59,13 +80,18 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
     Json::Value object;
     object["code"] = 200;
     object["msg"] = http_code[200];
+    object["loginAs"] = userId;
+    object["loginInfo"] = userInfo;
     object["pageCount"] = pageCount;
     object["items"].resize(0);
     for (int i = 0; i < res.size(); i++) {
         Json::Value single;
         single["id"] = atoi(res[i]["id"].c_str());
-        single["uid"] = atoi(res[i]["uid"].c_str());
-        single["user"] = res[i]["uid"];
+        for (int j = 0; j < users.size(); j++) if (users[j]["id"] == res[i]["uid"]) {
+            single["user"] = users[j]["title"];
+            single["uid"] = atoi(users[j]["id"].c_str());
+            break;
+        }
         for (int j = 0; j < problems.size(); j++) if (problems[j]["id"] == res[i]["pid"]) {
             single["problem"] = problems[j]["title"];
             single["pid"] = atoi(problems[j]["id"].c_str());
@@ -83,8 +109,10 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
 
     mysqli_close(mysql);
     string responseBody = json_encode(object);
-    __api_default_response["Content-Length"] = to_string(responseBody.size());
-    putRequest(conn, 200, __api_default_response);
+    auto response = __api_default_response;
+    response["Access-Control-Allow-Origin"] = request.argv["origin"];
+    response["Content-Length"] = to_string(responseBody.size());
+    putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);
 };

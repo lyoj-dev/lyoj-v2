@@ -66,6 +66,12 @@ void* work_thread(void* arg) {
                 result["time"] = val["time"];
                 result["memory"] = val["memory"];
                 result["status"] = val["status"];
+                // 先发一次包保证所有测试点状态都被更新
+                Json::Value tmp = result;
+                tmp["type"] = DetailedSubmission;
+                tmp["sid"] = args.sid;
+                for (auto connId : submissionIds[args.sid]) conns[connId].send(json_encode(tmp));
+                // 再发一次包来表示结束
                 val["sid"] = args.sid;
                 for (auto connId : submissionIds[args.sid]) {
                     conns[connId].send(json_encode(val));

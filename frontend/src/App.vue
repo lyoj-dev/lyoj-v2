@@ -2,27 +2,8 @@
 import { RouterView } from 'vue-router'
 import AppBar from './components/AppBar/AppBar.vue';
 import Message from '@/components/Message/Message.vue';
-import { provide, ref } from 'vue';
-
-var errorListener = 0;
-var errorListener2 = 0;
-var isError = ref(false);
-var type = ref("success");
-var errorText = ref("");
-
-function showMsg(errorType: string, msg: string) {
-	if (errorListener != 0) { clearTimeout(errorListener); }
-	if (errorListener2 != 0) { clearTimeout(errorListener2); }
-	isError.value = false;
-	errorListener = setTimeout(() => { 
-		isError.value = true;
-		type.value = errorType;
-		errorText.value = msg;
-	}, 500);
-	errorListener2 = setTimeout(() => { isError.value = false; }, 5000);
-}
-
-provide('showMsg', showMsg);
+import { provide } from 'vue';
+import { showMsg, isError, type, errorText } from '@/utils';
 </script>
 
 <template>

@@ -1,5 +1,7 @@
 auto ProblemsListAllTags = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
+    int userId = getUserId(request);
+    auto userInfo = getUserInfo(userId);
     
     auto res = mysqli_query(
         mysql, 
@@ -9,6 +11,8 @@ auto ProblemsListAllTags = [](client_conn conn, http_request request, param argv
     Json::Value object;
     object["code"] = 200;
     object["msg"] = http_code[200];
+    object["loginAs"] = userId;
+    object["loginInfo"] = userInfo;
     object["items"].resize(0);
     for (int i = 0; i < res.size(); i++) {
         if (res[i]["id"] == "0") continue;
@@ -21,8 +25,10 @@ auto ProblemsListAllTags = [](client_conn conn, http_request request, param argv
 
     mysqli_close(mysql);
     string responseBody = json_encode(object);
-    __api_default_response["Content-Length"] = to_string(responseBody.size());
-    putRequest(conn, 200, __api_default_response);
+    auto response = __api_default_response;
+    response["Access-Control-Allow-Origin"] = request.argv["origin"];
+    response["Content-Length"] = to_string(responseBody.size());
+    putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);
 };

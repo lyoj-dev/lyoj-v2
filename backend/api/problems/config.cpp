@@ -1,28 +1,27 @@
-auto ProblemsListAll = [](client_conn conn, http_request request, param argv) {
+auto ProblemsConfig = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
-    
-    string where = hasIntersection("groups", userInfo["groups"], false);
+    const int lim = 128;
+
     auto res = mysqli_query(
         mysql, 
-        "SELECT id, alias, title FROM problem WHERE %s ORDER BY id DESC",
-        where.c_str()
+        "SELECT groups FROM problem WHERE id = %d", 
+        atoi(argv[0].c_str())
     );
+    if (res.size() == 0) quickSendMsg(404);
 
+    // 权限检查
+    if (!hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
+
+    Json::Value config = json_decode(readFile("../problem/" + argv[0] + "/config.json"));
+    
     Json::Value object;
     object["code"] = 200;
     object["msg"] = http_code[200];
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
-    object["items"].resize(0);
-    for (int i = 0; i < res.size(); i++) {
-        Json::Value single;
-        single["id"] = atoi(res[i]["id"].c_str());
-        single["alias"] = res[i]["alias"];
-        single["title"] = res[i]["title"];
-        object["items"].append(single);
-    }
+    object["item"] = config;
 
     mysqli_close(mysql);
     string responseBody = json_encode(object);
