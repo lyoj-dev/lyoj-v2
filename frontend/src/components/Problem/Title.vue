@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { i18n } from '@/i18n';
+
 const props = defineProps([ 'alias', 'title', 'inputFile', 'outputFile', 'minTime', 'maxTime', 'minMemory', 'maxMemory' ]);
+const t = i18n.global.t;
 </script>
 
 <template>
@@ -8,10 +11,10 @@ const props = defineProps([ 'alias', 'title', 'inputFile', 'outputFile', 'minTim
             {{ alias }} - {{ title }}
         </v-card-title>
         <v-card-text>
-            输入文件: {{ inputFile }} | 
-            输出文件: {{ outputFile }} | 
-            时间限制: {{ minTime == maxTime ? minTime + 'ms' : minTime + 'ms ~ ' + maxTime + 'ms' }} | 
-            内存限制: {{ 
+            {{ t('pages.problems.inputFile') }}：{{ inputFile }} | 
+            {{ t('pages.problems.outputFile') }}：{{ outputFile }} | 
+            {{ t('pages.problems.timeLimit') }}：{{ minTime == maxTime ? minTime + 'ms' : minTime + 'ms ~ ' + maxTime + 'ms' }} | 
+            {{ t('pages.problems.memoryLimit') }}：{{ 
                 Math.round(minMemory / 1024) == Math.round(maxMemory / 1024) 
                 ? Math.round(minMemory / 1024) + 'MB'
                 : Math.round(minMemory / 1024) + 'MB ~ ' + Math.round(maxMemory / 1024) + 'MB'

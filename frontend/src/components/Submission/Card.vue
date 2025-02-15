@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { statusList } from '@/config.ts'
-const props = defineProps([ 'id', 'pid', 'problem', 'uid', 'user', 'statusType', 'status', 'score' ]);
+const props = defineProps([ 'id', 'cid', 'pid', 'problem', 'uid', 'user', 'statusType', 'status', 'score' ]);
 </script>
 
 <template>
     <v-card class="d-flex SubmissionCard card-radius">
-        <router-link :to="'/submissions/' + id" class="SubmissionCard-id">#{{ id }}</router-link>
-        <router-link :to="'/users/' + uid" class="SubmissionCard-user">{{ user }}</router-link>
-        <router-link :to="'/problems/' + pid" class="SubmissionCard-problem">{{ problem }}</router-link>
-        <router-link :to="'/submissions/' + id" :style="'color:' + statusList[statusType].color">
+        <router-link :to="(cid == undefined ? '' : '/contests/' + cid) + '/submissions/' + id" class="SubmissionCard-id ellipsis">#{{ id }}</router-link>
+        <router-link :to="'/users/' + uid" class="SubmissionCard-user ellipsis">{{ user }}</router-link>
+        <router-link :to="(cid == undefined ? '' : '/contests/' + cid) + '/problems/' + pid" class="SubmissionCard-problem ellipsis">{{ problem }}</router-link>
+        <router-link :to="(cid == undefined ? '' : '/contests/' + cid) + '/submissions/' + id" :style="'color:' + statusList[statusType].color">
             <v-icon :icon="statusList[statusType].icon" class="SubmissionCard-icon"></v-icon>
             &nbsp;
             {{ score }}

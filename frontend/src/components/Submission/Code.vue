@@ -2,11 +2,16 @@
 import hljs from 'highlight.js'
 import { i18n } from '@/i18n';
 import SubmissionCodeInfo from './CodeInfo.vue';
-import { computed } from 'vue';
-import { showMsg } from '@/utils';
+import { computed, ref } from 'vue';
+import { myFetch, showMsg, sleep } from '@/utils';
+import { config } from '@/config';
+import { locate } from '@/router';
+import { useRoute } from 'vue-router';
 
 const t = i18n.global.t;
-const props = defineProps([ 'code', 'langCode', 'time', 'memory', 'langName', 'date' ]);
+const props = defineProps([ 'id', 'code', 'langCode', 'time', 'memory', 'langName', 'date', 'allowRejudge' ]);
+const enableBtn = ref(true);
+const route = useRoute();
 
 function highlight(str: string, lang: string) {
     var code: string = '<pre class="hljs" style="margin: 0px!important;"><code><ul>';
@@ -42,7 +47,21 @@ function copyCode(e: MouseEvent) {
     document.execCommand('copy');
     document.body.removeChild(el);
     e.stopPropagation();
-    showMsg("success", "Copy Success!");
+    showMsg("success", t('pages.submissions.copySuccess'));
+}
+
+async function rejudge(e: MouseEvent) {
+    e.stopPropagation();
+    enableBtn.value = false;
+    const res = await myFetch(config.apiBase + '/submissions/' + props.id + '/rejudge', {
+        method: 'POST',
+    }, false);
+    if (res.code == 200) {
+        showMsg("success", t('pages.submissions.rejudgeSuccess'));
+        await sleep(1000);
+        locate('/submissions/' + props.id + '?rejudge=' + (route.query.rejudge == undefined ? 1 : Number(route.query.rejudge) + 1));
+    } else showMsg("error", t('pages.submissions.rejudgeFailed'));
+    enableBtn.value = true;
 }
 </script>
 
@@ -59,6 +78,9 @@ function copyCode(e: MouseEvent) {
                 <v-btn
                     size="small"
                     class="SubmissionCode-button"
+                    @click="rejudge"
+                    v-if="allowRejudge"
+                    :disabled="!enableBtn"
                 >{{ t('pages.submissions.rejudge') }}</v-btn>
                 <div
                     v-for="(item, index) in CodeInfo"

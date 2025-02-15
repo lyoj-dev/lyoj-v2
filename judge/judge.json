@@ -1,5 +1,5 @@
 {
-    "thread": 8,
+    "thread": 1,
     "mysql": {
         "server": "127.0.0.1",
         "port": 3306,

@@ -45,17 +45,17 @@ export function showMsg(errorType: string, msg: string) {
 
 export const loginAs = ref(0);
 export const loginInfo: any = ref({});
-export async function myFetch(url: string, options?: RequestInit) {
+export async function myFetch(url: string, options?: RequestInit, checkCode: boolean = true) {
     if (options == undefined) options = {};
     if (options.headers == undefined) options.headers = {};
     (options.headers as any)['Authorization'] = 'SessionToken ' + getCookie().session;
     var response = await fetch(url, options);
-    if (response.status != 200) {
+    if (response.status != 200 && checkCode) {
         showMsg('error', response.statusText);
         throw new Error(response.statusText);
     }
     var data = await response.json();
-    if (data.code != 200) {
+    if (data.code != 200 && checkCode) {
         showMsg('error', data.code + " " + data.msg);
         throw new Error(data.code + " " + data.msg);
     }

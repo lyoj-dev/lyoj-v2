@@ -4,10 +4,10 @@ const t = i18n.global.t;
 
 export const appBarConfig: any = {
     left: [
-        { title: "appbar.index", icon: "mdi-home", href: "/index" },
-        { title: "appbar.problem", icon: "mdi-format-list-bulleted", href: "/problems/list" },
-        { title: "appbar.submission", icon: "mdi-server", href: "/submissions/list" },
-        { title: "appbar.contest", icon: "mdi-calendar-blank", href: "/contest" }
+        { title: "appbar.index", icon: "mdi-home", href: "/index", prefix: "/index" },
+        { title: "appbar.problem", icon: "mdi-format-list-bulleted", href: "/problems/list", prefix: "/problems" },
+        { title: "appbar.submission", icon: "mdi-server", href: "/submissions/list", prefix: "/submissions" },
+        { title: "appbar.contest", icon: "mdi-calendar-blank", href: "/contests/list", prefix: "/contests" }
     ],
     right: [
 

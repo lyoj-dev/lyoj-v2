@@ -11,5 +11,6 @@ export const JudgeResultInfo: string[] = [
     "Waiting...",
     "Compiling...",
     "Running on case %d...",
-    "Skipped"
+    "Skipped",
+    "Submitted"
 ];

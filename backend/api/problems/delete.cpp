@@ -2,8 +2,7 @@ auto ProblemsDelete = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
 
-    if (request.method != "POST") quickSendMsg(405);
-    if (userId == 0) quickSendMsg(401);
+    if (request.method != "POST") quickSendMsgWithoutMySQL(405);
 
     MYSQL mysql = quick_mysqli_connect();
 
@@ -13,7 +12,8 @@ auto ProblemsDelete = [](client_conn conn, http_request request, param argv) {
     // 权限检查
     auto res = mysqli_query(mysql, "SELECT uid, groups FROM problem WHERE id = " + argv[0]);
     if (!hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
-    if (userId != atoi(res[0]["uid"].c_str())) quickSendMsg(403);
+    if (userId == atoi(res[0]["uid"].c_str()) && !hasPermission(userInfo, ProblemEdit)) quickSendMsg(403);
+    if (userId != atoi(res[0]["uid"].c_str()) && !hasPermission(userInfo, ProblemEditOthers)) quickSendMsg(403);
 
     mysqli_execute(
         mysql, 

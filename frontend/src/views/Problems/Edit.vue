@@ -1,22 +1,82 @@
 <script lang="ts">
 import { config, groupColor, tagsTypeList } from '@/config';
 import { i18n } from '@/i18n';
-import { myFetch } from '@/utils';
+import { loginAs, loginInfo, myFetch, showMsg, sleep } from '@/utils';
 import NProgress from 'nprogress';
 import { defineComponent, ref } from 'vue';
 import ProblemEditCard from '@/components/Problem/EditCard.vue';
 import ProblemEditCase from '@/components/Problem/EditCase.vue';
+import { useRoute } from 'vue-router';
+import { locate } from '@/router';
+import { getCookie } from '../../utils';
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
     NProgress.inc();
 
-    var data = await myFetch(config.apiBase + "/problems/" + to.params.id);
+    var data = to.params.id == 0 ? {
+            code: 200,
+            config: {
+                input: "",
+                maxMemory: 0,
+                maxTime: 0,
+                minMemory: 0,
+                minTime: 0,
+                output: ""
+            },
+            item: {
+                alias: "",
+                bg: "",
+                cases: [],
+                descrip: "",
+                difficulty: 0,
+                groups: [],
+                hint: "",
+                id: 0,
+                input: "",
+                langs: [],
+                lastCode: "",
+                lastLang: 0,
+                output: "",
+                tags: [],
+                title: ""
+            },
+            loginAs: 0,
+            loginInfo: {
+                groups: [],
+                permission: 0,
+                title: ""
+            },
+            msg: ""
+        } : await myFetch(config.apiBase + "/problems/" + to.params.id);
     var languages = (await myFetch(config.apiBase + "/configurations/languages")).items;
     for (var i = 0; i < languages.length; i++) languages[i].id = i;
     var tags = await myFetch(config.apiBase + "/problems/listAllTags");
     var groups = await myFetch(config.apiBase + "/users/listAllGroups");
-    var configs = await myFetch(config.apiBase + "/problems/" + to.params.id + "/config");
+    var configs = to.params.id == 0 ? {
+            code: 200,
+            item: {
+                datas: [],
+                input: "",
+                output: "",
+                spj: {
+                    compile_cmd: "",
+                    exec_name: "",
+                    exec_param: "",
+                    exec_path: "",
+                    source: "",
+                    type: 0
+                },
+                subtasks: []
+            },
+            loginAs: 0,
+            loginInfo: {
+                groups: [],
+                permission: 0,
+                title: ""
+            },
+            msg: ""
+        } : await myFetch(config.apiBase + "/problems/" + to.params.id + "/config");
     var spjs = (await myFetch(config.apiBase + "/configurations/spjs")).items;
     for (var i = 0; i < spjs.length; i++) spjs[i].id = i + 1;
     
@@ -36,6 +96,7 @@ export default defineComponent({
 </script>
 
 <script lang="ts" setup>
+const route = useRoute();
 const t = i18n.global.t;
 const item: any = ref({});
 const languages: any = ref([]);
@@ -49,6 +110,13 @@ const minCase = ref(1);
 const maxCase = ref(0);
 
 const minMaxCaseDialog = ref(false);
+const addTagDialog = ref(false);
+const enableBtn = ref(true);
+const enableUploadBtn = ref(true);
+const uploadProgress = ref("");
+
+const addTagTitle = ref('');
+const addTagType = ref(0);
 
 function loading(data: any) {
     item.value = data.data;
@@ -61,6 +129,8 @@ function loading(data: any) {
 
     if(item.value.item.cases.length == 0) item.value.item.cases = [ { input: "", output: "" } ];
     loaded.value = true;
+
+    item.value.item.tags = item.value.item.tags.map((tag: any) => tag.id);
 }
 
 defineExpose({ loading });
@@ -72,6 +142,135 @@ function updateCaseValue(key: string, value: number) {
         i++
     ) configs.value.datas[i - 1][key] = value;
 }
+
+async function addTagSubmit() {
+    var title = addTagTitle.value;
+    var type = addTagType.value;
+    console.log(title, type);
+    if (title == "") {
+        showMsg('error', t('pages.problems.edit.addTagTitleEmpty'));
+        addTagDialog.value = false;
+        return;
+    }
+    var res = await myFetch(config.apiBase + "/problems/addTag", {
+        method: 'POST',
+        body: JSON.stringify({ title: title, type: type })
+    }, false);
+    if (res.code != 200) {
+        showMsg('error', t('pages.problems.edit.addTagFailed'));
+        addTagDialog.value = false;
+        return;
+    }
+    showMsg('success', t('pages.problems.edit.addTagSuccess'));
+    tagsList.value.push({ id: res.id, title: title, type: type });
+    item.value.item.tags.push(res.id);
+    addTagDialog.value = false; 
+}
+
+function uploadData() {
+    var a = document.createElement('input');
+    a.type = 'file';
+    a.accept = '.zip';
+    a.onchange = async function() {
+        enableUploadBtn.value = false;
+        var reader = new FileReader();
+        reader.onload = async function() {
+            var data = (this.result as string).split(',')[1];
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', config.apiBase + '/problems/' + route.params.id + '/data/upload', true);
+            xhr.upload.addEventListener("progress", function(e) {
+                if (e.lengthComputable) {
+                    var percent = Math.round((e.loaded / e.total) * 100);
+                    uploadProgress.value = "(" + percent + "%)";
+                }
+            });
+            xhr.addEventListener("readystatechange", () => {
+                if (xhr.readyState == xhr.DONE) {
+                    var res = JSON.parse(xhr.responseText);
+                    loginAs.value = res.loginAs;
+                    loginInfo.value = res.loginInfo;
+                    if (res.code != 200) showMsg('error', t('pages.problems.edit.uploadDataFailed'));
+                    showMsg('success', t('pages.problems.edit.uploadDataSuccess'));
+                    configs.value.datas = [];
+                    for (var i = 0; i < res.datas.length; i++) configs.value.datas.push({
+                        input: res.datas[i].input,
+                        output: res.datas[i].output,
+                        time: 1000,
+                        memory: 128 * 1024,
+                        score: Math.floor(100 / res.datas.length) + (i >= res.datas.length - 100 % res.datas.length ? 1 : 0),
+                        subtask: 0
+                    });
+                    enableUploadBtn.value = true;
+                    uploadProgress.value = "";
+                    minCase.value = 1;
+                    maxCase.value = configs.value.datas.length;
+                }
+            });
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('Authorization', 'SessionToken ' + getCookie().session);
+            xhr.send(data);
+        };
+        if (a.files != null) reader.readAsDataURL(a.files[0]);
+    };
+    a.click();
+}
+
+async function submit() {
+    enableBtn.value = false;
+    var data = {
+        item: {
+            id: item.value.item.id,
+            alias: item.value.item.alias,
+            title: item.value.item.title,
+            bg: item.value.item.bg,
+            descrip: item.value.item.descrip,
+            input: item.value.item.input,
+            output: item.value.item.output,
+            cases: ((cases) => {
+                var res = [];
+                for (var i = 0; i < cases.length; i++) {
+                    if (cases[i].input == "" && cases[i].output == "") continue;
+                    res.push(cases[i]);
+                } return res;
+            })(item.value.item.cases),
+            hint: item.value.item.hint,
+            tags: item.value.item.tags,
+            groups: item.value.item.groups,
+            langs: item.value.item.langs
+        },
+        config: {
+            input: configs.value.input,
+            output: configs.value.output,
+            datas: configs.value.datas,
+            subtasks: ((datas, subtasks) => {
+                var res = [];
+                for (var i = 0; i < subtasks.length; i++) {
+                    var subtask = subtasks[i];
+                    for (var j = 0; j < datas.length; j++) {
+                        if (datas[j].subtask == subtask.id) {
+                            res.push(subtask); 
+                            break;
+                        }
+                    }
+                } return res;
+            })(configs.value.datas, configs.value.subtasks),
+            spj: configs.value.spj
+        }
+    };
+
+    var res = await myFetch(config.apiBase + "/problems/" + route.params.id + "/create", {
+        method: 'POST',
+        body: JSON.stringify(data)
+    }, false);
+    if (res.code != 200) {
+        showMsg('error', t('pages.problems.edit.submitFailed'));
+        enableBtn.value = true;
+        return;
+    }
+    showMsg('success', t('pages.problems.edit.submitSuccess'));
+    await sleep(1000);
+    locate('/problems/' + res.id);
+}
 </script>
 
 <template>
@@ -80,7 +279,7 @@ function updateCaseValue(key: string, value: number) {
             <v-card-title>{{ t('pages.problems.edit.baseInfo') }}</v-card-title>
             <v-card-text>
                 <div class="d-flex align-center mb-3">
-                    {{ t('pages.problems.edit.title') }}：
+                    <p>{{ t('pages.problems.edit.title') }}：</p>
                     <v-text-field
                         v-model="item.item.title"
                         dense
@@ -90,7 +289,7 @@ function updateCaseValue(key: string, value: number) {
                     ></v-text-field>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    {{ t('pages.problems.edit.alias') }}：
+                    <p>{{ t('pages.problems.edit.alias') }}：</p>
                     <v-text-field
                         v-model="item.item.alias"
                         dense
@@ -100,7 +299,7 @@ function updateCaseValue(key: string, value: number) {
                     ></v-text-field>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    {{ t('pages.problems.edit.tags') }}：
+                    <p>{{ t('pages.problems.edit.tags') }}：</p>
                     <v-autocomplete
                         v-model="item.item.tags"
                         :items="tagsList"
@@ -124,10 +323,48 @@ function updateCaseValue(key: string, value: number) {
                         class="ProblemEdit-addButton"
                         icon="mdi-plus"
                         size="small"
+                        @click="() => addTagDialog = !addTagDialog"
                     ></v-btn>
+                    <v-dialog
+                        v-model="addTagDialog"
+                        width="400px"
+                    >
+                        <v-card class="card-radius ProblemEdit-card">
+                            <v-card-title>{{ t('pages.problems.edit.addTag') }}</v-card-title>
+                            <v-card-text>
+                                <div class="d-flex align-center mb-3">
+                                    {{ t('pages.problems.edit.addTagTitle') }}：
+                                    <v-text-field
+                                        v-model="addTagTitle"
+                                        dense
+                                        hide-details
+                                        clearable
+                                        density="compact"
+                                    ></v-text-field>
+                                </div>
+                                <div class="d-flex align-center mb-3">
+                                    {{ t('pages.problems.edit.addTagType') }}：
+                                    <v-select
+                                        v-model="addTagType"
+                                        :items="tagsTypeList"
+                                        item-title="title"
+                                        item-value="id"
+                                        dense
+                                        hide-details
+                                    ></v-select>
+                                </div>
+                                <div class="d-flex justify-center">
+                                    <v-btn 
+                                        class="submitButton" 
+                                        @click="addTagSubmit()" 
+                                    >{{ t('pages.problems.edit.submit') }}</v-btn>
+                                </div>
+                            </v-card-text>
+                        </v-card>
+                    </v-dialog>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    {{ t('pages.problems.edit.langs') }}：
+                    <p>{{ t('pages.problems.edit.langs') }}：</p>
                     <v-autocomplete
                         v-model="item.item.langs"
                         :items="languages"
@@ -140,7 +377,7 @@ function updateCaseValue(key: string, value: number) {
                     ></v-autocomplete>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    {{ t('pages.problems.edit.groups') }}：
+                    <p>{{ t('pages.problems.edit.groups') }}：</p>
                     <v-autocomplete
                         v-model="item.item.groups"
                         :items="groupsList"
@@ -160,14 +397,9 @@ function updateCaseValue(key: string, value: number) {
                             >{{ (item.raw as any).title }}</v-chip>
                         </template>
                     </v-autocomplete>
-                    <v-btn
-                        class="ProblemEdit-addButton"
-                        icon="mdi-plus"
-                        size="small"
-                    ></v-btn>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    {{ t('pages.problems.edit.inputFile') }}：
+                    <p>{{ t('pages.problems.edit.inputFile') }}：</p>
                     <v-text-field
                         v-model="configs.input"
                         dense
@@ -177,7 +409,7 @@ function updateCaseValue(key: string, value: number) {
                     ></v-text-field>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    {{ t('pages.problems.edit.outputFile') }}：
+                    <p>{{ t('pages.problems.edit.outputFile') }}：</p>
                     <v-text-field
                         v-model="configs.output"
                         dense
@@ -224,13 +456,15 @@ function updateCaseValue(key: string, value: number) {
             :title="t('pages.problems.edit.hint')"
             v-model:value="item.item.hint"
         ></ProblemEditCard>
-        <v-card class="ProblemEdit-card card-radius">
+        <v-card class="ProblemEdit-card card-radius" v-if="Number(route.params.id) != 0">
             <v-card-title>
                 {{ t('pages.problems.edit.datas') }}
                 <v-btn
                     size="small"
                     class="ProblemEdit-button"
-                >{{ t('pages.problems.edit.uploadData') }}</v-btn>
+                    @click="uploadData()"
+                    :disabled="!enableUploadBtn"
+                >{{ t('pages.problems.edit.uploadData') + uploadProgress }}</v-btn>
             </v-card-title>
             <v-card-text>
                 <h3>{{ t('pages.problems.edit.dataConfig') }}</h3>
@@ -500,7 +734,8 @@ function updateCaseValue(key: string, value: number) {
                 <div class="d-flex justify-center mt-3">
                     <v-btn 
                         class="submitButton" 
-                        @click="" 
+                        @click="submit()"
+                        :disabled="!enableBtn"
                     >{{ t('pages.problems.edit.submit') }}</v-btn>
                 </div>
             </v-card-text>
@@ -577,5 +812,9 @@ h3 {
 .submitButton {
     color: var(--color-text)!important;
     background-color: var(--color-background-mute)!important;
+}
+
+p {
+    flex-shrink: 0;
 }
 </style>

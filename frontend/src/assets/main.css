@@ -29,3 +29,9 @@ a,
 .card-radius {
   border-radius: 15px!important;
 }
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

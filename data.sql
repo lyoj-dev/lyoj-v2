@@ -1,9 +1,29 @@
--- CREATE TABLE contest (id int(255) NULL,title longtext NULL,starttime int(20) NULL,duration int(20) NULL,type int(11) NULL,rated tinyint(1) NULL DEFAULT 0,lang varchar(1024) NULL);
--- CREATE TABLE contest_problem (pid int(255) NULL,id int(255) NULL);
--- CREATE TABLE contest_ranking (id int(255) NULL,uid int(255) NULL,score int(255) NULL,time int(255) NULL,info longtext NULL,penalty int(255) NULL);
--- CREATE TABLE contest_signup (id int(255) NULL,uid int(255) NULL);
--- CREATE TABLE crontab (id int(255) NULL,duration int(20) NULL,lasttime int(20) NULL,command longtext NULL,name longtext NULL);
--- CREATE TABLE judger (id varchar(128) NULL,config longtext NULL,name longtext NULL,heartbeat int(20) NULL);
+CREATE TABLE contest (
+    id int,
+    title longtext,
+    starttime int,
+    duration int,
+    type int,
+    rated boolean,
+    tags longtext,
+    problems longtext,
+    password text,
+    info longtext,
+    uid int
+);
+CREATE TABLE contest_ranking (
+    id int,
+    uid int,
+    score int,
+    time int,
+    time2 int,
+    info longtext,
+    penalty int
+);
+CREATE TABLE contest_signup (
+    id int,
+    uid int
+);
 CREATE TABLE session (
     uid int,
     session longtext,
@@ -56,13 +76,13 @@ INSERT INTO userGroup VALUES (
     1,
     'Default',
     'Default group for all users',
-    0
+    1420
 );
 INSERT INTO userGroup VALUES (
     2,
     'Admin',
     'Administrators',
-    0
+    2047
 );
 CREATE TABLE user (
     id int,

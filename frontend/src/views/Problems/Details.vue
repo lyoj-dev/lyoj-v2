@@ -9,20 +9,31 @@ import hljs from 'highlight.js'
 import { i18n } from '@/i18n';
 import ProblemTitle from '@/components/Problem/Title.vue';
 import ProblemCase from '@/components/Problem/Case.vue';
+import ContestNavigation from '@/components/Contest/Navigation.vue';
 import MonacoEditor from 'monaco-editor-vue3';
 import { loginAs, myFetch, showMsg, sleep } from '@/utils';
+import { useRoute } from 'vue-router';
+import { fa } from 'vuetify/locale';
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
     NProgress.inc();
 
-    var data = await myFetch(config.apiBase + "/problems/" + to.params.id);
+    var data = 
+        to.params.cid == undefined ?
+        await myFetch(config.apiBase + "/problems/" + to.params.id) :
+        await myFetch(config.apiBase + "/contests/" + to.params.cid + "/problems/" + to.params.id);
     var languages = (await myFetch(config.apiBase + "/configurations/languages")).items;
     for (var i = 0; i < languages.length; i++) languages[i].id = i;
+    var contest = 
+        to.params.cid == undefined ?
+        {} :
+        await myFetch(config.apiBase + "/contests/" + to.params.cid);
     
     next((e: any) => e.loading({
         data: data,
-        languages: languages
+        languages: languages,
+        contest: contest
     }));
 }
 export default defineComponent({
@@ -56,10 +67,12 @@ const md = markdownit({
     }
 });
 md.use(markdownItKatex);
+const route = useRoute();
 
 const item: any = ref({});
 const languages: any = ref([]);
 const loaded = ref(false);
+const contest: any = ref({});
 
 const submitLanguage: any = ref(0);
 const submitCode = ref("");
@@ -68,6 +81,7 @@ const enableBtn = ref(true);
 function loading(data: any) {
     item.value = data.data;
     languages.value = [];
+    contest.value = data.contest;
     submitCode.value = data.data.item.lastCode;
     submitLanguage.value = data.data.item.lastLang;
     document.title = data.data.item.title + ' - ' + config.title.full;
@@ -92,32 +106,32 @@ async function submit() {
         code: submitCode.value,
     };
 
-    var res = await myFetch(config.apiBase + "/problems/" + item.value.item.id + "/submit", {
+    var res = await myFetch(config.apiBase + (route.params.cid != undefined ? "/contests/" + route.params.cid : "" ) + "/problems/" + item.value.item.id + "/submit", {
         method: "POST",
         body: JSON.stringify(data)
-    });
+    }, false);
     if (res.id != undefined && res.id != null && res.id > 0) {
         showMsg("success", t('pages.problems.submitSuccess'));
         await sleep(1000);
-        locate("/submissions/" + res.id);    
+        locate((route.params.cid != undefined ? "/contests/" + route.params.cid : "") + "/submissions/" + res.id);    
     } else {
         showMsg("success", t('pages.problems.submitFailed'));
         enableBtn.value = true;
         await sleep(1000);
     }
 }
-
-function addTag(id: number) {
-
-}
-
-function addDifficulty(difficulty: number) {
-
-}
 </script>
 
 <template>
     <div v-if="loaded">
+        <ContestNavigation 
+            :id="route.params.cid" 
+            current="problems"
+            :identity="item.identity"
+            :signup="item.signup"
+            :endTime="contest.item.starttime + contest.item.duration"
+            v-if="route.params.cid != undefined"
+        ></ContestNavigation>
         <ProblemTitle
             :alias="item.item.alias"
             :title="item.item.title"
@@ -127,8 +141,6 @@ function addDifficulty(difficulty: number) {
             :maxTime="item.config.maxTime"
             :minMemory="item.config.minMemory"
             :maxMemory="item.config.maxMemory"
-            @addTag="addTag"
-            @addDifficulty="addDifficulty"
         ></ProblemTitle>
         <v-card class="ProblemVCard card-radius" v-if="item.item.bg != ''">
             <v-card-title>{{ t('pages.problems.background') }}</v-card-title>
@@ -161,7 +173,14 @@ function addDifficulty(difficulty: number) {
             <v-card-title>{{ t('pages.problems.hint') }}</v-card-title>
             <v-card-text class="markdown-text" v-html="md.render(item.item.hint)"></v-card-text>
         </v-card>
-        <v-card class="ProblemVCard card-radius" v-if="loginAs != 0">
+        <v-card 
+            class="ProblemVCard card-radius" 
+            v-if="
+                loginAs != 0 && 
+                item.config.minTime <= item.config.maxTime && 
+                item.config.minMemory <= item.config.maxMemory
+            "
+        >
             <v-card-title>{{ t('pages.problems.submit') }}</v-card-title>
             <v-card-text>
                 <div class="d-flex align-center">

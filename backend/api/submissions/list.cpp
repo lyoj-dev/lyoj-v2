@@ -4,7 +4,7 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
 
-    string where = hasIntersection("p.groups", userInfo["groups"], false);
+    string where = argv.size() ? "1" : hasIntersection("p.groups", userInfo["groups"], false);
     if ($_GET.find("problems") != $_GET.end()) {
         where += " AND s.pid in (";
         Json::Value problems = json_decode($_GET["problems"]);
@@ -29,6 +29,8 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
         for (int i = 0; i < status.size(); i++) where += (i ? "," : "") + to_string(status[i].asInt());
         where += ")";
     }
+    where += " AND contest = " + (argv.size() ? to_string(atoi(argv[0].c_str())) : "0");
+    if (!hasPermission(userInfo, SubmissionListOthers)) where += " AND s.uid = " + to_string(userId);
 
     int page = $_GET.find("page") == $_GET.end() ? 1 : atoi($_GET["page"].c_str());
     int pageCount = (atoi(mysqli_query(
@@ -66,6 +68,14 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
         userList.c_str()
     ) : vector<map<string, string> >();
 
+    auto contest = mysqli_query(
+        mysql,
+        "SELECT type, starttime, duration FROM contest WHERE id = %d",
+        argv.size() ? atoi(argv[0].c_str()) : 0
+    );
+    bool ended = contest.size() == 0 || time(NULL) > atol(contest[0]["starttime"].c_str()) + atol(contest[0]["duration"].c_str());
+    bool hidden = contest.size() && atoi(contest[0]["type"].c_str()) == 0;
+
     Json::Value fetchData;
     fetchData["type"] = SimpleSubmissions;
     fetchData["items"].resize(0);
@@ -83,6 +93,12 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
     object["pageCount"] = pageCount;
+    if (argv.size()) {
+        int identity = getContestIdentity(userId, atoi(argv[0].c_str()));
+        bool signup = checkSignUp(userId, atoi(argv[0].c_str()));
+        object["identity"] = identity;
+        object["signup"] = signup;
+    }
     object["items"].resize(0);
     for (int i = 0; i < res.size(); i++) {
         Json::Value single;
@@ -104,6 +120,21 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
             single["score"] = status[j]["score"].asInt();
             break;
         }
+
+        // 对特定比赛进行数据修改
+        if (hidden && !ended) {
+            if (
+                single["statusType"].asInt() != Waiting && 
+                single["statusType"].asInt() != Compiling &&
+                single["statusType"].asInt() != CE
+            ) {
+                single["statusType"] = Submitted;
+                single["status"] = JudgeResultInfo[Submitted];
+                single["judged"] = true;
+                single["score"] = 100;
+            }
+        }
+
         object["items"].append(single);
     }
 

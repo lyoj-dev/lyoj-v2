@@ -44,13 +44,15 @@ function setLocale(val: string) {
                 :title="t(item.title)"
                 :icon="item.icon"
                 :href="item.href"
+                :prefix="item.prefix"
             ></AppBarButton>
 
             <AppBarButton
-                v-if="loginAs != 0 && (loginInfo.permission & (1 << 13)) != 0"
+                v-if="loginAs != 0 && (loginInfo.permission & (1 << 10)) != 0"
                 :title="t('appbar.admin')"
                 icon="mdi-cog"
-                href="/admin"
+                href="/admin/index"
+                prefix="/admin"
             ></AppBarButton>
         </div>
         <div class="d-flex AppBar-right">
@@ -59,25 +61,29 @@ function setLocale(val: string) {
                 :title="t(item.title)"
                 :icon="item.icon"
                 :href="item.href"
+                :prefix="item.prefix"
             ></AppBarButton>
 
             <AppBarButton
                 v-if="loginAs == 0"
                 :title="t('appbar.login')"
-                icon="mdi-arrow-right-bold-circle"
+                icon="mdi-arrow-right-circle"
                 href="/login"
+                prefix="/login"
             ></AppBarButton>
             <AppBarButton
                 v-if="loginAs != 0"
                 :title="loginInfo.title"
                 icon=""
                 :href="'/users/' + loginAs"
+                :prefix="'/users/' + loginAs"
             ></AppBarButton>
             <AppBarButton
                 v-if="loginAs != 0"
                 :title="t('appbar.logout')"
-                icon="mdi-arrow-left-bold-circle"
+                icon="mdi-power"
                 href="/logout"
+                prefix="/logout"
             ></AppBarButton>
 
             <div class="d-flex align-center AppBar-language">

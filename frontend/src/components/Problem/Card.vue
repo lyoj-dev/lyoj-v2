@@ -5,7 +5,7 @@ import { goto, locate } from '@/router';
 import { loginAs } from '@/utils';
 
 const t = i18n.global.t;
-const props = defineProps([ 'status', 'id', 'alias', 'title', 'tags', 'accepted', 'total', 'difficulty', 'allowEdit', 'allowDelete' ]);
+const props = defineProps([ 'status', 'id', 'cid', 'alias', 'title', 'tags', 'accepted', 'total', 'difficulty', 'allowEdit', 'allowDelete' ]);
 const emits = defineEmits([ 'addTag', 'deleteProblem' ]);
 
 function getColor(d: number) {
@@ -24,7 +24,11 @@ function getColor(d: number) {
 <template>
     <v-card class="d-flex ProblemCard card-radius">
         <router-link 
-            :to="'/submissions/list' + (loginAs ? '?problems=[' + id + ']&users=[' + loginAs + ']' : '')" 
+            :to="
+                cid != undefined ? 
+                '/contests/' + cid + '/submissions/list' + (loginAs ? '?problems=[' + id + ']&users=[' + loginAs + ']' : '') : 
+                '/submissions/list' + (loginAs ? '?problems=[' + id + ']&users=[' + loginAs + ']' : '')
+            "
             class="ProblemCard-status"
             :style="'color: ' + statusCardList[status].color + '!important;'"
         >
@@ -32,8 +36,14 @@ function getColor(d: number) {
                 :icon="statusCardList[status].icon"
             ></v-icon>
         </router-link>
-        <router-link :to="'/problems/' + id" class="ProblemCard-id">{{ alias }}</router-link>
-        <router-link :to="'/problems/' + id" class="ProblemCard-problem">{{ title }}</router-link>
+        <router-link 
+            :to="cid != undefined ? '/contests/' + cid + '/problems/' + id : '/problems/' + id" 
+            class="ProblemCard-id ellipsis"
+        >{{ alias }}</router-link>
+        <router-link 
+            :to="cid != undefined ? '/contests/' + cid + '/problems/' + id : '/problems/' + id" 
+            class="ProblemCard-problem ellipsis"
+        >{{ title }}</router-link>
         <div class="ProblemCard-tags d-flex">
             <v-chip 
                 v-for="tag in tags" 
@@ -49,10 +59,11 @@ function getColor(d: number) {
                 :color="getColor(difficulty)" 
                 size="small" 
                 variant="flat"
+                v-if="difficulty != -1"
             >{{ t('pages.problems.difficulty') }}：{{ difficulty }}</v-chip>
         </div>
         <v-progress-linear 
-            :model-value="accepted / total * 100" 
+            :model-value="total == 0 ? 0 : accepted / total * 100" 
             :height="15" 
             color="green" 
             bg-color="currentColor" 

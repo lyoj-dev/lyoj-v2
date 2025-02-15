@@ -116,9 +116,16 @@ async function deleteProblem(id: number, name: string) {
             :tagsList="tagsList"
             @search="search"
         ></ProblemSearch>
+        <v-card class="d-flex ProblemCard card-radius" v-if="list.allowCreate">
+            <router-link 
+                to="/problems/0/edit" 
+                class="ProblemCard-status"
+                style="color: rgb(36, 140, 36)!important;"
+            ><v-icon icon="mdi-plus"></v-icon></router-link>
+            <router-link to="/problems/0/edit" class="ProblemCard-problem">{{ t('pages.problems.addProblem') }}</router-link>
+        </v-card>
         <ProblemCard
             v-for="item in list.items"
-            :key="item.id"
             :status="item.status"
             :id="item.id"
             :alias="item.alias"
@@ -140,3 +147,25 @@ async function deleteProblem(id: number, name: string) {
         ></v-pagination>
     </div>
 </template>
+
+<style lang="css" scoped>
+.ProblemCard {
+    color: var(--color-text)!important;
+    background-color: var(--color-background)!important;
+    padding: 0px 30px;
+    width: 100%;
+    min-height: 50px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.ProblemCard-status {
+    width: 3%;
+    position: relative;
+    top: -0.8px;
+}
+
+.ProblemCard-problem {
+    width: 97%;
+}
+</style>

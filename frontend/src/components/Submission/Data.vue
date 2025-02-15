@@ -23,27 +23,31 @@ const props = defineProps([ 'id', 'data', 'reversed', 'judgeData' ]);
             <p style="width: 18%">{{ t('pages.submissions.memory') }}：&nbsp;{{ Math.round(data.memory / 1024) }}MB</p>
         </v-expansion-panel-title>
         <v-expansion-panel-text style="padding-bottom: 0px; width: 100%">
-            <div class="d-flex justify-space-between" style="padding: 0px 10px;">
-                <div class="d-flex align-center">
-                    <p style="font-weight: 700">{{ t('pages.submissions.inputFile') }}</p>
-                    <p>{{ judgeData.inputIgnored == 0 ? "" : "（" + t('pages.submissions.ignored', { size: judgeData.inputIgnored + " Bytes" }) + "）" }}</p>
+            <div>
+                <div class="d-flex justify-space-between" style="padding: 0px 10px;">
+                    <div class="d-flex align-center">
+                        <p style="font-weight: 700">{{ t('pages.submissions.inputFile') }}</p>
+                        <p>{{ judgeData.inputIgnored == 0 ? "" : "（" + t('pages.submissions.ignored', { size: judgeData.inputIgnored + " Bytes" }) + "）" }}</p>
+                    </div>
+                    <p>{{ judgeData.inputName }}</p>
                 </div>
-                <p>{{ judgeData.inputName }}</p>
+                <pre class="d-flex" style="margin-top: 10px;">
+                    <code class="hljs" :style="'background-color: var(--color-background' + (reversed == 1 ? '' : '-mute') + ')!important;'">{{ judgeData.input }}</code>
+                </pre>
             </div>
-            <pre class="d-flex" style="margin-top: 10px;">
-                <code class="hljs" :style="'background-color: var(--color-background' + (reversed == 1 ? '' : '-mute') + ')!important;'">{{ judgeData.input }}</code>
-            </pre>
-            <div class="d-flex justify-space-between" style="padding: 0px 10px; margin-top: 10px;">
-                <div class="d-flex align-center">
-                    <p style="font-weight: 700">{{ t('pages.submissions.answerFile') }}</p>
-                    <p>{{ judgeData.outputIgnored == 0 ? "" : "（" + t('pages.submissions.ignored', { size: judgeData.outputIgnored + " Bytes" }) + "）" }}</p>
+            <div>
+                <div class="d-flex justify-space-between" style="padding: 0px 10px; margin-top: 10px;">
+                    <div class="d-flex align-center">
+                        <p style="font-weight: 700">{{ t('pages.submissions.answerFile') }}</p>
+                        <p>{{ judgeData.outputIgnored == 0 ? "" : "（" + t('pages.submissions.ignored', { size: judgeData.outputIgnored + " Bytes" }) + "）" }}</p>
+                    </div>
+                    <p>{{ judgeData.outputName }}</p>
                 </div>
-                <p>{{ judgeData.outputName }}</p>
+                <pre class="d-flex" style="margin-top: 10px;">
+                    <code class="hljs" :style="'background-color: var(--color-background' + (reversed == 1 ? '' : '-mute') + ')!important;'">{{ judgeData.output }}</code>
+                </pre>
             </div>
-            <pre class="d-flex" style="margin-top: 10px;">
-                <code class="hljs" :style="'background-color: var(--color-background' + (reversed == 1 ? '' : '-mute') + ')!important;'">{{ judgeData.output }}</code>
-            </pre>
-            <div v-if="data.output != ''">
+            <div>
                 <div class="d-flex justify-space-between" style="padding: 0px 10px; margin-top: 10px;">
                     <div class="d-flex align-center">
                         <p style="font-weight: 700">{{ t('pages.submissions.outputFile') }}</p>

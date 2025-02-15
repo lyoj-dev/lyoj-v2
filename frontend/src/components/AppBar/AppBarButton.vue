@@ -3,12 +3,11 @@ import { goto } from '@/router';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
-const props = defineProps([ 'title', 'icon', 'href' ]);
+const props = defineProps([ 'title', 'icon', 'href', 'prefix' ]);
 const route = useRoute();
 
 const active = computed(() => {
-    const href = props.href;
-    return !!href && (route.path === href || route.path.startsWith(`${href}/`));
+    return !!props.prefix && route.path.startsWith(props.prefix);
 });
 </script>
 

@@ -10,13 +10,14 @@ auto ProblemsDetails = [](client_conn conn, http_request request, param argv) {
     if (res.size() == 0) quickSendMsg(404);
 
     // 权限检查
-    if (!hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
+    if (argv.size() == 1 && !hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
 
     auto submission = mysqli_query(
         mysql,
-        "SELECT lang, code FROM submission WHERE uid = %d AND pid = %d ORDER BY id DESC LIMIT 1",
+        "SELECT lang, code FROM submission WHERE uid = %d AND pid = %d AND contest = %d ORDER BY id DESC LIMIT 1",
         userId,
-        atoi(argv[0].c_str())
+        atoi(argv[0].c_str()),
+        argv.size() == 2 ? atoi(argv[1].c_str()) : 0
     );
     string code = submission.size() ? submission[0]["code"] : "";
     int lang = submission.size() ? atoi(submission[0]["lang"].c_str()) : 0;
@@ -26,12 +27,16 @@ auto ProblemsDetails = [](client_conn conn, http_request request, param argv) {
     object["msg"] = http_code[200];
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
+    if (argv.size() == 2) {
+        object["identity"] = getContestIdentity(userId, atoi(argv[1].c_str()));
+        object["signup"] = checkSignUp(userId, atoi(argv[1].c_str()));
+    }
     object["item"]["id"] = atoi(res[0]["id"].c_str());
     object["item"]["alias"] = res[0]["alias"];
     object["item"]["title"] = res[0]["title"];
     object["item"]["difficulty"] = atoi(res[0]["difficulty"].c_str());
     object["item"]["tags"] = Json::arrayValue;
-    auto tags = mysqli_query(
+    auto tags = res[0]["tags"] == "[]" ? vector<argvar>() : mysqli_query(
         mysql,
         "SELECT * FROM tags WHERE id in (%s)",
         res[0]["tags"].substr(1, res[0]["tags"].size() - 2).c_str()

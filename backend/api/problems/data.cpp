@@ -12,7 +12,7 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
     if (res.size() == 0) quickSendMsg(404);
 
     // 权限检查
-    if (!hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
+    if (argv.size() == 1 && !hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
 
     Json::Value config = json_decode(readFile("../problem/" + argv[0] + "/config.json"));
     map<int, int> subtasks = { { 0, 0 } };
@@ -28,8 +28,8 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
         fin.seekg(0, ios::beg);
         char* ch = new char[min(lim, len)];
         fin.read(ch, min(lim, len));
-        data["inputIgnored"] = max(0, len - lim);
-        data["input"] = string(ch, min(lim, len)) + (len > lim ? "..." : "");
+        data["inputIgnored"] = argv.size() == 2 && atoi(argv[1].c_str()) ? 0 : max(0, len - lim);
+        data["input"] = argv.size() == 2 && atoi(argv[1].c_str()) ? "" : string(ch, min(lim, len)) + (len > lim ? "..." : "");
         fin.close();
 
         fin.open("../problem/" + argv[0] + "/" + config["datas"][i]["output"].asString());
@@ -39,10 +39,17 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
         delete[] ch;
         ch = new char[min(lim, len)];
         fin.read(ch, min(lim, len));
-        data["outputIgnored"] = max(0, len - lim);
-        data["output"] = string(ch, min(lim, len)) + (len > lim ? "..." : "");
+        data["outputIgnored"] = argv.size() == 2 && atoi(argv[1].c_str()) ? 0 : max(0, len - lim);
+        data["output"] = argv.size() == 2 && atoi(argv[1].c_str()) ? "" : string(ch, min(lim, len)) + (len > lim ? "..." : "");
         fin.close();
         delete[] ch;
+
+        if (!hasPermission(userInfo, SubmissionData)) {
+            data["input"] = "";
+            data["inputIgnored"] = 0;
+            data["output"] = "";
+            data["outputIgnored"] = 0;
+        }
 
         data["inputName"] = config["datas"][i]["input"].asString();
         data["outputName"] = config["datas"][i]["output"].asString();

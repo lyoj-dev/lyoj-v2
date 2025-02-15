@@ -23,6 +23,21 @@ using namespace std;
 #include"../shared/mysql.h"
 #include"../shared/utils.h"
 
+Json::Value judge;
+auto defaultResult = [](int lang){
+    Json::Value res;
+    res["status"] = Waiting;
+    res["type"] = DetailedSubmission;
+    res["score"] = 0;
+    res["time"] = 0;
+    res["memory"] = 0;
+    res["langCode"] = lang;
+    res["langMode"] = judge["languages"][lang]["mode"];
+    res["langName"] = judge["languages"][lang]["name"];
+    res["subtasks"].resize(0);
+    return res;
+};
+
 bool isJudging[1024];
 set<int> judging;
 MYSQL mysql;
@@ -34,6 +49,9 @@ int connsCount = 0;
 struct Args {
     int id; // 临时目录 id
     int sid; // 提交 id
+    int cid; // 比赛 id
+    int uid; // 用户 id
+    int pid; // 题目 id
     string cmd; // 启动单元程序指令
     MYSQL mysql; // mysql 连接符
 };
@@ -121,19 +139,91 @@ void* work_thread(void* arg) {
     }
     mysqli_execute(
         args.mysql, 
-        "UPDATE submission SET result = \"%s\", status = %d, score = %d, judged = true WHERE id = %d",
+        "UPDATE submission SET result = \"%s\", status = %d, score = %d, judged = true WHERE id = %d AND contest = %d",
         quote_encode(json_encode(result)).c_str(),
         result["status"].asInt(),
         result["score"].asInt(),
-        args.sid
+        args.sid,
+        args.cid
     );
+    if (args.cid) {
+        auto res = mysqli_query(
+            args.mysql,
+            "SELECT * FROM contest_ranking WHERE id = %d AND uid = %d",
+            args.cid,
+            args.uid
+        );
+        auto contest = mysqli_query(
+            args.mysql,
+            "SELECT type, starttime FROM contest WHERE id = %d",
+            args.cid
+        );
+        int type = contest.size() == 0 ? OI : atoi(contest[0]["type"].c_str());
+        time_t submitTime = atol(mysqli_query(mysql, "SELECT time FROM submission WHERE id = %d", args.sid)[0]["time"].c_str());
+        if (res.size()) {
+            int score = atoi(res[0]["score"].c_str());
+            int time1 = atoi(res[0]["time"].c_str());
+            int time2 = atoi(res[0]["time2"].c_str());
+            int penalty = atoi(res[0]["penalty"].c_str());
+            auto info = json_decode(res[0]["info"]);
+            for (int i = 0; i < info.size(); i++) {
+                if (info[i]["pid"].asInt() != args.pid) continue;
+                if (type == ACM) result["score"] = result["status"].asInt() == AC ? 1 : 0;
+                // 更新分数
+                if (info[i]["score"].asInt() < result["score"].asInt()) {
+                    score += result["score"].asInt() - info[i]["score"].asInt();
+                    info[i]["score"] = result["score"].asInt();
+                    time1 += time - info[i]["time"].asInt();
+                    info[i]["time"] = time;
+                    info[i]["sid"] = args.sid;
+                }
+                // 更新罚时
+                if (info[i]["time2"].asInt() == 0 && result["status"].asInt() != AC)
+                    info[i]["penalty"] = info[i]["penalty"].asInt() + 1;
+                // 更新 sid
+                if (info[i]["score"].asInt() == result["score"].asInt()) 
+                    info[i]["sid"] = args.sid;
+                // 更新 time
+                if (info[i]["score"].asInt() == result["score"].asInt() && time < info[i]["time"].asInt()) {
+                    time1 += time - info[i]["time"].asInt();
+                    info[i]["time"] = time;
+                }
+                // 更新 time2
+                if (info[i]["time2"].asInt() == 0 && result["status"].asInt() == AC) {
+                    time2 += submitTime - atol(contest[0]["starttime"].c_str());
+                    penalty += info[i]["penalty"].asInt();
+                    info[i]["time2"] = submitTime - atol(contest[0]["starttime"].c_str());
+                }
+
+                if (type == OI) {
+                    score += result["score"].asInt() - info[i]["score"].asInt();
+                    info[i]["score"] = result["score"];
+                    info[i]["sid"] = args.sid;
+                    time1 += time - info[i]["time"].asInt();
+                    info[i]["time"] = time;
+                }
+
+                mysqli_execute(
+                    args.mysql,
+                    "UPDATE contest_ranking SET score = %d, time = %d, time2 = %d, penalty = %d, info = \"%s\" WHERE id = %d AND uid = %d",
+                    score,
+                    time1,
+                    time2,
+                    penalty,
+                    quote_encode(json_encode(info)).c_str(),
+                    args.cid,
+                    args.uid
+                );
+                break;
+            }
+        }
+    }
     mysqli_close(args.mysql);
     isJudging[args.id] = false;
     judging.erase(judging.find(args.sid));
     return NULL;
 }
 
-Json::Value judge;
 MYSQL quick_mysqli_connect() {
     return mysqli_connect(
         judge["mysql"]["server"].asString(),
@@ -153,7 +243,7 @@ void* webserver_work_thread(void* arg) {
         MYSQL mysql = quick_mysqli_connect();
         auto res = mysqli_query(
             mysql,
-            "SELECT id, status, score, judged FROM submission WHERE id in (%s)",
+            "SELECT id, status, score, judged, lang FROM submission WHERE id in (%s)",
             ids.c_str()
         );
         Json::Value object;
@@ -161,6 +251,8 @@ void* webserver_work_thread(void* arg) {
             Json::Value single;
             single["id"] = data["items"][i].asInt();
             for (int j = 0; j < res.size(); j++) if (res[j]["id"] == data["items"][i].asString()) {
+                if (results.find(data["items"][i].asInt()) == results.end()) 
+                    results[data["items"][i].asInt()] = defaultResult(atoi(res[j]["lang"].c_str()));
                 single["judged"] = atoi(res[j]["judged"].c_str()) ? true : false;
                 single["score"] = 
                     single["judged"].asBool() ? 
@@ -206,8 +298,11 @@ void* webserver_work_thread(void* arg) {
             data["item"].asInt()
         );
         Json::Value result;
-        if (atoi(res[0]["judged"].c_str()) == 0) result = results[data["item"].asInt()];
-        else result = json_decode(res[0]["result"]);
+        if (atoi(res[0]["judged"].c_str()) == 0) {
+            if (results.find(data["item"].asInt()) == results.end()) 
+                results[data["item"].asInt()] = defaultResult(atoi(res[0]["lang"].c_str()));
+            result = results[data["item"].asInt()];
+        } else result = json_decode(res[0]["result"]);
         result["statusType"] = result["status"];
         result["status"] = 
             result["statusType"].asInt() == Running ? 
@@ -225,6 +320,10 @@ void* webserver_work_thread(void* arg) {
         mysqli_close(mysql);
     }
     else if (data["type"].asInt() == DetailedSubmissionLongConnection) {
+        Json::Value res = results[data["item"].asInt()];
+        res["sid"] = data["item"].asInt();
+        res["type"] = DetailedSubmission;
+        conn.send(json_encode(res));
         int connId = connsCount++;
         conns[connId] = conn;
         int submitId = data["item"].asInt();
@@ -281,11 +380,25 @@ int main() {
                     }
                     writeLog(LOG_LEVEL_INFO, "Judge submission #%d in ../tmp/%d...", atoi(list[i]["id"].c_str()), j);
                     writeLog(LOG_LEVEL_INFO, "Problem id: %d", atoi(list[i]["pid"].c_str()));
+                    writeLog(LOG_LEVEL_INFO, "Contest id: %d", atoi(list[i]["contest"].c_str()));
                     writeLog(LOG_LEVEL_INFO, "Submitted user id: %d", atoi(list[i]["uid"].c_str()));
                     writeLog(LOG_LEVEL_INFO, "Language: %s", judge["languages"][atoi(list[i]["lang"].c_str())]["name"].asCString());
+                    auto contest = mysqli_query(
+                        mysql,
+                        "SELECT starttime, duration FROM contest WHERE id = %d",
+                        atoi(list[i]["contest"].c_str())
+                    );
                     pthread_t pt; 
                     Args *arg = new Args;
-                    *arg = { j, atoi(list[i]["id"].c_str()), "", NULL };
+                    *arg = { 
+                        j, 
+                        atoi(list[i]["id"].c_str()), 
+                        atoi(list[i]["contest"].c_str()), 
+                        atoi(list[i]["uid"].c_str()),
+                        atoi(list[i]["pid"].c_str()),
+                        "", 
+                        NULL
+                    };
                     arg->cmd = "./unit ../../judge/judge.json ../../problem/" + list[i]["pid"] + " ../tmp/" + to_string(j) + " ./server.sock " + list[i]["lang"] + " >> ./log.txt 2>&1";
                     arg->mysql = quick_mysqli_connect();
                     pthread_create(&pt, NULL, work_thread, (void*)arg);

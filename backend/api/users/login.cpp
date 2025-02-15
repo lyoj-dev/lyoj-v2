@@ -13,7 +13,7 @@ auto UsersLogin = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
 
-    if (request.method != "POST") quickSendMsg(405);
+    if (request.method != "POST") quickSendMsgWithoutMySQL(405);
 
     auto $_POST = json_decode(request.postdata);
     MYSQL mysql = quick_mysqli_connect();

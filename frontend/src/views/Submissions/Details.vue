@@ -8,20 +8,23 @@ import SubmissionCode from '@/components/Submission/Code.vue'
 import SubmissionCompileInfo from '@/components/Submission/CompileInfo.vue'
 import SubmissionData from '@/components/Submission/Data.vue'
 import SubmissionSubtask from '@/components/Submission/Subtask.vue'
+import ContestNavigation from '@/components/Contest/Navigation.vue'
 import { JudgeResultInfo } from "@/shared";
 import { myFetch } from "@/utils";
-import { onBeforeRouteLeave } from "vue-router";
+import { onBeforeRouteLeave, useRoute } from "vue-router";
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
     NProgress.inc();
 
-    var data = await myFetch(config.apiBase + "/submissions/" + to.params.id);
-    var judgeData = await myFetch(config.apiBase + "/problems/" + data.item.pid + "/data");
+    var data = await myFetch(config.apiBase + (to.params.cid == undefined ? "" : "/contests/" + to.params.cid) + "/submissions/" + to.params.id);
+    var judgeData = await myFetch(config.apiBase + (to.params.cid == undefined ? "" : "/contests/" + to.params.cid) + "/problems/" + data.item.pid + "/data");
+    var contest = to.params.cid == undefined ? {} : await myFetch(config.apiBase + "/contests/" + to.params.cid);
     
     next((e: any) => e.loading({
         data: data,
-        judgeData: judgeData
+        judgeData: judgeData,
+        contest: contest
     }));
 }
 export default defineComponent({
@@ -31,16 +34,21 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
+const route = useRoute();
 const item: any = ref([]);
 const judgeData: any = ref([]);
 const loaded = ref(false);
 const compiled = ref(false);
 const subtasks = computed(() => item.value.subtasks.slice(1));
+const info: any = ref({});
+const contest: any = ref({});
 var ws: WebSocket;
 
 function loading(data: any) {
     item.value = data.data.item;
+    info.value = data.data;
     judgeData.value = data.judgeData.items;
+    contest.value = data.contest;
     compiled.value = !(item.value.statusType == 9 || item.value.statusType == 10);
 
     if (item.value.judged == true) {
@@ -66,12 +74,13 @@ function loading(data: any) {
                 item.value.subtasks[json.subtaskId].datas[json.dataId].memory = json.memory;
                 item.value.subtasks[json.subtaskId].datas[json.dataId].score = json.score;
                 item.value.subtasks[json.subtaskId].datas[json.dataId].status = json.status;
-                item.value.subtasks[json.subtaskId].datas[json.dataId].info = json.info;``
+                item.value.subtasks[json.subtaskId].datas[json.dataId].info = json.info;
                 item.value.subtasks[json.subtaskId].datas[json.dataId].output = json.output;
                 item.value.subtasks[json.subtaskId].datas[json.dataId].outputIgnored = json.outputIgnored;
                 item.value.status = json.totalStatus;
                 item.value.time = json.totalTime;
                 item.value.memory = json.totalMemory;
+                item.value.score = json.totalScore;
             }
             compiled.value = !(item.value.statusType == 9 || item.value.statusType == 10);
 
@@ -91,8 +100,17 @@ onBeforeRouteLeave((to, from, next) => {
 
 <template>
     <div v-if="loaded">
+        <ContestNavigation 
+            :id="route.params.cid" 
+            current="submissions"
+            :identity="info.identity"
+            :signup="info.signup"
+            :endTime="contest.item.starttime + contest.item.duration"
+            v-if="route.params.cid != undefined"
+        ></ContestNavigation>
         <SubmissionCard
             :id="item.id"
+            :cid="route.params.cid"
             :pid="item.pid"
             :uid="item.uid"
             :problem="item.problem"
@@ -102,12 +120,15 @@ onBeforeRouteLeave((to, from, next) => {
             :score="item.score"
         ></SubmissionCard>
         <SubmissionCode
+            v-if="item.code != ''"
+            :id="item.id"
             :code="item.code"
             :langCode="item.langMode"
             :time="item.time"
             :memory="item.memory"
             :langName="item.langName"
             :date="item.date"
+            :allowRejudge="item.rejudge"
         ></SubmissionCode>
         <SubmissionCompileInfo
             :info="item.info"

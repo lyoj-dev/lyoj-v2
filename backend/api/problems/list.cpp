@@ -47,23 +47,23 @@ auto ProblemsList = [](client_conn conn, http_request request, param argv) {
     ) : vector<map<string, string> >();
     auto accepted = pageCount ? mysqli_query(
         mysql,
-        "SELECT COUNT(*) AS count, pid FROM submission WHERE judged = true AND status = 0 AND pid in (%s) GROUP BY pid",
+        "SELECT COUNT(*) AS count, pid FROM submission WHERE judged = true AND status = 0 AND contest = 0 AND pid in (%s) GROUP BY pid",
         problemList.c_str()
     ) : vector<map<string, string> >();
     auto myAccepted = pageCount ? mysqli_query(
         mysql,
-        "SELECT COUNT(*) AS count, pid FROM submission WHERE judged = true AND status = 0 AND uid = %d AND pid in (%s) GROUP BY pid",
+        "SELECT COUNT(*) AS count, pid FROM submission WHERE judged = true AND status = 0 AND uid = %d AND contest = 0 AND pid in (%s) GROUP BY pid",
         userId,
         problemList.c_str()
     ) : vector<map<string, string> >();
     auto total = pageCount ? mysqli_query(
         mysql,
-        "SELECT COUNT(*) AS count, pid FROM submission WHERE pid in (%s) GROUP BY pid",
+        "SELECT COUNT(*) AS count, pid FROM submission WHERE contest = 0 AND pid in (%s) GROUP BY pid",
         problemList.c_str()
     ) : vector<map<string, string> >();
     auto myTotal = pageCount ? mysqli_query(
         mysql,
-        "SELECT COUNT(*) AS count, pid FROM submission WHERE uid = %d AND pid in (%s) GROUP BY pid",
+        "SELECT COUNT(*) AS count, pid FROM submission WHERE uid = %d AND contest = 0 AND pid in (%s) GROUP BY pid",
         userId,
         problemList.c_str()
     ) : vector<map<string, string> >();
@@ -74,6 +74,7 @@ auto ProblemsList = [](client_conn conn, http_request request, param argv) {
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
     object["pageCount"] = pageCount;
+    object["allowCreate"] = hasPermission(userInfo, ProblemEdit);
     object["items"].resize(0);
     for (int i = 0; i < res.size(); i++) {
         Json::Value single;
@@ -107,8 +108,10 @@ auto ProblemsList = [](client_conn conn, http_request request, param argv) {
         for (int j = 0; j < myTotal.size(); j++)
             if (myTotal[j]["pid"] == res[i]["id"]) myTotalCount = atoi(myTotal[j]["count"].c_str());
         single["status"] = myTotalCount ? (myAcceptedCount ? 1 : 2) : 0;
-        single["allowEdit"] = userId == atoi(res[i]["uid"].c_str());
-        single["allowDelete"] = userId == atoi(res[i]["uid"].c_str());
+        single["allowEdit"] = 
+            userId == atoi(res[i]["uid"].c_str()) && hasPermission(userInfo, ProblemEdit) ||
+            userId != atoi(res[i]["uid"].c_str()) && hasPermission(userInfo, ProblemEditOthers);
+        single["allowDelete"] = single["allowEdit"];
         object["items"].append(single);
     }
 

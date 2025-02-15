@@ -90,7 +90,7 @@ defineExpose({ loading })
     <v-card class="announcement card-radius">
         <v-card-title>{{ t('pages.index.announcement') }}</v-card-title>
         <v-card-text>
-            <div v-html="result" class="markdown"></div>
+            <div v-html="result" class="markdown-text"></div>
         </v-card-text>
     </v-card>
 </template>

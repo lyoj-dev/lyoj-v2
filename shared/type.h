@@ -46,19 +46,28 @@ enum WebSocketDataType {
     SimpleSubmissionsLongConnection = 3
 };
 
+enum ContestIdentity {
+    Visitor = 0,
+    Contestant = 1,
+    Administrator = 2
+};
+
+enum ContestType {
+    OI = 0,
+    IOI = 1,
+    ACM = 2
+};
+
 enum UserPermission {
-    ProblemEdit = 1 << 0,
-    ProblemEditOthers = (1 << 0) | (1 << 1),
-    ProblemDelete = 1 << 2,
-    ProblemDeleteOthers = (1 << 2) | (1 << 3),
-    ProblemListPage = 1 << 4,
-    ProblemSubmit = 1 << 5,
-    SubmissionListPage = 1 << 6,
-    SubmissionDetailsPage = 1 << 7,
-    SubmissionCode = 1 << 8,
-    SubmissionCodeOthers =  (1 << 8) | (1 << 9),
-    SubmissionRejudge = 1 << 10,
-    SubmissionRejudgeOthers = (1 << 10) | (1 << 11),
-    SubmissionData = 1 << 12,
-    AdminPage = 1 << 13
+    ProblemEdit = 1 << 0, // 新建题目，编辑自己的题目，删除自己的题目
+    ProblemEditOthers = 1 << 1, // 编辑别人的题目，删除别人的题目
+    AddTag = 1 << 2, // 新建未知标签权限
+    SubmissionListOthers = 1 << 3, // 列举他人提交代码
+    SubmissionCodeOthers = 1 << 4, // 查看他人提交代码
+    SubmissionRejudge = 1 << 5, // 重测自己提交的代码
+    SubmissionRejudgeOthers = 1 << 6, // 重测他人提交的代码
+    SubmissionData = 1 << 7, // 查看测试数据
+    ContestEdit = 1 << 8, // 新建比赛，编辑比赛
+    ContestEditOthers = 1 << 9, // 高级比赛管理员权限
+    Admin = 1 << 10, // 系统管理权限
 };

@@ -2,8 +2,8 @@ auto ProblemsSubmit = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
 
-    if (request.method != "POST") quickSendMsg(405);
-    if (userId == 0) quickSendMsg(401);
+    if (request.method != "POST") quickSendMsgWithoutMySQL(405);
+    if (userId == 0) quickSendMsgWithoutMySQL(401);
 
     auto $_POST = json_decode(request.postdata);
     MYSQL mysql = quick_mysqli_connect();
@@ -13,8 +13,9 @@ auto ProblemsSubmit = [](client_conn conn, http_request request, param argv) {
 
     // 权限检查
     auto res = mysqli_query(mysql, "SELECT langs, groups FROM problem WHERE id = " + argv[0]);
-    if (!hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
-    if (!hasIntersection(json_decode(res[0]["langs"]), { $_POST["lang"].asInt() })) quickSendMsg(403);
+    if (argv.size() == 1 && !hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
+    Json::Value langs; langs.append($_POST["lang"].asInt());
+    if (!hasIntersection(json_decode(res[0]["langs"]), langs)) quickSendMsg(403);
 
     int id = atoi(mysqli_query(mysql, "SELECT MAX(id) AS count FROM submission")[0]["count"].c_str()) + 1;
     int uid = userId;
@@ -26,11 +27,11 @@ auto ProblemsSubmit = [](client_conn conn, http_request request, param argv) {
     int status = Waiting;
     int score = 0;
     bool judged = false;
-    int contest = 0;
+    int contest = argv.size() == 2 ? atoi(argv[1].c_str()) : 0;
 
     mysqli_execute(
         mysql,
-        "INSERT INTO submission VALUES (%d, %d, %d, %d, \"%s\", \"%s\", %d, %d, %d, %d, %d)",
+        "INSERT INTO submission VALUES (%d, %d, %d, %d, \"%s\", \"%s\", %ld, %d, %d, %d, %d)",
         id, uid, pid, lang, quote_encode(code).c_str(), result.c_str(), time, status, score, judged, contest
     );
 

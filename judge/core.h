@@ -105,6 +105,7 @@ int run_code(
         key = true;
 		while (process == "" && kill(executive,0) == 0) process = system2(("pidof " + name + " 2>/dev/null").c_str());
 		int main_pid = atoi(process.c_str());
+        // cout << "Sub Process: " << executive << " " << main_pid << endl;
 		time_t st = clock2(); pid_t ret2 = -1;
 		int status = 0; 
 		while (1) { 

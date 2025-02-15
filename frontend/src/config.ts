@@ -1,6 +1,14 @@
+import { i18n } from "./i18n";
+
+const t = i18n.global.t;
+
 export const config = {
     apiBase: "https://api-v2.lyoj.littleyang.icu",
     wsBase: "wss://api-v2.lyoj.littleyang.icu",
+    // apiBase: "http://192.168.56.102:8080",
+    // wsBase: "ws://192.168.56.102:8080",
+    // apiBase: "http://192.168.0.5:8080",
+    // wsBase: "ws://192.168.0.5:8080",
     title: {
         short: "LYOJ",
         full: "LittleYang OnlineJudge"
@@ -78,6 +86,19 @@ export const statusCardList = [
         icon: 'mdi-close',
         color: 'rgb(255, 0, 0)'
     }
+];
+
+export const contestStatusCardList = [
+    {
+        title: t('pages.contests.notStarted'),
+        color: "green"
+    }, {
+        title: t('pages.contests.running'),
+        color: "blue"
+    }, {
+        title: t('pages.contests.ended'),
+        color: "red"
+    }
 ]
 
 export const difficultyList = [
@@ -129,8 +150,13 @@ export const maxDifficulty = 4000;
 
 export const tagsTypeList = [
     {
+        id: 0,
         title: "算法标签",
         color: "rgb(41, 73, 180)"
+    }, {
+        id: 1,
+        title: "日期标签",
+        color: "rgb(180, 41, 41)"
     }
 ]
 

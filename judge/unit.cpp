@@ -53,6 +53,8 @@ int main(int argc, char** argv) {
         cout << "    随后评测机主程序调用该程序并利用该套接字通信。" << endl;
         return 1;
     }
+    // system("export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin");
+    // writeLog(LOG_LEVEL_INFO, "%s", system2("echo $PATH").c_str());
     workPath = argv[3], dataPath = argv[2];
     __chdir(workPath);
     Json::Value judge = json_decode(readFile(argv[1]));

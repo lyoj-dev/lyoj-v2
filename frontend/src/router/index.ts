@@ -4,6 +4,15 @@ import ProblemsDetails from '@/views/Problems/Details.vue'
 import ProblemsEdit from '@/views/Problems/Edit.vue'
 import SubmissionsList from '@/views/Submissions/List.vue'
 import SubmissionsDetails from '@/views/Submissions/Details.vue'
+import ContestsList from '@/views/Contests/List.vue'
+import ContestsRegister from '@/views/Contests/Register.vue'
+import ContestsUnregister from '@/views/Contests/Unregister.vue'
+import ContestsIndex from '@/views/Contests/Index.vue'
+import ContestsProblemsList from '@/views/Contests/Problems.vue'
+import ContestsSubmissionsList from '@/views/Contests/Submissions.vue'
+import ContestsRanking from '@/views/Contests/Ranking.vue'
+import ContestsEdit from '@/views/Contests/Edit.vue'
+import AdminIndex from '@/views/Admin/Index.vue'
 import Login from '@/views/Login.vue'
 import Logout from '@/views/Logout.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -45,7 +54,62 @@ export const router = createRouter({
       path: '/submissions/:id',
       name: 'submissionsDetails',
       component: SubmissionsDetails
-    }, 
+    },
+    {
+      path: '/contests/list',
+      name: 'contestsList',
+      component: ContestsList
+    },
+    {
+      path: '/contests/:id/register',
+      name: 'contestsRegister',
+      component: ContestsRegister
+    },
+    {
+      path: '/contests/:id/unregister',
+      name: 'contestsUnregister',
+      component: ContestsUnregister
+    },
+    {
+      path: '/contests/:id/index',
+      name: 'contestIndex',
+      component: ContestsIndex
+    },
+    {
+      path: '/contests/:id/problems/list',
+      name: 'contestProblemsList',
+      component: ContestsProblemsList
+    },
+    {
+      path: '/contests/:cid/problems/:id',
+      name: 'contestProblemsDetails',
+      component: ProblemsDetails
+    },
+    {
+      path: '/contests/:id/submissions/list',
+      name: 'contestSubmissionsList',
+      component: ContestsSubmissionsList
+    },
+    {
+      path: '/contests/:cid/submissions/:id',
+      name: 'contestSubmissionsDetails',
+      component: SubmissionsDetails
+    },
+    {
+      path: '/contests/:id/ranking',
+      name: 'contestRanking',
+      component: ContestsRanking
+    },
+    {
+      path: '/contests/:id/edit',
+      name: 'contestEdit',
+      component: ContestsEdit
+    },
+    {
+      path: '/admin/index',
+      name: 'adminIndex',
+      component: AdminIndex
+    },
     {
       path: '/login',
       name: 'login',
@@ -63,8 +127,8 @@ router.afterEach((to, from, next) => {
   NProgress.done();
 });
 
-export function goto(name: string, query: any) {
-	router.push({ name, query });
+export function goto(name: string, query: any, params: any = {}) {
+	router.push({ name, query, params });
 }
 
 export function locate(url: string) {
