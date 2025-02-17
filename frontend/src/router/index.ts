@@ -13,6 +13,7 @@ import ContestsSubmissionsList from '@/views/Contests/Submissions.vue'
 import ContestsRanking from '@/views/Contests/Ranking.vue'
 import ContestsEdit from '@/views/Contests/Edit.vue'
 import AdminIndex from '@/views/Admin/Index.vue'
+import UserDetails from '@/views/User/Details.vue'
 import Login from '@/views/Login.vue'
 import Logout from '@/views/Logout.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -109,6 +110,11 @@ export const router = createRouter({
       path: '/admin/index',
       name: 'adminIndex',
       component: AdminIndex
+    },
+    {
+      path: '/users/:id',
+      name: 'userDetails',
+      component: UserDetails
     },
     {
       path: '/login',

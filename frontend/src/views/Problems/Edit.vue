@@ -105,6 +105,7 @@ const groupsList: any = ref([]);
 const configs: any = ref({});
 const spjs: any = ref([]);
 const loaded = ref(false);
+const allowAddTag = ref(false);
 
 const minCase = ref(1);
 const maxCase = ref(0);
@@ -126,6 +127,7 @@ function loading(data: any) {
     spjs.value = data.spjs;
     configs.value = data.config.item;
     maxCase.value = configs.value.datas.length;
+    allowAddTag.value = data.tags.allowAddTag;
 
     if(item.value.item.cases.length == 0) item.value.item.cases = [ { input: "", output: "" } ];
     loaded.value = true;
@@ -213,6 +215,24 @@ function uploadData() {
         if (a.files != null) reader.readAsDataURL(a.files[0]);
     };
     a.click();
+}
+
+async function downloadData() {
+    var url = config.apiBase + '/problems/' + route.params.id + '/data/download';
+    var res = await fetch(url, {
+        headers: {
+            Authorization: 'SessionToken ' + getCookie().session
+        }
+    });
+    var blob = await res.blob();
+    var a = document.createElement('a');
+    var url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = "data.zip";
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
 }
 
 async function submit() {
@@ -323,6 +343,7 @@ async function submit() {
                         class="ProblemEdit-addButton"
                         icon="mdi-plus"
                         size="small"
+                        v-if="allowAddTag"
                         @click="() => addTagDialog = !addTagDialog"
                     ></v-btn>
                     <v-dialog
@@ -465,6 +486,11 @@ async function submit() {
                     @click="uploadData()"
                     :disabled="!enableUploadBtn"
                 >{{ t('pages.problems.edit.uploadData') + uploadProgress }}</v-btn>
+                <v-btn
+                    size="small"
+                    class="ProblemEdit-button"
+                    @click="downloadData()"
+                >{{ t('pages.problems.edit.downloadData') }}</v-btn>
             </v-card-title>
             <v-card-text>
                 <h3>{{ t('pages.problems.edit.dataConfig') }}</h3>

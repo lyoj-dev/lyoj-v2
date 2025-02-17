@@ -40,7 +40,7 @@ async function load(to: any, from: any, next: any) {
     next((e: any) => e.loading({
         data: data,
         problems: problems.items,
-        tags: tags.items
+        tags: tags
     }));
 }
 export default defineComponent({
@@ -59,6 +59,7 @@ const t = i18n.global.t;
 const calendarDialog1 = ref(false);
 const calendarDialog2 = ref(false);
 const addTagDialog = ref(false);
+const allowAddTag = ref(false);
 
 const time1Date = ref(new Date());
 const time1Time = ref("");
@@ -98,9 +99,10 @@ const isPreview = ref(false);
 function loading(data: any) {
     contest.value = data.data;
     problems.value = data.problems;
-    tags.value = data.tags;
+    tags.value = data.tags.items;
     contest.value.item.tags = contest.value.item.tags.map((tag: any) => tag.id);
     contest.value.item.password = '';
+    allowAddTag.value = data.tags.allowAddTag;
     
     var date = new Date(contest.value.item.starttime * 1000);
     time1Date.value = new Date(date.getFullYear() + '-' +
@@ -320,6 +322,7 @@ async function submit() {
                         class="ContestEdit-button"
                         icon="mdi-plus"
                         size="small"
+                        v-if="allowAddTag"
                         @click="() => addTagDialog = !addTagDialog"
                     ></v-btn>
                     <v-dialog

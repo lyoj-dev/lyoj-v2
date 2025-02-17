@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { i18n } from '@/i18n';
-import { loginInfo } from '@/utils';
+import { loginAs, loginInfo } from '@/utils';
 import { ref } from 'vue';
 
 const props = defineProps([ 'id', 'current', 'identity', 'signup', 'endTime' ]);
@@ -30,14 +30,14 @@ const t = i18n.global.t;
 
             <v-list 
                 density="compact" nav v-model:selected="unused" @update:selected="unused = []"
-                v-if="endTime >= Math.floor(Date.now() / 1000)"
+                v-if="endTime >= Math.floor(Date.now() / 1000) && loginAs != 0"
             >
                 <v-list-item prepend-icon="mdi-hand-pointing-right" :title="t('pages.contests.register')" value="signup" :to="'/contests/' + id + '/register'" v-if="!signup"></v-list-item>
                 <v-list-item prepend-icon="mdi-power" :title="t('pages.contests.unregister')" :to="'/contests/' + id + '/unregister'" value="signup" v-else></v-list-item>
             </v-list>
 
             <v-divider
-                v-if="endTime >= Math.floor(Date.now() / 1000)"
+                v-if="endTime >= Math.floor(Date.now() / 1000) && loginAs != 0"
             ></v-divider>
 
             <v-list density="compact" nav v-model:selected="curr">

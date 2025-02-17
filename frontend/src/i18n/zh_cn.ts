@@ -18,6 +18,7 @@ export const zh_cn = {
         contestSubmissionsDetails: "评测详情",
         contestRanking: "比赛排名",
         contestEdit: "编辑比赛",
+        userDetails: "个人主页",
         login: "登录"
     },
     appbar: {
@@ -118,6 +119,7 @@ export const zh_cn = {
                 uploadData: "上传数据",
                 uploadDataFailed: "上传数据失败",
                 uploadDataSuccess: "上传数据成功",
+                downloadData: "下载数据",
                 dataConfig: "测试点配置",
                 data: {
                     title: "测试点",
@@ -204,6 +206,35 @@ export const zh_cn = {
                 submitFailed: "提交失败",
                 submitSuccess: "提交成功"
             }
+        },
+        users: {
+            info: "共进行 {submissions} 次提交，解决了 {problems} 道问题。",
+            rating: "当前评分：{rating}。",
+            infoButton: "个人介绍",
+            problemsButton: "做题情况",
+            settingButton: "个人设定",
+            triedProblem: "尝试的题目",
+            acceptedProblem: "通过的题目",
+            uploadHeader: "上传头像",
+            uploadHeaderButton: "点我上传",
+            uploadHeaderSuccess: "上传成功",
+            uploadHeaderFailed: "上传失败",
+            uploadBanner: "上传空间头图",
+            uploadBannerButton: "点我上传",
+            uploadBannerSuccess: "上传成功",
+            uploadBannerFailed: "上传失败",
+            username: "用户名",
+            introduction: "个人介绍",
+            preview: "编辑/预览",
+            submit: "提交",
+            submitSuccess: "提交成功",
+            submitFailed: "提交失败",
+            oldPassword: "旧密码",
+            newPassword: "新密码",
+            confirmPassword: "确认密码",
+            passwordNotMatch: "两次输入的密码不一致",
+            updatePasswordSuccess: "密码修改成功",
+            updatePasswordFailed: "原密码错误",
         },
         login: {
             title: "登录",

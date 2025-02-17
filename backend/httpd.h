@@ -38,6 +38,7 @@ typedef map<string, string> argvar;
 argvar _e, __default_response, __api_default_response;
 string _endl = "<br/>";
 map<string, argvar> http_mime;
+map<int, time_t> runTime;
 
 /** 全局参数列表 */
 #define HTTP_ENABLE_SSL 1
@@ -690,7 +691,6 @@ http_request getRequest(client_conn& conn) {
  * @param content 输出内容
  */
 void putRequest(client_conn& conn, int code, argvar argv) {
-
     /** 判断响应代码 */
     if (code <= 0 || code >= 1000 || http_code[code] == "") {
         writeLog(LOG_LEVEL_WARNING, "Invalid Response Code!");
@@ -713,6 +713,7 @@ void putRequest(client_conn& conn, int code, argvar argv) {
     stringstream __buf;
     __buf << "HTTP/1.1 " << code << " " << http_code[code] << "\r\n";
     writeLog(LOG_LEVEL_DEBUG, "Response Info: HTTP/1.1 %d %s", code, http_code[code].c_str());
+    argv["Execute-Time"] = to_string(clock2() - runTime[conn.thread_id]);
     for (auto it = argv.begin(); it != argv.end(); it++)
         __buf << (*it).first << ": " << (*it).second << "\r\n";
     __buf << "\r\n";
@@ -1409,6 +1410,7 @@ void thread_pool::work_thread() {
 		}
 		
         /** 分发路由 */
+        runTime[id] = clock2();
         for (int i = 0; i < app.route.size(); i++) {
             if (app.matchPath(app.route[i], rlpath)) {
                 writeLog(LOG_LEVEL_DEBUG, "Matched route \"%s\"", app.route[i].path.c_str());
@@ -1426,6 +1428,16 @@ void thread_pool::work_thread() {
                         argv.push_back(__a2[j]);
 
                 /** 主函数执行 */
+                // 屏蔽 OPTIONS 类请求
+                if (request.method == "OPTIONS") {
+                    auto response = __api_default_response; 
+                    response["Access-Control-Allow-Origin"] = request.argv["origin"];
+                    response["Content-Length"] = "0";
+                    putRequest(conn2, 200, response);
+                    send(conn2, "");
+                    exitRequest(conn2);
+                    break;
+                }
                 app.route[i].main(conn2, request, argv);
                 putRequest(conn2, 200, __default_response);
                 send(conn2, "");

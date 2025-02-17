@@ -52,7 +52,7 @@ auto ProblemsDataUpload = [](client_conn conn, http_request request, param argv)
     fout.write(data.c_str(), data.size());
     fout.close();
 
-    system(("cd ../problem/" + to_string(id) + " && unzip -n data.zip > /dev/null 2>&1 && rm data.zip").c_str());
+    system(("cd ../problem/" + to_string(id) + " && unzip -n data.zip > /dev/null 2>&1").c_str());
 
     auto files = getAllFiles("../problem/" + to_string(id));
     map<string, vector<string> > numbers;

@@ -4,12 +4,18 @@ auto ProblemsAddTag = [](client_conn conn, http_request request, param argv) {
 
     if (request.method != "POST") quickSendMsgWithoutMySQL(405);
     if (!hasPermission(userInfo, AddTag)) quickSendMsgWithoutMySQL(403);
-
-    MYSQL mysql = quick_mysqli_connect();
-    int id = atoi(mysqli_query(mysql, "SELECT MAX(id) AS count FROM tags")[0]["count"].c_str()) + 1;
     Json::Value $_POST = json_decode(request.postdata);
     string title = $_POST["title"].asString();
     int type = $_POST["type"].asInt();
+
+    MYSQL mysql = quick_mysqli_connect();
+    if (atoi(mysqli_query(
+        mysql, 
+        "SELECT COUNT(*) AS count FROM tags WHERE title = \"%s\"",
+        quote_encode(title).c_str()
+    ).at(0)["count"].c_str())) quickSendMsg(400);
+
+    int id = atoi(mysqli_query(mysql, "SELECT MAX(id) AS count FROM tags")[0]["count"].c_str()) + 1;
     mysqli_execute(
         mysql, 
         "INSERT INTO tags VALUES (%d, \"%s\", %d)", 

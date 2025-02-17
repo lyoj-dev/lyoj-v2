@@ -1,9 +1,28 @@
 <script setup lang="ts">
-import { statusList } from '@/config.ts'
+import { config, statusList } from '@/config.ts'
 import { i18n } from '@/i18n';
+import { getCookie } from '../../utils';
 
 const t = i18n.global.t;
-const props = defineProps([ 'id', 'data', 'reversed', 'judgeData' ]);
+const props = defineProps([ 'id', 'data', 'reversed', 'judgeData', 'pid' ]);
+
+async function downloadFile(name: string) {
+    var url = config.apiBase + '/problems/' + props.pid + '/data/' + name;
+    var res = await fetch(url, {
+        headers: {
+            Authorization: 'SessionToken ' + getCookie().session
+        }
+    });
+    var blob = await res.blob();
+    var a = document.createElement('a');
+    var url = window.URL.createObjectURL(blob);
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+}
 </script>
 
 <template>
@@ -29,7 +48,14 @@ const props = defineProps([ 'id', 'data', 'reversed', 'judgeData' ]);
                         <p style="font-weight: 700">{{ t('pages.submissions.inputFile') }}</p>
                         <p>{{ judgeData.inputIgnored == 0 ? "" : "（" + t('pages.submissions.ignored', { size: judgeData.inputIgnored + " Bytes" }) + "）" }}</p>
                     </div>
-                    <p>{{ judgeData.inputName }}</p>
+                    <p>
+                        {{ judgeData.inputName }}
+                        <v-icon
+                            icon="mdi-download"
+                            @click="downloadFile(judgeData.inputName)"
+                            v-if="judgeData.input != ''"
+                        ></v-icon>
+                    </p>
                 </div>
                 <pre class="d-flex" style="margin-top: 10px;">
                     <code class="hljs" :style="'background-color: var(--color-background' + (reversed == 1 ? '' : '-mute') + ')!important;'">{{ judgeData.input }}</code>
@@ -41,7 +67,14 @@ const props = defineProps([ 'id', 'data', 'reversed', 'judgeData' ]);
                         <p style="font-weight: 700">{{ t('pages.submissions.answerFile') }}</p>
                         <p>{{ judgeData.outputIgnored == 0 ? "" : "（" + t('pages.submissions.ignored', { size: judgeData.outputIgnored + " Bytes" }) + "）" }}</p>
                     </div>
-                    <p>{{ judgeData.outputName }}</p>
+                    <p>
+                        {{ judgeData.outputName }}
+                        <v-icon
+                            icon="mdi-download"
+                            @click="downloadFile(judgeData.outputName)"
+                            v-if="judgeData.output != ''"
+                        ></v-icon>
+                    </p>
                 </div>
                 <pre class="d-flex" style="margin-top: 10px;">
                     <code class="hljs" :style="'background-color: var(--color-background' + (reversed == 1 ? '' : '-mute') + ')!important;'">{{ judgeData.output }}</code>

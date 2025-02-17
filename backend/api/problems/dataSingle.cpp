@@ -1,21 +1,29 @@
-auto ProblemsDataDownload = [](client_conn conn, http_request request, param argv) {
+auto ProblemsDataSingle = [](client_conn conn, http_request request, param argv) {
+    MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
-
-    MYSQL mysql = quick_mysqli_connect();
-    auto res = mysqli_query(mysql, "SELECT uid FROM problem WHERE id = " + argv[0]);
+    auto res = mysqli_query(
+        mysql, 
+        "SELECT * FROM problem WHERE id = %d", 
+        atoi(argv[0].c_str())
+    );
     if (res.size() == 0) quickSendMsg(404);
-    if (atoi(res[0]["uid"].c_str()) == userId && !hasPermission(userInfo, ProblemEdit)) quickSendMsg(403);
-    if (atoi(res[0]["uid"].c_str()) != userId && !hasPermission(userInfo, ProblemEditOthers)) quickSendMsg(403);
+
+    // 权限检查
+    if (argv.size() == 1 && !hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
     mysqli_close(mysql);
 
-    ifstream fin("../problem/" + to_string(atoi(argv[0].c_str())) + "/data.zip", ios::binary);
-    if (!fin.is_open()) system(("cd ../problem/" + to_string(atoi(argv[0].c_str())) + " && zip -r data.zip * > /dev/null 2>&1").c_str());
-    fin.close();
+    // 存在性检查
+    Json::Value config = json_decode(readFile("../problem/" + to_string(atoi(argv[0].c_str())) + "/config.json"));
+    bool exist = false;
+    for (int i = 0; i < config["datas"].size(); i++) exist |= 
+        config["datas"][i]["input"].asString() == argv[1] ||
+        config["datas"][i]["output"].asString() == argv[1];
+    if (!exist) quickSendMsg(404);
 
     /** 打开文件 */
-    fin.open("../problem/" + to_string(atoi(argv[0].c_str())) + "/data.zip", ios::binary);
-    if (!fin.is_open()) quickSendMsgWithoutMySQL(404);
+    ifstream fin("../problem/" + to_string(atoi(argv[0].c_str())) + "/" + argv[1], ios::binary);
+    if (!fin.is_open()) quickSendMsg(404);
 
     /** 构造基础响应头 */
     argvar response = __default_response;

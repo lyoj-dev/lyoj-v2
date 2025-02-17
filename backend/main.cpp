@@ -136,6 +136,8 @@ string hasIntersection(string key, Json::Value goal, bool ifEmptyValue = true) {
 #include"api/problems/addTag.cpp"
 #include"api/problems/create.cpp"
 #include"api/problems/dataUpload.cpp"
+#include"api/problems/dataDownload.cpp"
+#include"api/problems/dataSingle.cpp"
 #include"api/submissions/list.cpp"
 #include"api/submissions/details.cpp"
 #include"api/submissions/rejudge.cpp"
@@ -157,6 +159,13 @@ string hasIntersection(string key, Json::Value goal, bool ifEmptyValue = true) {
 #include"api/users/check.cpp"
 #include"api/users/listAll.cpp"
 #include"api/users/listAllGroups.cpp"
+#include"api/users/details.cpp"
+#include"api/users/header.cpp"
+#include"api/users/banner.cpp"
+#include"api/users/updateHeader.cpp"
+#include"api/users/updateBanner.cpp"
+#include"api/users/updatePassword.cpp"
+#include"api/users/edit.cpp"
 #include"api/admin/info.cpp"
 #include"ws/submissions/list.cpp"
 #include"ws/submissions/details.cpp"
@@ -191,7 +200,8 @@ int main() {
     app.addRoute("/problems/%d/config", ProblemsConfig);
     app.addRoute("/problems/%d/create", ProblemsCreate);
     app.addRoute("/problems/%d/data/upload", ProblemsDataUpload);
-    // app.addRoute("/problems/%d/data/%s", ProblemsData);
+    app.addRoute("/problems/%d/data/download", ProblemsDataDownload);
+    app.addRoute("/problems/%d/data/%s", ProblemsDataSingle);
     app.addRoute("/submissions/list", SubmissionsList);
     app.addRoute("/submissions/%d", SubmissionsDetails);
     app.addRoute("/submissions/%d/rejudge", SubmissionsRejudge);
@@ -213,6 +223,13 @@ int main() {
     app.addRoute("/users/check", UsersCheck);
     app.addRoute("/users/listAll", UsersListAll);
     app.addRoute("/users/listAllGroups", UsersListAllGroups);
+    app.addRoute("/users/%d", UsersDetails);
+    app.addRoute("/users/%d/header", UsersHeader);
+    app.addRoute("/users/%d/banner", UsersBanner);
+    app.addRoute("/users/%d/header/update", UsersUpdateHeader);
+    app.addRoute("/users/%d/banner/update", UsersUpdateBanner);
+    app.addRoute("/users/%d/edit", UsersEdit);
+    app.addRoute("/users/%d/password/update", UsersUpdatePassword);
     app.addRoute("/admin/info", AdminInfo);
 
     app.ws_addRoute("/submissions/list", WSSubmissionsList);

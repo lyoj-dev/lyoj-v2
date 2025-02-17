@@ -4,7 +4,7 @@ import { i18n } from '@/i18n';
 import SubmissionData from '@/components/Submission/Data.vue'
 
 const t = i18n.global.t;
-const props = defineProps([ 'subtask', 'judgeDatas' ]);
+const props = defineProps([ 'subtask', 'judgeDatas', 'pid' ]);
 </script>
 
 <template>
@@ -26,6 +26,7 @@ const props = defineProps([ 'subtask', 'judgeDatas' ]);
                     :data="item"
                     :reversed="1"
                     :judgeData="judgeDatas[index]"
+                    :pid="pid"
                 ></SubmissionData>
             </v-expansion-panels>
         </v-expansion-panel-text>

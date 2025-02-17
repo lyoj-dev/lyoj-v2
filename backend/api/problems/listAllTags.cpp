@@ -22,6 +22,7 @@ auto ProblemsListAllTags = [](client_conn conn, http_request request, param argv
         single["type"] = atoi(res[i]["type"].c_str());
         object["items"].append(single);
     }
+    object["allowAddTag"] = hasPermission(userInfo, AddTag);
 
     mysqli_close(mysql);
     string responseBody = json_encode(object);

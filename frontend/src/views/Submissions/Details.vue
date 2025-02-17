@@ -141,16 +141,18 @@ onBeforeRouteLeave((to, from, next) => {
             static
         >
             <SubmissionData
-                v-for="(item, index) in item.subtasks[0].datas"
+                v-for="(item2, index) in item.subtasks[0].datas"
                 :id="index + 1"
-                :data="item"
+                :data="item2"
                 :reversed="0"
                 :judgeData="judgeData[0] == undefined ? [] : judgeData[0][index]"
+                :pid="item.pid"
             ></SubmissionData>
             <SubmissionSubtask
-                v-for="(item, index) in subtasks"
-                :subtask="item"
+                v-for="(item2, index) in subtasks"
+                :subtask="item2"
                 :judgeDatas="judgeData[index + 1]"
+                :pid="item.pid"
             ></SubmissionSubtask>
         </v-expansion-panels>
     </div>

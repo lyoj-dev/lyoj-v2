@@ -76,7 +76,7 @@ INSERT INTO userGroup VALUES (
     1,
     'Default',
     'Default group for all users',
-    1420
+    393
 );
 INSERT INTO userGroup VALUES (
     2,
@@ -93,7 +93,8 @@ CREATE TABLE user (
     password text,
     createTime int,
     rating int,
-    groups longtext
+    groups longtext,
+    info longtext
 );
 DELETE FROM user WHERE id = 0;
 INSERT INTO user VALUES (
@@ -105,5 +106,6 @@ INSERT INTO user VALUES (
     '',
     0,
     0,
-    '[1]'
+    '[1]',
+    ''
 );

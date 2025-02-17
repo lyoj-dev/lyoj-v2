@@ -69,5 +69,6 @@ enum UserPermission {
     SubmissionData = 1 << 7, // 查看测试数据
     ContestEdit = 1 << 8, // 新建比赛，编辑比赛
     ContestEditOthers = 1 << 9, // 高级比赛管理员权限
-    Admin = 1 << 10, // 系统管理权限
+    UserEditOthers = 1 << 10, // 编辑他人信息权限
+    AdminPage = 1 << 11 // 管理员页面权限
 };
