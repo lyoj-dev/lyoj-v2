@@ -156,6 +156,7 @@ string hasIntersection(string key, Json::Value goal, bool ifEmptyValue = true) {
 #include"api/contests/ranking.cpp"
 #include"api/contests/create.cpp"
 #include"api/users/login.cpp"
+#include"api/users/casLogin.cpp"
 #include"api/users/check.cpp"
 #include"api/users/listAll.cpp"
 #include"api/users/listAllGroups.cpp"
@@ -220,6 +221,7 @@ int main() {
     app.addRoute("/contests/%d/ranking", ContestsRanking);
     app.addRoute("/contests/%d/create", ContestsCreate);
     app.addRoute("/users/login", UsersLogin);
+    app.addRoute("/users/casLogin", UsersCasLogin);
     app.addRoute("/users/check", UsersCheck);
     app.addRoute("/users/listAll", UsersListAll);
     app.addRoute("/users/listAllGroups", UsersListAllGroups);

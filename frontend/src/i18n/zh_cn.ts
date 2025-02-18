@@ -19,7 +19,8 @@ export const zh_cn = {
         contestRanking: "比赛排名",
         contestEdit: "编辑比赛",
         userDetails: "个人主页",
-        login: "登录"
+        login: "登录",
+        casLogin: "农大登录",
     },
     appbar: {
         index: "首页",
@@ -246,7 +247,9 @@ export const zh_cn = {
             loginSuccess: "登录成功",
             userNotFound: "用户不存在",
             disabledPassword: "该用户未启用密码登录，请使用农大登录",
-            wrongPassword: "密码错误"
+            wrongPassword: "密码错误",
+            casLogin: "或者，使用农大账号登录",
+            casLoginButton: "农大登录"
         },
         logout: {
             success: "注销成功"

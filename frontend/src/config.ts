@@ -3,12 +3,13 @@ import { i18n } from "./i18n";
 const t = i18n.global.t;
 
 export const config = {
-    apiBase: "https://api-v2.lyoj.littleyang.icu",
-    wsBase: "wss://api-v2.lyoj.littleyang.icu",
+    // apiBase: "https://api-v2.lyoj.littleyang.icu",
+    // wsBase: "wss://api-v2.lyoj.littleyang.icu",
     // apiBase: "http://192.168.56.102:8080",
     // wsBase: "ws://192.168.56.102:8080",
-    // apiBase: "http://192.168.0.5:8080",
-    // wsBase: "ws://192.168.0.5:8080",
+    apiBase: "http://192.168.0.5:8081",
+    wsBase: "ws://192.168.0.5:8081",
+    casBase: "https://192.168.0.5:8443/cas/login",
     title: {
         short: "LYOJ",
         full: "LittleYang OnlineJudge"

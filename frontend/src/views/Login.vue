@@ -6,6 +6,7 @@ import crypto from 'crypto-js';
 import { useRouter } from 'vue-router';
 import { myFetch, setCookie, showMsg, sleep } from '@/utils';
 import NProgress from 'nprogress';
+import { goto } from '@/router';
 export default defineComponent({
     async beforeRouteEnter(to, from, next) {
         NProgress.start();
@@ -86,6 +87,17 @@ defineExpose({ loading });
                     @click="login"
                     :disabled="!enableBtn"
                 >{{ t('pages.login.loginButton') }}</v-btn>    
+            </div>
+            <v-divider class="mt-4"></v-divider>
+            <div class="d-flex justify-center mt-4 align-center">
+                {{ t('pages.login.casLogin') }}：
+                <v-btn
+                    class="Login-button d-flex align-center"
+                    @click="goto('casLogin', {})"
+                >
+                    <img src="/favicon.ico" style="width: 20px; height: 20px;"/>
+                    <p style="line-height: 15px; position: relative; top: -1px;">&nbsp;{{ t('pages.login.casLoginButton') }}</p>
+                </v-btn>
             </div>
         </v-card-text>
     </v-card>

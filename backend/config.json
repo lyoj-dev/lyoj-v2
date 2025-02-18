@@ -1,6 +1,6 @@
 {
     "server.listenHost": "0.0.0.0",
-    "server.listenPort": 8080,
+    "server.listenPort": 8081,
     "server.enableSSL": false,
     "server.httpsCacert": "cert.pem",
     "server.httpsPrivkey": "privkey.pem",
@@ -13,5 +13,12 @@
         "database": "judge"
     },
     "judge.sock": "../judge.sock",
-    "frontend": "http://192.168.56.102:8080"
+    "cas": {
+        "host": "192.168.0.5",
+        "port": 8443,
+        "prefix": "/cas/",
+        "service": "https://192.168.0.5:5173/cas/login",
+        "ssl": true,
+        "sslIgnoreCert": true
+    }
 }

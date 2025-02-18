@@ -35,7 +35,7 @@ async function load(to: any, from: any, next: any) {
     var tags = await myFetch(config.apiBase + '/problems/listAllTags');
     var contestProblems = to.params.id == 0 ? { items: [] } : await myFetch(config.apiBase + '/contests/' + to.params.id + '/problems/list');
     data.item.problems = [];
-    for (var i = 0; i < contestProblems.items.length; i++) data.item.problems.push(contestProblems.items[i].id);
+    for (var i = 0; i < contestProblems.items.length; i++) data.item.problems.push(contestProblems.items[i].realId);
     
     next((e: any) => e.loading({
         data: data,

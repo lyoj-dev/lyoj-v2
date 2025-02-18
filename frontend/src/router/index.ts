@@ -15,6 +15,7 @@ import ContestsEdit from '@/views/Contests/Edit.vue'
 import AdminIndex from '@/views/Admin/Index.vue'
 import UserDetails from '@/views/User/Details.vue'
 import Login from '@/views/Login.vue'
+import CasLogin from '@/views/CasLogin.vue'
 import Logout from '@/views/Logout.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import NProgress from 'nprogress'
@@ -120,6 +121,11 @@ export const router = createRouter({
       path: '/login',
       name: 'login',
       component: Login
+    },
+    {
+      path: '/cas/login',
+      name: 'casLogin',
+      component: CasLogin
     },
     {
       path: '/logout',

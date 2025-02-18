@@ -1255,51 +1255,54 @@ class application {
         }
 }app;
 
-/** url解码字表 */
-static unsigned char dec_tab[256] = {
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  0,  0,  0,  0,  0,  0,
-    0, 10, 11, 12, 13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0, 10, 11, 12, 13, 14, 15,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-};
+unsigned char ToHex(unsigned char x) { 
+    return  x > 9 ? x + 55 : x + 48; 
+}
 
-/**
- * @brief url解码
- * 
- * @param str 源字符串
- * @return string
- */
-string urldecode(string str){
-    int len = str.size();
-    char *tmp = (char *)malloc(len + 1);
-    int i = 0, pos = 0;
-    for (i = 0; i < len; i++) {
-        if (str[i] != '%') tmp[pos] = str[i];
-        else if (i + 2 >= len) {
-            tmp[pos++] = '%';
-            if (++i >= len) break;
-            tmp[pos] = str[i];
-            break;
-        } else if (isalnum(str[i + 1]) && isalnum(str[i + 2])) {
-            tmp[pos] = (dec_tab[(unsigned char) str[i + 1]] << 4) + dec_tab[(unsigned char) str[i + 2]];
-            i += 2;
-        } else tmp[pos] = str[i];
-        pos++;
+unsigned char FromHex(unsigned char x) { 
+    unsigned char y;
+    if (x >= 'A' && x <= 'Z') y = x - 'A' + 10;
+    else if (x >= 'a' && x <= 'z') y = x - 'a' + 10;
+    else if (x >= '0' && x <= '9') y = x - '0';
+    else assert(false);
+    return y;
+}
+
+string urlencode(string str)
+{
+    std::string strTemp = "";
+    size_t length = str.length();
+    for (size_t i = 0; i < length; i++) {
+        if (isalnum((unsigned char)str[i]) || 
+            (str[i] == '-') ||
+            (str[i] == '_') || 
+            (str[i] == '.') || 
+            (str[i] == '~')) strTemp += str[i];
+        else if (str[i] == ' ') strTemp += "+";
+        else {
+            strTemp += '%';
+            strTemp += ToHex((unsigned char)str[i] >> 4);
+            strTemp += ToHex((unsigned char)str[i] % 16);
+        }
     }
-    tmp[pos] = '\0';
-    return tmp;
+    return strTemp;
+}
+
+string urldecode(string str)
+{
+    string strTemp = "";
+    size_t length = str.length();
+    for (size_t i = 0; i < length; i++) {
+        if (str[i] == '+') strTemp += ' ';
+        else if (str[i] == '%') {
+            assert(i + 2 < length);
+            unsigned char high = FromHex((unsigned char)str[++i]);
+            unsigned char low = FromHex((unsigned char)str[++i]);
+            strTemp += high*16 + low;
+        }
+        else strTemp += str[i];
+    }
+    return strTemp;
 }
 
 struct wsarg {

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vscode/markdown-it-katex": "^1.1.1",
     "@vueuse/core": "^12.3.0",
     "crypto-js": "^4.2.0",
