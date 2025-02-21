@@ -47,8 +47,8 @@ const tagsList: any = ref([]);
 
 const title = ref("");
 const tags: any = ref([]);
-const minDiff: any = ref(0);
-const maxDiff: any = ref(maxDifficulty);
+const minDiff = ref(0);
+const maxDiff = ref(maxDifficulty);
 
 const originalQuery: any = ref({});
 
@@ -87,7 +87,7 @@ function jump() {
 }
 
 function addTag(id: number) {
-    if (tags.value.indexOf(id) == -1) tags.value.push(id);
+    if (tags.value.indexOf(id) == -1) tags.value = tags.value.concat([ id ]);
 }
 
 async function deleteProblem(id: number, name: string) {

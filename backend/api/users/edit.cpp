@@ -9,6 +9,11 @@ auto UsersEdit = [](client_conn conn, http_request request, param argv) {
     auto data = json_decode(request.postdata);
     string title = data["title"].asString();
     string info = data["info"].asString();
+    if (atoi(mysqli_query(
+        mysql,
+        "SELECT COUNT(*) AS count FROM user WHERE title = \"%s\"",
+        title.c_str()
+    )[0]["count"].c_str()) && title != userInfo["title"].asString()) quickSendMsg(409);
 
     mysqli_execute(
         mysql,

@@ -133,6 +133,11 @@ async function uploadBanner() {
 }
 
 async function submit() {
+    if (username.value == "") {
+        showMsg("error", t('pages.users.submitFailedTitleEmpty'));
+        return;
+    }
+
     var data = {
         title: username.value,
         info: info.value
@@ -143,6 +148,10 @@ async function submit() {
         body: JSON.stringify(data)
     }, false);
 
+    if (res.code == 409) {
+        showMsg("error", t('pages.users.submitFailedTitleConflict'));
+        return;
+    }
     if (res.code != 200) {
         showMsg("error", t('pages.users.submitFailed'));
         return;

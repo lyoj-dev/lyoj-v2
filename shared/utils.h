@@ -7,6 +7,7 @@ string readFile(string path) {
     if (!fin) return "";
     fin.seekg(0, ios::end);
     int len = fin.tellg();
+    if (len == -1) return "";
     fin.seekg(0, ios::beg);
     char *ch = new char[len];
     fin.read(ch, len);

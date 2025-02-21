@@ -10,7 +10,7 @@ export const JudgeResultInfo: string[] = [
     "Compile Error",
     "Waiting...",
     "Compiling...",
-    "Running on case %d...",
+    "Running...",
     "Skipped",
     "Submitted"
 ];

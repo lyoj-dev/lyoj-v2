@@ -1,3 +1,5 @@
+#include<netdb.h>
+
 string getContent(string source, string prefix, string suffix, int pt = 0) {
     int st = source.find(prefix, pt) + prefix.size();
     int ed = source.find(suffix, st);
@@ -28,7 +30,12 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
 
     string ticket = $_GET["ticket"];
 
-    Client client(appConfig["cas"]["host"].asString(), appConfig["cas"]["port"].asInt());
+    string host = appConfig["cas"]["host"].asString();
+    string ip = [&](){
+        auto res = gethostbyname(host.c_str());
+        return string(inet_ntoa(*(struct in_addr*)res->h_addr_list[0]));
+    }();
+    Client client(ip, appConfig["cas"]["port"].asInt());
     Connection conn2 = client.connect();
     SSL_CTX *ctx = SSL_CTX_new(TLS_client_method());
     SSL* ssl;
@@ -39,7 +46,7 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
         if (SSL_connect(ssl) == -1) quickSendMsgWithoutMySQL(500);
     }
     stringstream ss;
-    ss << "GET " << appConfig["cas"]["prefix"].asString() << "p3/serviceValidate?ticket=" << ticket << "&service=" << urlencode(appConfig["cas"]["service"].asString()) << " HTTP/1.1\r\n";
+    ss << "GET " << appConfig["cas"]["prefix"].asString() << "?ticket=" << ticket << "&service=" << urlencode(appConfig["cas"]["service"].asString()) << " HTTP/1.1\r\n";
     ss << "User-Agent: LittleYang OnlineJudge Backend Service\r\n";
     ss << "Host: " << appConfig["cas"]["host"].asString() << ":" << appConfig["cas"]["port"].asInt() << "\r\n";
     ss << "Connection: keep-alive\r\n\r\n";
@@ -66,23 +73,54 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
         object["failureCode"] = getContent(data, "code=\"", "\"", pt);
         object["failureMsg"] = htmldecode(getContent(data, ">", "<", pt));
     } else if (data.find("cas:authenticationSuccess") != string::npos) {
-        // object["user"] = getContent(data, "<cas:user>", "</cas:user>");
-        // object["credentialType"] = getContent(data, "<cas:credentialType>", "</cas:credentialType>");
-        // object["clientIpAddress"] = getContent(data, "<cas:clientIpAddress>", "</cas:clientIpAddress>");
-        // object["isFromNewLogin"] = getContent(data, "<cas:isFromNewLogin>", "</cas:isFromNewLogin>");   
-        // object["authenticationDate"] = getContent(data, "<cas:authenticationDate>", "</cas:authenticationDate>");
-        // object["authenticationMethod"] = getContent(data, "<cas:authenticationMethod>", "</cas:authenticationMethod>");
-        // object["successfulAuthenticationHandlers"] = getContent(data, "<cas:successfulAuthenticationHandlers>", "</cas:successfulAuthenticationHandlers>");
-        // object["serverIpAddress"] = getContent(data, "<cas:serverIpAddress>", "</cas:serverIpAddress>");
-        // object["longTermAuthenticationRequestTokenUsed"] = getContent(data, "<cas:longTermAuthenticationRequestTokenUsed>", "</cas:longTermAuthenticationRequestTokenUsed>");
-        // object["userAgent"] = getContent(data, "<cas:userAgent>", "</cas:userAgent>");
-        string schoolId = "";
+        object["ID_NUMBER"] = getContent(data, "<cas:ID_NUMBER>", "</cas:ID_NUMBER>"); // 学号
+        object["ID_TYPE"] = atoi(getContent(data, "<cas:ID_TYPE>", "</cas:ID_TYPE>").c_str()); // 学生类型
+        object["UNIT_ID"] = atoi(getContent(data, "<cas:UNIT_ID>", "</cas:UNIT_ID>").c_str()); // 学院ID
+        object["UNIT_NAME"] = getContent(data, "<cas:UNIT_NAME>", "</cas:UNIT_NAME>"); // 学院名称
+        object["USER_SEX"] = atoi(getContent(data, "<cas:USER_SEX>", "</cas:USER_SEX>").c_str()); // 用户性别
+        object["USER_FIRST_LOGIN"] = getContent(data, "<cas:USER_FIRST_LOGIN>", "</cas:USER_FIRST_LOGIN>"); 
+        object["USER_ID"] = getContent(data, "<cas:USER_ID>", "</cas:USER_ID>");
+        object["USER_NAME"] = getContent(data, "<cas:USER_NAME>", "</cas:USER_NAME>"); // 姓名
+        object["TYPE_NAME"] = getContent(data, "<cas:TYPE_NAME>", "</cas:TYPE_NAME>"); // 学生类型名称
+        string schoolId = object["ID_NUMBER"].asString();
 
         MYSQL mysql = quick_mysqli_connect();
-        auto res = mysqli_query(mysql, "SELECT * FROM user WHERE schoolId = \"%s\"", schoolId.c_str());
+        auto res = mysqli_query(mysql, "SELECT * FROM user WHERE idNumber = \"%s\"", schoolId.c_str());
         int uid = 0;
         if (res.size() == 0) {
-
+            uid = atoi(mysqli_query(mysql, "SELECT MAX(id) AS count FROM user")[0]["count"].c_str()) + 1;
+            string title = object["USER_NAME"].asString();
+            string name = object["USER_NAME"].asString();
+            string idNumber = object["ID_NUMBER"].asString();
+            int idType = object["ID_TYPE"].asInt();
+            string typeName = object["TYPE_NAME"].asString();
+            int unitId = object["UNIT_ID"].asInt();
+            string unitName = object["UNIT_NAME"].asString();
+            int sex = object["USER_SEX"].asInt();
+            string password = "";
+            time_t createTime = time(NULL);
+            int rating = 0;
+            string groups = "[1]";
+            string info = "";
+            mysqli_execute(
+                mysql,
+                "INSERT INTO user VALUES (%d, \"%s\", \"%s\", \"%s\", %d, \"%s\", %d, \"%s\", %d, \"%s\", %d, %d, \"%s\", \"%s\")",
+                uid,
+                quote_encode(title).c_str(),
+                quote_encode(name).c_str(),
+                quote_encode(idNumber).c_str(),
+                idType,
+                quote_encode(typeName).c_str(),
+                unitId,
+                quote_encode(unitName).c_str(),
+                sex,
+                quote_encode(password).c_str(),
+                createTime,
+                rating,
+                quote_encode(groups).c_str(),
+                quote_encode(info).c_str()
+            );
+            system(("cp -r ./data/users/0 ./data/users/" + to_string(uid)).c_str());
         } else uid = atoi(res[0]["id"].c_str());
         string session = generateSession();
         mysqli_execute(

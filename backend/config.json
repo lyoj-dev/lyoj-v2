@@ -14,11 +14,11 @@
     },
     "judge.sock": "../judge.sock",
     "cas": {
-        "host": "192.168.0.5",
-        "port": 8443,
-        "prefix": "/cas/",
-        "service": "https://192.168.0.5:5173/cas/login",
+        "host": "onecas.cau.edu.cn",
+        "port": 443,
+        "prefix": "/tpass/p3/serviceValidate",
+        "service": "https://page.cau.edu.cn:5173/cas/login",
         "ssl": true,
-        "sslIgnoreCert": true
+        "sslIgnoreCert": false
     }
 }

@@ -7,6 +7,7 @@ import AppBarButton from './AppBarButton.vue';
 import { storage } from '@/settings';
 import { config } from '@/config.ts';
 import { loginAs, loginInfo } from '@/utils.ts';
+import { goto } from '@/router';
 
 const t = i18n.global.t;
 const route = useRoute();
@@ -34,7 +35,7 @@ function setLocale(val: string) {
 <template>
     <div class="d-flex justify-space-around elevation-7 AppBar">
         <div class="d-flex AppBar-left">
-            <div class="d-flex align-center" style="margin-right: 10px;">
+            <div class="d-flex align-center" style="margin-right: 10px;" @click="goto('index', {})">
                 <img src="/favicon.png" class="AppBar-left-favicon"/>
                 <p class="AppBar-left-title">&nbsp;{{ title }}</p>
             </div>

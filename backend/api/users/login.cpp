@@ -27,7 +27,7 @@ auto UsersLogin = [](client_conn conn, http_request request, param argv) {
 
     auto res = mysqli_query(
         mysql,
-        "SELECT * FROM user WHERE (title = \"%s\" OR schoolId = \"%s\") AND id != 0",
+        "SELECT * FROM user WHERE (title = \"%s\" OR idNumber = \"%s\") AND id != 0",
         quote_encode(user.c_str()).c_str(),
         quote_encode(user.c_str()).c_str()
     );

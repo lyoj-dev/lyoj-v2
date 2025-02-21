@@ -21,6 +21,7 @@ export const zh_cn = {
         userDetails: "个人主页",
         login: "登录",
         casLogin: "农大登录",
+        adminIndex: "管理首页"
     },
     appbar: {
         index: "首页",
@@ -230,6 +231,8 @@ export const zh_cn = {
             submit: "提交",
             submitSuccess: "提交成功",
             submitFailed: "提交失败",
+            submitFailedTitleConflict: "用户名已存在",
+            submitFailedTitleEmpty: "用户名不能为空",
             oldPassword: "旧密码",
             newPassword: "新密码",
             confirmPassword: "确认密码",
@@ -253,6 +256,29 @@ export const zh_cn = {
         },
         logout: {
             success: "注销成功"
+        },
+        admin: {
+            index: {
+                title: "首页"
+            },
+            problems: {
+                title: "题库管理",
+            },
+            submissions: {
+                title: "评测管理",
+            },
+            contests: {
+                title: "比赛管理",
+            },
+            tags: {
+                title: "标签管理",
+            },
+            users: {
+                title: "用户管理",
+            },
+            groups: {
+                title: "用户组管理",
+            }
         }
     }
 };

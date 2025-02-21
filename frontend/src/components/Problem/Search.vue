@@ -10,7 +10,6 @@ const maxDiff: any = defineModel('maxDiff');
 const t = i18n.global.t;
 const props = defineProps([ 'tagsList' ]);
 const emits = defineEmits([ 'search' ]);
-const difficultiesList = difficultyList.map((item: any, index) => ({ id: index, title: item.title, color: item.color }));
 </script>
 
 <template>

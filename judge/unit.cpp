@@ -33,6 +33,7 @@ string workPath = "", dataPath = "";
 #include"../shared/type.h"
 #include"../shared/socket.h"
 #include"../shared/utils.h"
+Json::Value judge;
 #include"system.h"
 #include"core.h"
 
@@ -57,7 +58,7 @@ int main(int argc, char** argv) {
     // writeLog(LOG_LEVEL_INFO, "%s", system2("echo $PATH").c_str());
     workPath = argv[3], dataPath = argv[2];
     __chdir(workPath);
-    Json::Value judge = json_decode(readFile(argv[1]));
+    judge = json_decode(readFile(argv[1]));
     Json::Value data = json_decode(readFile(dataPath + "/config.json"));
     string serverSock = argv[4];
     int lang = atoi(argv[5]);

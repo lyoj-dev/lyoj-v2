@@ -22,3 +22,5 @@ modify*
 fps
 newTags.json
 cas
+backend/data
+!backend/data/users/0

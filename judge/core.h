@@ -73,6 +73,7 @@ int run_code(
 ) {
 	ofstream fout("run.sh");
 	fout << "ulimit -s 2097152" << endl;
+    fout << "ulimit -u $(($(ps -u " << judge["runas"].asString() << " | wc -l)+10))" << endl; // 防止 fork 炸弹
     fout << cmd;
 	if (stdin) fout << " < stdin";
 	if (stdout) fout << " > stdout";
@@ -81,8 +82,11 @@ int run_code(
 	fout.close();
     bool key = false;
 	char *argv[1010] = { NULL }; 
-    argv[0] = const_cast<char*>("bash"); 
-    argv[1] = const_cast<char*>("run.sh");
+    argv[0] = const_cast<char*>("sudo"); 
+    argv[1] = const_cast<char*>("-u");
+    argv[2] = const_cast<char*>(judge["runas"].asCString());
+    argv[3] = const_cast<char*>("bash"); 
+    argv[4] = const_cast<char*>("run.sh");
 	string process = ""; 
     time = memory = 0;
 
@@ -95,7 +99,7 @@ int run_code(
         return 1;
     }
     else if (executive == 0) {
-		execvp("bash", argv);
+		execvp("sudo", argv);
 		exit(0);
 	}
     else { 
@@ -120,8 +124,7 @@ int run_code(
 					else writeLog(LOG_LEVEL_INFO, "SPJ Time usage: 0ms. Memory usage: 0kb");
 					time = 0, memory = 0;
 					return 4;
-				} 
-
+				}
 
 
 				// 对于某些运行太快的程序，无法获取到 pid，又不可能在用户界面上显示 0，只好写了一个自欺欺人代码，以后再来修
@@ -137,18 +140,27 @@ int run_code(
 			} 
             int64_t mem = get_proc_mem(main_pid);
 			if (mem != 0) time = clock2() - st, memory = mem;
+            string killScript = "list_descendants ()\n"
+                "{\n"
+                "  local children=$(ps -o pid= --ppid \"$1\")\n"
+                "\n"
+                "  for pid in $children\n"
+                "  do\n"
+                "    list_descendants \"$pid\"\n"
+                "  done\n"
+                "\n"
+                "  echo \"$children\"\n"
+                "}\n";
 			if (mem > memory_limit) {
 				if (!special_judge) writeLog(LOG_LEVEL_INFO, "Time usage: %dms. Memory usage: %dkb", time, memory);
 				else writeLog(LOG_LEVEL_INFO, "SPJ Time usage: %dms. Memory usage: %dkb", time, memory);
-				system2("kill " + to_string(executive));
-				system2("kill " + to_string(main_pid));
+				system2("echo '" + killScript + " kill -9 $(list_descendants " + to_string((executive)) + ")' | bash"); // 杀掉进程
 				return 3;
 			}
 			if (time > time_limit) {
 				if (!special_judge) writeLog(LOG_LEVEL_INFO, "Time usage: %dms. Memory usage: %dkb", time, memory);
 				else writeLog(LOG_LEVEL_INFO, "SPJ Time usage: %dms. Memory usage: %dkb", time, memory);
-				system2("kill " + to_string(executive));
-				system2("kill " + to_string(main_pid));
+				system2("echo '" + killScript + " kill -9 $(list_descendants " + to_string((executive)) + ")' | bash"); // 杀掉进程
 				return 2;
 			}
 		}
@@ -264,7 +276,6 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	}
 	
 	clearFile("./" + data["output"].asString());
-	system(("chmod 0777 ./" + data["output"].asString()).c_str());
 
 	int64_t t = 0, m = 0, ret; 
     string command = judge["languages"][lang]["exec_command"].asString();
