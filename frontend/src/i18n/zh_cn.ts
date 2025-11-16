@@ -259,7 +259,34 @@ export const zh_cn = {
         },
         admin: {
             index: {
-                title: "首页"
+                title: "首页",
+                statistic: {
+                    problems: "总题目数",
+                    totalSubmissions: "总评测数",
+                    todaySubmissions: "今日评测",
+                    contests: "总比赛数",
+                    users: "总用户数",
+                    groups: "用户组数",
+                    tags: "总标签数"
+                },
+                cpuInfo: {
+                    title: "处理器信息",
+                    model: "型号名",
+                    cores: "核心数",
+                    speed: "最大速度",
+                    usage: "利用率",
+                    user: "用户",
+                    system: "系统",
+                    free: "空闲"
+                },
+                memoryInfo: {
+                    title: "内存信息",
+                    memory: "物理内存",
+                    swap: "虚拟内存",
+                },
+                diskInfo: {
+                    title: "磁盘信息"
+                }
             },
             problems: {
                 title: "题库管理",

@@ -1,3 +1,4 @@
+import nProgress from "nprogress";
 import { ref } from "vue";
 
 export function sleep(ms: number) {
@@ -52,11 +53,13 @@ export async function myFetch(url: string, options?: RequestInit, checkCode: boo
     var response = await fetch(url, options);
     if (response.status != 200 && checkCode) {
         showMsg('error', response.statusText);
+        nProgress.done();
         throw new Error(response.statusText);
     }
     var data = await response.json();
     if (data.code != 200 && checkCode) {
         showMsg('error', data.code + " " + data.msg);
+        nProgress.done();
         throw new Error(data.code + " " + data.msg);
     }
     loginAs.value = data.loginAs;

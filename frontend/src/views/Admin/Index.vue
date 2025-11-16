@@ -4,12 +4,13 @@ import { myFetch } from '@/utils';
 import NProgress from 'nprogress';
 import { defineComponent, ref, onUnmounted } from 'vue';
 import AdminNavigation from '@/components/Admin/Navigation.vue';
+import { i18n } from '@/i18n';
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
     NProgress.inc();
 
-    var res = await myFetch(config.apiBase + "/admin/info");
+    var res = await myFetch(config.apiBase + "/admin/info")
 
     next((e: any) => e.loading({
         data: res
@@ -24,6 +25,7 @@ export default defineComponent({
 <script lang="ts" setup>
 const loaded = ref(false);
 const data: any = ref({});
+const t = i18n.global.t;
 var interval = 0;
 
 function loading(data2: any) {
@@ -57,7 +59,7 @@ function formatSize(size: number) {
         <div class="d-flex" style="gap: 15px;">
             <v-card class="AdminVCard card-radius statistics">
                 <v-card-text>
-                    <p class="title">Problems</p>
+                    <p class="title">{{ t('pages.admin.index.statistic.problems') }}</p>
                     <div class="d-flex align-center">
                         <v-icon icon="mdi-clipboard-list" class="icon"></v-icon>
                         <p class="value">{{ data.problems }}</p>
@@ -66,7 +68,7 @@ function formatSize(size: number) {
             </v-card>
             <v-card class="AdminVCard card-radius statistics">
                 <v-card-text>
-                    <p class="title">Total Submissions</p>
+                    <p class="title">{{ t('pages.admin.index.statistic.totalSubmissions') }}</p>
                     <div class="d-flex align-center">
                         <v-icon icon="mdi-memory" class="icon"></v-icon>
                         <p class="value">{{ data.totalSubmissions }}</p>
@@ -75,7 +77,7 @@ function formatSize(size: number) {
             </v-card>
             <v-card class="AdminVCard card-radius statistics">
                 <v-card-text>
-                    <p class="title">Today's Submissions</p>
+                    <p class="title">{{ t('pages.admin.index.statistic.todaySubmissions') }}</p>
                     <div class="d-flex align-center">
                         <v-icon icon="mdi-memory" class="icon"></v-icon>
                         <p class="value">{{ data.todaySubmissions }}</p>
@@ -86,7 +88,7 @@ function formatSize(size: number) {
         <div class="d-flex" style="gap: 15px;">
             <v-card class="AdminVCard card-radius statistics">
                 <v-card-text>
-                    <p class="title">Contests</p>
+                    <p class="title">{{ t('pages.admin.index.statistic.contests') }}</p>
                     <div class="d-flex align-center">
                         <v-icon icon="mdi-calendar-blank" class="icon"></v-icon>
                         <p class="value">{{ data.contests }}</p>
@@ -95,7 +97,7 @@ function formatSize(size: number) {
             </v-card>
             <v-card class="AdminVCard card-radius statistics">
                 <v-card-text>
-                    <p class="title">Users</p>
+                    <p class="title">{{ t('pages.admin.index.statistic.users') }}</p>
                     <div class="d-flex align-center">
                         <v-icon icon="mdi-account" class="icon"></v-icon>
                         <p class="value">{{ data.users }}</p>
@@ -104,7 +106,7 @@ function formatSize(size: number) {
             </v-card>
             <v-card class="AdminVCard card-radius statistics">
                 <v-card-text>
-                    <p class="title">User Groups</p>
+                    <p class="title">{{ t('pages.admin.index.statistic.groups') }}</p>
                     <div class="d-flex align-center">
                         <v-icon icon="mdi-account-group" class="icon"></v-icon>
                         <p class="value">{{ data.groups }}</p>
@@ -115,7 +117,7 @@ function formatSize(size: number) {
         <div class="d-flex" style="gap: 15px;">
             <v-card class="AdminVCard card-radius statistics">
                 <v-card-text>
-                    <p class="title">Tags</p>
+                    <p class="title">{{ t('pages.admin.index.statistic.tags') }}</p>
                     <div class="d-flex align-center">
                         <v-icon icon="mdi-tag" class="icon"></v-icon>
                         <p class="value">{{ data.tags }}</p>
@@ -124,10 +126,10 @@ function formatSize(size: number) {
             </v-card>
         </div>
         <v-card class="AdminVCard card-radius">
-            <v-card-title>CPU Info</v-card-title>
+            <v-card-title>{{ t('pages.admin.index.cpuInfo.title') }}</v-card-title>
             <v-card-text>
                 <div class="d-flex align-center">
-                    <p style="flex-shrink: 0;">Model Name：</p>
+                    <p style="flex-shrink: 0;">{{ t('pages.admin.index.cpuInfo.model') }}：</p>
                     <v-text-field 
                         v-model="data.cpu.name"
                         disabled
@@ -138,7 +140,7 @@ function formatSize(size: number) {
                     ></v-text-field>
                 </div>
                 <div class="d-flex align-center mt-3">
-                    <p style="flex-shrink: 0;">Cores：</p>
+                    <p style="flex-shrink: 0;">{{ t('pages.admin.index.cpuInfo.cores') }}：</p>
                     <v-text-field 
                         :model-value="data.cpu.cores + ' Cores'"
                         disabled
@@ -149,7 +151,7 @@ function formatSize(size: number) {
                     ></v-text-field>
                 </div>
                 <div class="d-flex align-center mt-3">
-                    <p style="flex-shrink: 0;">Speed：</p>
+                    <p style="flex-shrink: 0;">{{ t('pages.admin.index.cpuInfo.speed') }}：</p>
                     <v-text-field 
                         :model-value="data.cpu.speed / 1000 + ' GHz'"
                         disabled
@@ -160,7 +162,7 @@ function formatSize(size: number) {
                     ></v-text-field>
                 </div>
                 <div class="d-flex align-center mt-3" style="height: 40px">
-                    <p style="flex-shrink: 0;">Usage：</p>
+                    <p style="flex-shrink: 0;">{{ t('pages.admin.index.cpuInfo.usage') }}：</p>
                     <v-progress-linear
                         bg-color="gray"
                         buffer-color="blue"
@@ -174,18 +176,18 @@ function formatSize(size: number) {
                         rounded
                     ></v-progress-linear>
                     <p style="flex-shrink: 0; margin-left: 10px;">
-                        User：{{ Math.round(data.cpu.usage.us * 10) / 10 }}% |
-                        System：{{ Math.round(data.cpu.usage.sy * 10) / 10 }}% |
-                        Free：{{ Math.round((100 - data.cpu.usage.us - data.cpu.usage.sy) * 10) / 10 }}%
+                        {{ t('pages.admin.index.cpuInfo.user') }}：{{ Math.round(data.cpu.usage.us * 10) / 10 }}% |
+                        {{ t('pages.admin.index.cpuInfo.system') }}：{{ Math.round(data.cpu.usage.sy * 10) / 10 }}% |
+                        {{ t('pages.admin.index.cpuInfo.free') }}：{{ Math.round((100 - data.cpu.usage.us - data.cpu.usage.sy) * 10) / 10 }}%
                     </p>
                 </div>
             </v-card-text>
         </v-card>
         <v-card class="AdminVCard card-radius">
-            <v-card-title>Memory Info</v-card-title>
+            <v-card-title>{{ t('pages.admin.index.memoryInfo.title') }}</v-card-title>
             <v-card-text>
                 <div class="d-flex align-center" style="height: 40px">
-                    <p style="flex-shrink: 0;">Memory：</p>
+                    <p style="flex-shrink: 0;">{{ t('pages.admin.index.memoryInfo.memory') }}：</p>
                     <v-progress-linear
                         bg-color="gray"
                         color="orange"
@@ -201,7 +203,7 @@ function formatSize(size: number) {
                     </p>
                 </div>
                 <div class="d-flex align-center" style="height: 40px">
-                    <p style="flex-shrink: 0;">Swap Memory：</p>
+                    <p style="flex-shrink: 0;">{{ t('pages.admin.index.memoryInfo.swap') }}：</p>
                     <v-progress-linear
                         bg-color="gray"
                         color="orange"
@@ -219,7 +221,7 @@ function formatSize(size: number) {
             </v-card-text>
         </v-card>
         <v-card class="AdminVCard card-radius">
-            <v-card-title>Disk Info</v-card-title>
+            <v-card-title>{{ t('pages.admin.index.diskInfo.title') }}</v-card-title>
             <v-card-text>
                 <div class="d-flex align-center" style="height: 40px" v-for="item in data.disk">
                     <p style="flex-shrink: 0; font-family: 'Cascadia Mono', monospace!important;">{{ item.mounted }}：</p>
@@ -233,8 +235,8 @@ function formatSize(size: number) {
                         rounded
                     ></v-progress-linear>
                     <p style="flex-shrink: 0; margin-left: 10px;">
-                        {{ formatSize(item.used) }} /
-                        {{ formatSize(item.used + item.avail) }}
+                        {{ formatSize(item.used * 1024) }} /
+                        {{ formatSize((item.used + item.avail) * 1024) }}
                     </p>
                 </div>
             </v-card-text>

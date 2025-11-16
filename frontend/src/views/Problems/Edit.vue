@@ -263,6 +263,7 @@ async function submit() {
             output: configs.value.output,
             datas: configs.value.datas,
             subtasks: ((datas, subtasks) => {
+                if (subtasks == undefined) return [];
                 var res = [];
                 for (var i = 0; i < subtasks.length; i++) {
                     var subtask = subtasks[i];

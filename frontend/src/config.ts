@@ -3,10 +3,10 @@ import { i18n } from "./i18n";
 const t = i18n.global.t;
 
 export const config = {
-    apiBase: "https://api-v2.lyoj.littleyang.icu",
-    wsBase: "wss://api-v2.lyoj.littleyang.icu",
-    // apiBase: "http://192.168.56.102:8080",
-    // wsBase: "ws://192.168.56.102:8080",
+    // apiBase: "https://api-v2.lyoj.littleyang.icu",
+    // wsBase: "wss://api-v2.lyoj.littleyang.icu",
+    apiBase: "http://127.0.0.1:8081",
+    wsBase: "ws://127.0.0.1:8081",
     // apiBase: "http://192.168.0.5:8081",
     // wsBase: "ws://192.168.0.5:8081",
     casBase: "https://onecas.cau.edu.cn/tpass/login",

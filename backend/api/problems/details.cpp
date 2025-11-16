@@ -32,7 +32,7 @@ auto ProblemsDetails = [](client_conn conn, http_request request, param argv) {
         object["signup"] = checkSignUp(userId, atoi(argv[1].c_str()));
     }
     object["item"]["id"] = atoi(res[0]["id"].c_str());
-    object["item"]["alias"] = res[0]["alias"];
+    object["item"]["alias"] = argv.size() == 2 ? "#" + argv[0] : res[0]["alias"];
     object["item"]["title"] = res[0]["title"];
     object["item"]["difficulty"] = atoi(res[0]["difficulty"].c_str());
     object["item"]["tags"] = Json::arrayValue;

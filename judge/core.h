@@ -49,6 +49,42 @@ int get_proc_mem(int pid){
 	} return 0;
 }
 
+vector<string> explode(string seperator, string source) {
+	string src = source; vector<string> res;
+	while (src.find(seperator) != string::npos) {
+		int wh = src.find(seperator);
+		res.push_back(src.substr(0, src.find(seperator)));
+		src = src.substr(wh + string(seperator).size());
+	} res.push_back(src);
+	return res;
+}
+
+int getpidByName(string name, int stpid) {
+    int exec = stpid;
+    bool hasBash = false;
+    while (1) {
+        if (kill(exec, 0) != 0) return -1;
+        ifstream fin("/proc/" + to_string(stpid) + "/status");
+        if (!fin) continue;
+        stringstream ss;
+        ss << fin.rdbuf();
+        string buffer = ss.str();
+        fin.close();
+        auto tmp = explode("\n", buffer);
+        for (auto i : tmp) {
+            if (i.find("Name:") != string::npos) {
+                string pname = i.substr(i.find("\t") + 1);
+                if (pname == "bash") {
+                    if (!hasBash) hasBash = true;
+                    else stpid--;
+                    break;
+                }
+                if (pname == name) return stpid;
+            }
+        } stpid++;
+    }
+}
+
 /**
  * @brief 单个测试点 / SPJ 运行函数
  * @param cmd 运行指令
@@ -106,9 +142,13 @@ int run_code(
 		string name = cmd; 
         if (name.find(" ") != string::npos) name = name.substr(0, name.find(" "));
         if (name.find("/") != string::npos) name = name.substr(name.rfind("/") + 1);
-        key = true;
-		while (process == "" && kill(executive,0) == 0) process = system2(("pidof " + name + " 2>/dev/null").c_str());
-		int main_pid = atoi(process.c_str());
+		// while (process == "" && kill(executive,0) == 0) {
+        //     time_t st = clock2();
+        //     process = system2(("pgrep -u " + judge["runas"].asString() + " " + name + " 2>/dev/null").c_str());
+        //     cout << (clock2() - st) << endl;
+        // }
+		int main_pid = getpidByName(name, executive);
+        // int main_pid = executive + 6;
         // cout << "Sub Process: " << executive << " " << main_pid << endl;
 		time_t st = clock2(); pid_t ret2 = -1;
 		int status = 0; 
@@ -125,15 +165,6 @@ int run_code(
 					time = 0, memory = 0;
 					return 4;
 				}
-
-
-				// 对于某些运行太快的程序，无法获取到 pid，又不可能在用户界面上显示 0，只好写了一个自欺欺人代码，以后再来修
-				srand(clock2()); 
-                if (time == 0) time = rand() % 10 + 10;
-				if (memory == 0) memory = rand() % 500 + 1100;
-
-
-
 				if (!special_judge) writeLog(LOG_LEVEL_INFO, "Time usage: %dms. Memory usage: %dkb", time, memory);
 				else writeLog(LOG_LEVEL_INFO, "SPJ Time usage: %dms. Memory usage: %dkb", time, memory);
 				return 0;
