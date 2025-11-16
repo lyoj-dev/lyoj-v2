@@ -821,7 +821,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |problems|str|题目 id 数组，使用 json 格式传递|非必要|数组内每个元素为题目 id，例如 `[1,2]`|
 |users|str|用户 id 数组，使用 json 格式传递|非必要|数组内每个元素为用户 id，例如 `[1,2]`|
 |languages|str|语言 id 数组，使用 json 格式传递|非必要|数组内每个元素为语言 id，例如 `[1,2]`|
-|status|str|评测状态 id 数组，使用 json 格式传递|非必要|数组内每个元素为评测状态 id，例如 `[1,2]`。评测状态 id 详见[评测状态](评测状态)|
+|status|str|评测状态 id 数组，使用 json 格式传递|非必要|数组内每个元素为评测状态 id，例如 `[1,2]`。评测状态 id 详见[评测状态](#评测状态)|
 
 **json 回复：**
 
@@ -842,7 +842,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |uid|num|提交用户 id||
 |problem|str|题目名||
 |pid|num|题目 id||
-|statusType|num|评测状态 id|详见[评测状态](评测状态)|
+|statusType|num|评测状态 id|详见[评测状态](#评测状态)|
 |status|str|评测状态信息||
 |judged|bool|是否评测完成||
 |score|num|得分||
@@ -875,7 +875,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |user|str|提交用户名||
 |judged|bool|是否评测完成||
 |rejudge|bool|是否允许提交重测||
-|statusType|num|评测状态 id|详见[评测状态](评测状态)|
+|statusType|num|评测状态 id|详见[评测状态](#评测状态)|
 |status|str|评测状态信息||
 |score|num|得分||
 |time|num|评测总用时|单位 `s`|
@@ -899,7 +899,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |-|-|-|-|
 |id|num|子任务 id|`0` 为不属于任意子任务的数据|
 |score|num|子任务得分||
-|status|num|子任务评测状态 id|详见[评测状态](评测状态)|
+|status|num|子任务评测状态 id|详见[评测状态](#评测状态)|
 |title|str|子任务标题||
 |datas|array|子任务测试点信息||
 
@@ -918,7 +918,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |time|num|运行时间|单位 `s`|
 |memory|num|最大运行内存|单位 `kb`|
 |score|num|测试点得分||
-|status|num|子任务评测状态 id|详见[评测状态](评测状态)|
+|status|num|子任务评测状态 id|详见[评测状态](#评测状态)|
 |info|str|spj 输出信息||
 |output|str|部分用户输出||
 |outputIgnored|num|省略掉的用户输出长度||
@@ -1347,7 +1347,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |problems|str|题目 id 数组，使用 json 格式传递|非必要|数组内每个元素为在该比赛中的题目 id，例如 `[1,2]`|
 |users|str|用户 id 数组，使用 json 格式传递|非必要|数组内每个元素为用户 id，例如 `[1,2]`|
 |languages|str|语言 id 数组，使用 json 格式传递|非必要|数组内每个元素为语言 id，例如 `[1,2]`|
-|status|str|评测状态 id 数组，使用 json 格式传递|非必要|数组内每个元素为评测状态 id，例如 `[1,2]`。评测状态 id 详见[评测状态](评测状态)|
+|status|str|评测状态 id 数组，使用 json 格式传递|非必要|数组内每个元素为评测状态 id，例如 `[1,2]`。评测状态 id 详见[评测状态](#评测状态)|
 
 **json 回复：**
 
@@ -1368,7 +1368,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |uid|num|提交用户 id||
 |problem|str|题目名||
 |pid|num|题目 id|非真实题目 id，而是在该比赛中的题目 id|
-|statusType|num|评测状态 id|详见[评测状态](评测状态)|
+|statusType|num|评测状态 id|详见[评测状态](#评测状态)|
 |status|str|评测状态信息||
 |judged|bool|是否评测完成||
 |score|num|得分||
@@ -1402,7 +1402,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |user|str|提交用户名||
 |judged|bool|是否评测完成||
 |rejudge|bool|是否允许提交重测||
-|statusType|num|评测状态 id|详见[评测状态](评测状态)|
+|statusType|num|评测状态 id|详见[评测状态](#评测状态)|
 |status|str|评测状态信息||
 |score|num|得分||
 |time|num|评测总用时|单位 `s`|
@@ -1426,7 +1426,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |-|-|-|-|
 |id|num|子任务 id|`0` 为不属于任意子任务的数据|
 |score|num|子任务得分||
-|status|num|子任务评测状态 id|详见[评测状态](评测状态)|
+|status|num|子任务评测状态 id|详见[评测状态](#评测状态)|
 |title|str|子任务标题||
 |datas|array|子任务测试点信息||
 
@@ -1445,7 +1445,7 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |time|num|运行时间|单位 `s`|
 |memory|num|最大运行内存|单位 `kb`|
 |score|num|测试点得分||
-|status|num|子任务评测状态 id|详见[评测状态](评测状态)|
+|status|num|子任务评测状态 id|详见[评测状态](#评测状态)|
 |info|str|spj 输出信息||
 |output|str|部分用户输出||
 |outputIgnored|num|省略掉的用户输出长度||
