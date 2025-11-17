@@ -1,5 +1,5 @@
 {
-    "thread": 1,
+    "thread": 8,
     "runas": "judge",
     "mysql": {
         "server": "127.0.0.1",

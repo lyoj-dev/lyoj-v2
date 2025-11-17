@@ -347,7 +347,8 @@ void* socket_work_thread(void* arg) {
 int main() {
     judge = json_decode(readFile("./judge.json"));
     for (int i = 1; i <= judge["thread"].asInt(); i++)
-        mkdir(("../tmp/" + to_string(i)).c_str(), 0777);
+        mkdir(("../tmp/" + to_string(i)).c_str(), 0777),
+        chmod(("../tmp/" + to_string(i)).c_str(), 0777);
     mysql = quick_mysqli_connect();
     writeLog(LOG_LEVEL_INFO, "Listening to mysql server...");
 

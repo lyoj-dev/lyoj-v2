@@ -17,9 +17,11 @@
 #include<sys/resource.h>
 #include<sys/wait.h>
 #include<sys/syscall.h>
+#include<sys/stat.h>
 #include<sys/un.h>
 #include<unistd.h>
 #include<arpa/inet.h>
+#include<dirent.h>
 // #elif __windows__
 // #include<Windows.h>
 // #include<direct.h>

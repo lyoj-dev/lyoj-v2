@@ -33,3 +33,16 @@ void __chdir(string path) {
 // 	int retc = SetCurrentDirectory(path.c_str());
 #endif
 }
+
+vector<string> getFiles(string path) {
+    vector<string> files;
+    DIR *dir;
+    struct dirent *ptr;
+    dir = opendir(path.c_str());
+    while ((ptr = readdir(dir)) != NULL) {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) continue;
+        files.push_back(ptr->d_name);
+    }
+    closedir(dir);
+    return files;
+}

@@ -308,6 +308,11 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	
 	clearFile("./" + data["output"].asString());
 
+    // 设置权限
+    vector<string> files = getFiles(".");
+    for (int i = 0; i < files.size(); i++) chmod(files[i].c_str(), 0777);
+    chmod(("./" + data["input"].asString()).c_str(), 0744);
+    // 执行用户程序
 	int64_t t = 0, m = 0, ret; 
     string command = judge["languages"][lang]["exec_command"].asString();
 	string extra_command = "";
@@ -360,6 +365,11 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	int64_t spjt, spjm;
 	
 	#ifdef __linux__
+    // 设置权限
+    files = getFiles(".");
+    for (int i = 0; i < files.size(); i++) chmod(files[i].c_str(), 0777);
+    chmod(("./" + data["input"].asString()).c_str(), 0744);
+    // 执行 SPJ
     string cmd = "./spj \"" + inputpath + "\" \"" + outputpath + "\" \"" + answerpath + "\" " + data["datas"][dataid]["score"].asString() + 
         " \"" + resultpath + "\" \"" + infopath + "\" \"" + sourcepath + "\" " + data["spj"]["exec_param"].asString();
 	ret = run_code(

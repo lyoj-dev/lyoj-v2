@@ -46,7 +46,20 @@
     - [获取比赛排名](#获取比赛排名)
     - [创建/修改比赛](#创建修改比赛)
 - [用户](#用户)
+    - [用户密码登录](#用户密码登录)
+    - [用户 CAS 登录](#用户-cas-登录)
+    - [检查用户会话 id 是否有效](#检查用户会话-id-是否有效)
+    - [列举所有用户简要信息](#列举所有用户简要信息)
+    - [列举所有用户组](#列举所有用户组)
+    - [获取用户详细信息](#获取用户详细信息)
+    - [获取用户头像](#获取用户头像)
+    - [获取用户横幅](#获取用户横幅)
+    - [修改用户头像](#修改用户头像)
+    - [修改用户横幅](#修改用户横幅)
+    - [修改用户信息](#修改用户信息)
+    - [修改用户密码](#修改用户密码)
 - [管理](#管理)
+    - [获取服务器基础信息](#获取服务器基础信息)
 - [WebSocket 接口](#websocket-接口)
 
 ## 杂项
@@ -80,6 +93,7 @@
 |403|无权限访问此接口，请使用更高权限账号登录后重试|
 |404|必要资源无法通过参数找到|
 |405|请求方法出错|
+|409|用户名冲突，换个用户名试试吧|
 |500|服务器内部出错（仅会在 CAS 登录时出错）|
 
 ## 认证与回复
@@ -1632,6 +1646,444 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 
 ## 用户
 
+### 用户密码登录
+
+> https://api-v2.lyoj.littleyang.com.cn/users/login
+
+请求方式：POST
+
+**正文参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|user|str|用户名或学号|必要||
+|passwd|str|用户密码|必要|使用 MD5 进行加密|
+
+**json 回复：**
+
+根对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|success|bool|是否登录成功||
+|failMsg|str|登录失败原因|如果登录成功则无此项|
+|session|str|用户会话 id|如果登录失败则无此项|
+
+无 `loginAs`、`loginInfo` 属性和 `item` 对象或 `items` 数组。
+
+### 用户 CAS 登录
+
+> https://api-v2.lyoj.littleyang.com.cn/users/casLogin
+
+请求方式：GET
+
+**url 参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|ticket|str|CAS 服务器返回的 ticket id|必要||
+
+**json 回复：**
+
+根对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|success|bool|是否登录成功||
+|failureCode|str|登录失败 CAS 原因代码|如果登录成功则无此项|
+|failureMsg|str|登录失败原因|如果登录成功则无此项|
+|session|str|用户会话 id|如果登录失败则无此项|
+
+无 `loginAs`、`loginInfo` 属性和 `item` 对象或 `items` 数组。
+
+**如何使用：**
+
+目前服务器尚未搭载在 CAU 服务器上，按照 CAU 相关文件，不允许使用 CAS 登录。
+
+但是可以在开发环境下实现 CAS 登录：
+
+1. 在开发环境中搭建好 LYOJ v2。
+2. 修改用户端 hosts 文件，新增/修改一行 `<server ip> page.cau.edu.cn`。
+3. 使用 `https://page.cau.edu.cn:5173` 进入 LYOJ v2。
+
+这时您可以通过以下链接使用 CAS 登录：
+
+> https://onecas.cau.edu.cn/tpass/login?service=https%3A%2F%2Fpage.cau.edu.cn%3A5173%2Fcas%2Flogin
+
+登录完成后，该链接会自动跳转到 `https://page.cau.edu.cn:5173/cas/login`，并与访问后端 api 该接口完成登录操作。
+
+### 检查用户会话 id 是否有效
+
+> https://api-v2.lyoj.littleyang.com.cn/users/check
+
+请求方式：GET
+
+**json 回复：**
+
+无 `item` 对象或 `items` 数组，根对象上也无额外属性。
+
+### 列举所有用户简要信息
+
+> https://api-v2.lyoj.littleyang.com.cn/users/listAll
+
+请求方式：GET
+
+**json 回复：**
+
+`items` 数组：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|0|obj|第 1 位用户||
+|n|obj|第 (n + 1) 位用户||
+|......|obj|......|......|
+
+`items` 数组中的对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|id|num|用户 id||
+|title|str|用户名称||
+
+### 列举所有用户组
+
+> https://api-v2.lyoj.littleyang.com.cn/users/listAllGroups
+
+请求方式：GET
+
+**json 回复：**
+
+`items` 数组：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|0|obj|第 1 个用户组||
+|n|obj|第 (n + 1) 个用户组||
+|......|obj|......|......|
+
+`items` 数组中的对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|id|num|用户组 id||
+|title|str|用户组名||
+|description|str|用户组描述||
+|permission|num|用户组权限||
+
+### 获取用户详细信息
+
+> https://api-v2.lyoj.littleyang.com.cn/users/{id}
+
+请求方式：GET
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|用户 id|必要||
+
+**json 回复：**
+
+`item` 对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|id|num|用户 id||
+|title|str|用户名||
+|rating|num|用户评级||
+|info|str|用户个人简介||
+|submissions|obj|用户提交信息||
+|problems|obj|用户做题信息||
+|allowEdit|bool|是否允许修改用户信息||
+
+`item` 对象中的 `submissions` 对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|total|num|总提交次数||
+|accepted|num|通过提交次数||
+
+`item` 对象中的 `problems` 对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|total|array|已通过的题目||
+|tried|array|尝试但未通过的题目||
+
+`item` 对象中的 `problems` 对象中的 `total` 数组：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|0|obj|第 1 道题目||
+|n|obj|第 (n + 1) 道题目||
+|......|obj|......|......|
+
+`item` 对象中的 `problems` 对象中的 `total` 数组中的对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|id|num|题目 id||
+|alias|str|题目别名||
+|title|str|题目标题||
+
+`item` 对象中的 `problems` 对象中的 `tried` 数组：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|0|obj|第 1 道题目||
+|n|obj|第 (n + 1) 道题目||
+|......|obj|......|......|
+
+`item` 对象中的 `problems` 对象中的 `tried` 数组中的对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|id|num|题目 id||
+|alias|str|题目别名||
+|title|str|题目标题||
+
+### 获取用户头像
+
+> https://api-v2.lyoj.littleyang.com.cn/users/{id}/header
+
+请求方式：GET
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|用户 id|必要||
+
+**回复正文（image/png）：**
+
+|类型|内容|备注|
+|-|-|-|
+|str|用户头像 png 文件|该文件未经过 base64 加密，直接为原始二进制文件|
+
+### 获取用户横幅
+
+> https://api-v2.lyoj.littleyang.com.cn/users/{id}/banner
+
+请求方式：GET
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|用户 id|必要||
+
+**回复正文（image/png）：**
+
+|类型|内容|备注|
+|-|-|-|
+|str|用户横幅 png 文件|该文件未经过 base64 加密，直接为原始二进制文件|
+
+### 修改用户头像
+
+> https://api-v2.lyoj.littleyang.com.cn/users/{id}/header/update
+
+请求方式：GET
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|用户 id|必要||
+
+**正文参数（plain/text）：**
+
+|类型|内容|必要性|备注|
+|-|-|-|-|
+|str|用户头像 png 文件 base64 编码|必要||
+
+**json 回复：**
+
+无 `item` 对象或 `items` 数组，根对象上也无额外属性。
+
+### 修改用户横幅
+
+> https://api-v2.lyoj.littleyang.com.cn/users/{id}/banner/update
+
+请求方式：GET
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|用户 id|必要||
+
+**正文参数（plain/text）：**
+
+|类型|内容|必要性|备注|
+|-|-|-|-|
+|str|用户横幅 png 文件 base64 编码|必要||
+
+**json 回复：**
+
+无 `item` 对象或 `items` 数组，根对象上也无额外属性。
+
+### 修改用户信息
+
+> https://api-v2.lyoj.littleyang.com.cn/users/{id}/edit
+
+请求方式：POST
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|用户 id|必要||
+
+**正文参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|title|str|用户名|必要||
+|info|str|用户个人简介|必要||
+
+**json 回复：**
+
+无 `item` 对象或 `items` 数组，根对象上也无额外属性。
+
+### 修改用户密码
+
+> https://api-v2.lyoj.littleyang.com.cn/users/{id}/password/update
+
+请求方式：POST
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|用户 id|必要||
+
+**正文参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|oldPassword|str|旧密码|必要|如果未启用密码登录，则置空|
+|newPassword|str|新密码|必要|如果不启用密码登录，则置空|
+
+**json 回复：**
+
+无 `item` 对象或 `items` 数组，根对象上也无额外属性。
+
 ## 管理
 
+### 获取服务器基础信息
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/info
+
+请求方式：GET
+
+**json 回复：**
+
+根对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|cpu|obj|CPU 信息||
+|memory|obj|内存信息||
+|disk|array|磁盘信息||
+|problems|num|题目数量||
+|totalSubmissions|num|总提交数||
+|todaySubmissions|num|今日提交数||
+|contests|num|比赛数量||
+|users|num|用户数量||
+|tags|num|标签数量||
+|groups|num|用户组数量||
+
+`cpu` 对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|name|str|CPU 型号||
+|speed|num|CPU 频率||
+|cores|num|CPU 核心数||
+|usage|obj|CPU 使用情况|具体信息视 `top` 指令输出|
+
+`memory` 对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|mem|obj|内存信息||
+|swap|obj|交换内存信息||
+
+`memory` 对象中的 `mem` 对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|total|num|内存总量||
+|used|num|内存使用量||
+|free|num|空余内存量||
+|shared|num|共享内存量||
+|cache|num|缓存内存量||
+|available|num|剩余内存量||
+
+`memory` 对象中的 `swap` 对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|total|num|交换内存总量||
+|used|num|交换内存使用量||
+|free|num|空余交换内存量||
+
+`disk` 数组：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|0|obj|第 1 个分区||
+|n|obj|第 (n + 1) 个分区||
+|......|obj|......|......|
+
+`disk` 数组中的对象：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|size|num|分区大小||
+|used|num|分区使用量||
+|avail|num|剩余分区空间||
+|use|num|分区使用量占比|单位不为 `%`，无单位|
+|mounted|str|挂载点||
+
 ## WebSocket 接口
+
+### 获取多个提交简要信息更新
+
+> <wss://api-v2.lyoj.littleyang.com.cn/submissions/list>
+
+**交互信息：**
+
+您需要首先发送一个 json 数据包，格式如下：
+
+根数组：
+
+|项|类型|内容|备注|
+|-|-|-|-|
+|0|obj|第 1 个提交 id||
+|n|obj|第 (n + 1) 个提交 id||
+|......|obj|......|......|
+
+发送完后，您不需要也不能再发送任何信息。
+
+首先，该接口会返回一次这些提交的简要信息，然后在信息有更新时，发送对应的修改指令数据包，您需要根据这些数据包修改信息。
+
+请注意，所有数据包均为 json 格式。
+
+### 获取单个提交详细信息更新
+
+> <wss://api-v2.lyoj.littleyang.com.cn/submissions/{id}>
+
+**路径参数：**
+
+|项|类型|内容|必要性|备注|
+|-|-|-|-|-|
+|id|num|提交 id|必要||
+
+**交互信息：**
+
+您不需要也不能发送任何信息。
+
+首先，该接口会返回一次该提交的详细信息，然后在信息有更新时，发送对应的修改指令数据包，您需要根据这些数据包修改信息。
+
+请注意，所有数据包均为 json 格式。

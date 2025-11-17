@@ -20,6 +20,9 @@ sudo apt install g++ libjsoncpp-dev libmysqlclient-dev openssl
 cd judge
 g++ unit.cpp -ounit -ljsoncpp -O3 -w
 g++ judge.cpp -ojudge -ljsoncpp -lmysqlclient -O3 -w
+cd ../spj
+g++ 1.cpp -o1 -O3
+cd ..
 ```
 
 ### Compile Backend Service
@@ -27,6 +30,7 @@ g++ judge.cpp -ojudge -ljsoncpp -lmysqlclient -O3 -w
 ```bash
 cd backend
 g++ main.cpp -omain -ljsoncpp -lmysqlclient -lcrypto -lssl -O3 -w
+cd ..
 ```
 
 ### Build Frontend Service
@@ -37,7 +41,20 @@ Please modify `frontend/src/config.ts` before build.
 cd frontend
 npm install
 npm run build
+cd ..
 ```
+
+### Create `judge` user
+
+```bash
+sudo adduser judge
+sudo mkdir tmp
+sudo chmod 0777 tmp -R
+```
+
+You should set an empty password so that judge service can use `judge` user successfully.
+
+When system reminds you to put password, you should enter `Ctrl + D` to set an empty password.
 
 ## Run
 
