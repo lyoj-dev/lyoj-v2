@@ -1,9 +1,12 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ProblemsListAll = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
     
-    string where = hasIntersection("groups", userInfo["groups"], false);
+    std::string where = hasIntersection("groups", userInfo["groups"], false);
     auto res = mysqli_query(
         mysql, 
         "SELECT id, alias, title FROM problem WHERE %s ORDER BY id DESC",
@@ -25,10 +28,10 @@ auto ProblemsListAll = [](client_conn conn, http_request request, param argv) {
     }
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

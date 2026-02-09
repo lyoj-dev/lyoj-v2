@@ -31,7 +31,7 @@ import { showMsg, isError, type, errorText } from '@/utils';
   top: 53px;
   height: 10px;
   width: 100%;
-  z-index: 10000;
+  z-index: 1005;
 }
 
 .main-app {

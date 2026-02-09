@@ -1,12 +1,16 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+#include "../../../shared/socket.h"
+#include "login.cpp"
 #include<netdb.h>
 
-string getContent(string source, string prefix, string suffix, int pt = 0) {
+std::string getContent(std::string source, std::string prefix, std::string suffix, int pt = 0) {
     int st = source.find(prefix, pt) + prefix.size();
     int ed = source.find(suffix, st);
     return source.substr(st, ed - st);
 }
 
-vector<pair<string, string> > htmlEntities = {
+std::vector<std::pair<std::string, std::string> > htmlEntities = {
     {"&", "&amp;"},
     {" ", "&nbsp;"},
     {">", "&gt;"},
@@ -14,8 +18,8 @@ vector<pair<string, string> > htmlEntities = {
     {"\"", "&quot;"},
     {"'", "&apos;"}
 };
-string htmldecode(string s) {
-    for (int i = 0; i < 256; i++) htmlEntities.push_back({string(1, i), "&#" + to_string(i) + ";"});
+std::string htmldecode(std::string s) {
+    for (int i = 0; i < 256; i++) htmlEntities.push_back({std::string(1, i), "&#" + std::to_string(i) + ";"});
     for (auto entity : htmlEntities) s = str_replace(entity.second, entity.first, s);
     return s;
 }
@@ -28,12 +32,12 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
     auto $_GET = getParam(request);
     if ($_GET.find("ticket") == $_GET.end()) quickSendMsgWithoutMySQL(400);
 
-    string ticket = $_GET["ticket"];
+    std::string ticket = $_GET["ticket"];
 
-    string host = appConfig["cas"]["host"].asString();
-    string ip = [&](){
+    std::string host = appConfig["cas"]["host"].asString();
+    std::string ip = [&](){
         auto res = gethostbyname(host.c_str());
-        return string(inet_ntoa(*(struct in_addr*)res->h_addr_list[0]));
+        return std::string(inet_ntoa(*(struct in_addr*)res->h_addr_list[0]));
     }();
     Client client(ip, appConfig["cas"]["port"].asInt());
     Connection conn2 = client.connect();
@@ -45,7 +49,7 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
         SSL_set_fd(ssl, conn2.conn);
         if (SSL_connect(ssl) == -1) quickSendMsgWithoutMySQL(500);
     }
-    stringstream ss;
+    std::stringstream ss;
     ss << "GET " << appConfig["cas"]["prefix"].asString() << "?ticket=" << ticket << "&service=" << urlencode(appConfig["cas"]["service"].asString()) << " HTTP/1.1\r\n";
     ss << "User-Agent: LittleYang OnlineJudge Backend Service\r\n";
     ss << "Host: " << appConfig["cas"]["host"].asString() << ":" << appConfig["cas"]["port"].asInt() << "\r\n";
@@ -56,8 +60,8 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
     int len = 0;
     if (!appConfig["cas"]["ssl"].asBool()) len = recv(conn2.conn, ch, 1024 * 1024, 0);
     else len = SSL_read(ssl, ch, 1024 * 1024);
-    string r = string(ch, len);
-    string data = r.substr(r.find("\r\n\r\n") + 4);
+    std::string r = std::string(ch, len);
+    std::string data = r.substr(r.find("\r\n\r\n") + 4);
     delete[] ch;
 
     Json::Value object;
@@ -66,13 +70,13 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
     object["msg"] = "OK";
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
-    if (data.find("cas:authenticationFailure") != string::npos) {
+    if (data.find("cas:authenticationFailure") != std::string::npos) {
         object["success"] = false;
         object["msg"] = "Authentication Failure";
-        int pt = data.find("authenticationFailure") + string("authenticationFailure").size();
+        int pt = data.find("authenticationFailure") + std::string("authenticationFailure").size();
         object["failureCode"] = getContent(data, "code=\"", "\"", pt);
         object["failureMsg"] = htmldecode(getContent(data, ">", "<", pt));
-    } else if (data.find("cas:authenticationSuccess") != string::npos) {
+    } else if (data.find("cas:authenticationSuccess") != std::string::npos) {
         object["ID_NUMBER"] = getContent(data, "<cas:ID_NUMBER>", "</cas:ID_NUMBER>"); // 学号
         object["ID_TYPE"] = atoi(getContent(data, "<cas:ID_TYPE>", "</cas:ID_TYPE>").c_str()); // 学生类型
         object["UNIT_ID"] = atoi(getContent(data, "<cas:UNIT_ID>", "</cas:UNIT_ID>").c_str()); // 学院ID
@@ -82,26 +86,26 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
         object["USER_ID"] = getContent(data, "<cas:USER_ID>", "</cas:USER_ID>");
         object["USER_NAME"] = getContent(data, "<cas:USER_NAME>", "</cas:USER_NAME>"); // 姓名
         object["TYPE_NAME"] = getContent(data, "<cas:TYPE_NAME>", "</cas:TYPE_NAME>"); // 学生类型名称
-        string schoolId = object["ID_NUMBER"].asString();
+        std::string schoolId = object["ID_NUMBER"].asString();
 
         MYSQL mysql = quick_mysqli_connect();
         auto res = mysqli_query(mysql, "SELECT * FROM user WHERE idNumber = \"%s\"", schoolId.c_str());
         int uid = 0;
         if (res.size() == 0) {
             uid = atoi(mysqli_query(mysql, "SELECT MAX(id) AS count FROM user")[0]["count"].c_str()) + 1;
-            string title = object["USER_NAME"].asString();
-            string name = object["USER_NAME"].asString();
-            string idNumber = object["ID_NUMBER"].asString();
+            std::string title = object["USER_NAME"].asString();
+            std::string name = object["USER_NAME"].asString();
+            std::string idNumber = object["ID_NUMBER"].asString();
             int idType = object["ID_TYPE"].asInt();
-            string typeName = object["TYPE_NAME"].asString();
+            std::string typeName = object["TYPE_NAME"].asString();
             int unitId = object["UNIT_ID"].asInt();
-            string unitName = object["UNIT_NAME"].asString();
+            std::string unitName = object["UNIT_NAME"].asString();
             int sex = object["USER_SEX"].asInt();
-            string password = "";
+            std::string password = "";
             time_t createTime = time(NULL);
             int rating = 0;
-            string groups = "[1]";
-            string info = "";
+            std::string groups = "[1]";
+            std::string info = "";
             mysqli_execute(
                 mysql,
                 "INSERT INTO user VALUES (%d, \"%s\", \"%s\", \"%s\", %d, \"%s\", %d, \"%s\", %d, \"%s\", %d, %d, \"%s\", \"%s\")",
@@ -120,9 +124,9 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
                 quote_encode(groups).c_str(),
                 quote_encode(info).c_str()
             );
-            system(("cp -r ./data/users/0 ./data/users/" + to_string(uid)).c_str());
+            system(("cp -r ./data/users/0 ./data/users/" + std::to_string(uid)).c_str());
         } else uid = atoi(res[0]["id"].c_str());
-        string session = generateSession();
+        std::string session = generateSession();
         mysqli_execute(
             mysql,
             "INSERT INTO session VALUES (%d, \"%s\", %ld)",
@@ -137,10 +141,10 @@ auto UsersCasLogin = [](client_conn conn, http_request request, param argv) {
         object["msg"] = "Bad Request";
     }
 
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

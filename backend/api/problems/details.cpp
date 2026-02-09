@@ -1,3 +1,8 @@
+#pragma once
+
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ProblemsDetails = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
@@ -19,7 +24,7 @@ auto ProblemsDetails = [](client_conn conn, http_request request, param argv) {
         atoi(argv[0].c_str()),
         argv.size() == 2 ? atoi(argv[1].c_str()) : 0
     );
-    string code = submission.size() ? submission[0]["code"] : "";
+    std::string code = submission.size() ? submission[0]["code"] : "";
     int lang = submission.size() ? atoi(submission[0]["lang"].c_str()) : 0;
 
     Json::Value object;
@@ -36,7 +41,7 @@ auto ProblemsDetails = [](client_conn conn, http_request request, param argv) {
     object["item"]["title"] = res[0]["title"];
     object["item"]["difficulty"] = atoi(res[0]["difficulty"].c_str());
     object["item"]["tags"] = Json::arrayValue;
-    auto tags = res[0]["tags"] == "[]" ? vector<argvar>() : mysqli_query(
+    auto tags = res[0]["tags"] == "[]" ? std::vector<argvar>() : mysqli_query(
         mysql,
         "SELECT * FROM tags WHERE id in (%s)",
         res[0]["tags"].substr(1, res[0]["tags"].size() - 2).c_str()
@@ -64,30 +69,30 @@ auto ProblemsDetails = [](client_conn conn, http_request request, param argv) {
     object["config"]["output"] = config["output"];
     object["config"]["minTime"] = [&](){
         int _min = 1e9;
-        for (int i = 0; i < config["datas"].size(); i++) _min = min(_min, config["datas"][i]["time"].asInt());
+        for (int i = 0; i < config["datas"].size(); i++) _min = std::min(_min, config["datas"][i]["time"].asInt());
         return _min;
     }();
     object["config"]["maxTime"] = [&](){
         int _max = 0;
-        for (int i = 0; i < config["datas"].size(); i++) _max = max(_max, config["datas"][i]["time"].asInt());
+        for (int i = 0; i < config["datas"].size(); i++) _max = std::max(_max, config["datas"][i]["time"].asInt());
         return _max;
     }();
     object["config"]["minMemory"] = [&](){
         int _min = 1e9;
-        for (int i = 0; i < config["datas"].size(); i++) _min = min(_min, config["datas"][i]["memory"].asInt());
+        for (int i = 0; i < config["datas"].size(); i++) _min = std::min(_min, config["datas"][i]["memory"].asInt());
         return _min;
     }();
     object["config"]["maxMemory"] = [&](){
         int _max = 0;
-        for (int i = 0; i < config["datas"].size(); i++) _max = max(_max, config["datas"][i]["memory"].asInt());
+        for (int i = 0; i < config["datas"].size(); i++) _max = std::max(_max, config["datas"][i]["memory"].asInt());
         return _max;
     }();
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

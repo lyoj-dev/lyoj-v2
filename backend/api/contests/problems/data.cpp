@@ -1,3 +1,7 @@
+#include "../../../httpd.h"
+#include "../../../utils.cpp"
+#include "../../problems/data.cpp"
+
 auto ContestsProblemsData = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
@@ -17,6 +21,6 @@ auto ContestsProblemsData = [](client_conn conn, http_request request, param arg
     }
     
     swap(argv[0], argv[1]);
-    argv[1] = to_string(hidden);
+    argv[1] = std::to_string(hidden);
     ProblemsData(conn, request, argv);
 };

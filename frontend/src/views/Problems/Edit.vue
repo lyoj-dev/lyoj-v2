@@ -462,10 +462,10 @@ async function submit() {
             <v-card-title>{{ t('pages.problems.edit.cases') }}</v-card-title>
             <v-card-text>
                 <ProblemEditCase
-                    v-for="(item, index) in item.item.cases"
-                    :id="index + 1"
-                    v-model:input="item.input"
-                    v-model:output="item.output"
+                    v-for="(item2, index) in item.item.cases"
+                    :id="(index as number) + 1"
+                    v-model:input="item2.input"
+                    v-model:output="item2.output"
                 ></ProblemEditCase>
                 <div class="d-flex justify-center mt-3">
                     <v-btn class="ProblemEdit-appendButton" @click="() => item.item.cases.push({ input: '', output: '' })">
@@ -578,9 +578,9 @@ async function submit() {
                     v-for="(data, index) in configs.datas"
                     class="d-flex align-center ProblemEdit-dataConfig"
                 >
-                    <p class="ProblemEdit-dataName">{{ "#" + (index + 1) + ": " + data.input + " / " + data.output }}</p>
+                    <p class="ProblemEdit-dataName">{{ "#" + ((index as number) + 1) + ": " + data.input + " / " + data.output }}</p>
                     <center class="ProblemEdit-dataSingle d-flex align-center">
-                        <v-text-field
+                        <v-text-field   
                             density="compact"
                             type="number"
                             hide-details

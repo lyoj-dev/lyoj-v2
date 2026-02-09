@@ -1,3 +1,7 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+#include "../../../shared/socket.h"
+
 auto WSSubmissionsDetails = [](client_conn conn, http_request request, param argv) {
     auto mysql = quick_mysqli_connect();
     auto userId = getUserId(request);
@@ -9,7 +13,7 @@ auto WSSubmissionsDetails = [](client_conn conn, http_request request, param arg
     );
     if (submission.size() == 0) {
         ws_exitRequest(conn);
-        pthread_exit(NULL);
+        exit(0);
     }
     auto contest = mysqli_query(
         mysql,
@@ -28,7 +32,7 @@ auto WSSubmissionsDetails = [](client_conn conn, http_request request, param arg
     bool ws_alive = true;
 
     while(true) {
-        string data = client.recv();
+        std::string data = client.recv();
         if (data == errorKey) break;
         Json::Value val = json_decode(data);
 
@@ -96,5 +100,5 @@ auto WSSubmissionsDetails = [](client_conn conn, http_request request, param arg
     }
 
     if (ws_alive) ws_exitRequest(conn);
-    pthread_exit(NULL);
+    exit(0);
 };

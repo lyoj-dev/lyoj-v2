@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ContestsDetails = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
@@ -10,18 +13,18 @@ auto ContestsDetails = [](client_conn conn, http_request request, param argv) {
         "SELECT * FROM contest WHERE id = %d",
         atoi(argv[0].c_str())
     );
-    set<int> tagsSet;
+    std::set<int> tagsSet;
     if (res.size() == 0) quickSendMsg(404);
     Json::Value itemTags = json_decode(res[0]["tags"]);
     for (int j = 0; j < itemTags.size(); j++) if (itemTags[j].asInt()) tagsSet.insert(itemTags[j].asInt());
-    string tagsList = "";
-    for (auto v : tagsSet) tagsList += to_string(v) + ",";
+    std::string tagsList = "";
+    for (auto v : tagsSet) tagsList += std::to_string(v) + ",";
     if (tagsSet.size()) tagsList = tagsList.substr(0, tagsList.size() - 1);
     auto tags = tagsSet.size() ? mysqli_query(
         mysql,
         "SELECT * FROM tags WHERE id in (%s)",
         tagsList.c_str()
-    ) : vector<map<string, string> >();
+    ) : std::vector<std::map<std::string, std::string> >();
     int signups = atoi(mysqli_query(
         mysql,
         "SELECT COUNT(*) AS count FROM contest_signup WHERE id = %d",
@@ -63,10 +66,10 @@ auto ContestsDetails = [](client_conn conn, http_request request, param argv) {
     object["item"]["hasPassword"] = res[0]["password"] != "";
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

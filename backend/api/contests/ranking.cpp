@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ContestsRanking = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
@@ -29,7 +32,7 @@ auto ContestsRanking = [](client_conn conn, http_request request, param argv) {
         atoi(argv[0].c_str()),
         type == ACM ? "time2 + penalty * 20 * 60" : "time",
         (page - 1) * 10
-    ) : vector<argvar>();
+    ) : std::vector<argvar>();
     auto scoresRes = mysqli_query(
         mysql,
         "SELECT score FROM contest_ranking WHERE id = %d",
@@ -37,7 +40,7 @@ auto ContestsRanking = [](client_conn conn, http_request request, param argv) {
     );
     int *scores = new int[scoresRes.size()];
     for (int i = 0; i < scoresRes.size(); i++) scores[i] = atoi(scoresRes[i]["score"].c_str());
-    sort(scores, scores + scoresRes.size());
+    std::sort(scores, scores + scoresRes.size());
     auto my = mysqli_query(
         mysql,
         "SELECT * FROM contest_ranking WHERE id = %d AND uid = %d",
@@ -45,10 +48,10 @@ auto ContestsRanking = [](client_conn conn, http_request request, param argv) {
         userId
     );
 
-    string userList = "";
+    std::string userList = "";
     for (int i = 0; i < res.size(); i++) userList += (i ? "," : "") + res[i]["uid"];
-    if (my.size()) userList += (userList == "" ? "" : ",") + to_string(userId);
-    auto users = userList == "" ? vector<argvar>() : mysqli_query(
+    if (my.size()) userList += (userList == "" ? "" : ",") + std::to_string(userId);
+    auto users = userList == "" ? std::vector<argvar>() : mysqli_query(
         mysql,
         "SELECT id, title FROM user WHERE id in (%s)",
         userList.c_str()
@@ -67,7 +70,7 @@ auto ContestsRanking = [](client_conn conn, http_request request, param argv) {
         Json::Value single;
         single["id"] = type == ACM ? 
             i + 1 + (page - 1) * 10 : 
-            scoresRes.size() - (upper_bound(scores, scores + scoresRes.size(), atoi(res[i]["score"].c_str())) - scores) + 1;
+            scoresRes.size() - (std::upper_bound(scores, scores + scoresRes.size(), atoi(res[i]["score"].c_str())) - scores) + 1;
         single["uid"] = atoi(res[i]["uid"].c_str());
         single["user"] = "";
         for (int j = 0; j < users.size(); j++) {
@@ -93,7 +96,7 @@ auto ContestsRanking = [](client_conn conn, http_request request, param argv) {
                 atoi(my[0]["score"].c_str()),
                 atoi(my[0]["time2"].c_str()) + atoi(my[0]["penalty"].c_str()) * 20 * 60
             )[0]["count"].c_str()) + 1 :
-            scoresRes.size() - (upper_bound(scores, scores + scoresRes.size(), atoi(my[0]["score"].c_str())) - scores) + 1;
+            scoresRes.size() - (std::upper_bound(scores, scores + scoresRes.size(), atoi(my[0]["score"].c_str())) - scores) + 1;
         object["item"]["uid"] = userId;
         object["item"]["user"] = "";
         for (int j = 0; j < users.size(); j++) {
@@ -128,10 +131,10 @@ auto ContestsRanking = [](client_conn conn, http_request request, param argv) {
     }
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

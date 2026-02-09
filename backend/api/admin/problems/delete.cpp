@@ -1,14 +1,20 @@
-#include "../../httpd.h"
-#include "../../utils.cpp"
+#include "../../../httpd.h"
+#include "../../../utils.cpp"
 
-auto UsersListAll = [](client_conn conn, http_request request, param argv) {
-    MYSQL mysql = quick_mysqli_connect();
+auto AdminProblemsDelete = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
+    if (!hasPermission(userInfo, AdminPage)) quickSendMsgWithoutMySQL(403);
+    auto $_POST = json_decode(request.postdata);
 
-    auto res = mysqli_query(
-        mysql, 
-        "SELECT id, title FROM user ORDER BY id ASC"
+    MYSQL mysql = quick_mysqli_connect();
+    std::string ids = json_encode($_POST["ids"]);
+    ids[0] = '(', ids[ids.size() - 1] = ')';
+
+    mysqli_execute(
+        mysql,
+        "UPDATE problem SET hidden = true, banned = true, groups = '[]' WHERE id in %s", 
+        ids.c_str()
     );
 
     Json::Value object;
@@ -16,13 +22,6 @@ auto UsersListAll = [](client_conn conn, http_request request, param argv) {
     object["msg"] = http_code[200];
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
-    object["items"].resize(0);
-    for (int i = 0; i < res.size(); i++) {
-        Json::Value single;
-        single["id"] = atoi(res[i]["id"].c_str());
-        single["title"] = res[i]["title"];
-        object["items"].append(single);
-    }
 
     mysqli_close(mysql);
     std::string responseBody = json_encode(object);

@@ -9,11 +9,10 @@
  * 
  */
 
-#include<bits/stdc++.h>
 #include<pthread.h>
+#include <queue>
 #define __windows__ (defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
 #if __linux__ 
-#include<signal.h>
 #include<sys/resource.h>
 #include<sys/wait.h>
 #include<sys/syscall.h>
@@ -28,32 +27,30 @@
 // #include<winsock.h>
 #endif
 
-using namespace std;
-string workPath = "", dataPath = "";
 #include"../shared/json.h"
 #include"../shared/log.h"
 #include"../shared/type.h"
 #include"../shared/socket.h"
 #include"../shared/utils.h"
-Json::Value judge;
 #include"system.h"
 #include"core.h"
 
 int main(int argc, char** argv) {
+    // strcpy(argv[0], "lyoj-judge: unit test process");
     if (argc < 6) {
-        cout << "LYOJ 评测机单元程序" << endl;
-        cout << endl;
-        cout << "Usage: " << argv[0] << " <judge.json> <data-path> <tmp-path> <server.sock> <lang>" << endl;
-        cout << "    judge.json: 评测机配置文件" << endl;
-        cout << "    data-path: 数据文件目录" << endl;
-        cout << "    tmp-path: 临时文件目录" << endl;
-        cout << "    server.sock: 数据服务套接字文件" << endl;
-        cout << "    lang: 编程语言 id" << endl;
-        cout << endl;
-        cout << "注意: " << endl;
-        cout << "    此程序不应由用户手动执行，" << endl;
-        cout << "    应由评测机主程序创建评测任务后新建监听套接字，" << endl;
-        cout << "    随后评测机主程序调用该程序并利用该套接字通信。" << endl;
+        std::cout << "LYOJ 评测机单元程序" << std::endl;
+        std::cout << std::endl;
+        std::cout << "Usage: " << argv[0] << " <judge.json> <data-path> <tmp-path> <server.sock> <lang>" << std::endl;
+        std::cout << "    judge.json: 评测机配置文件" << std::endl;
+        std::cout << "    data-path: 数据文件目录" << std::endl;
+        std::cout << "    tmp-path: 临时文件目录" << std::endl;
+        std::cout << "    server.sock: 数据服务套接字文件" << std::endl;
+        std::cout << "    lang: 编程语言 id" << std::endl;
+        std::cout << std::endl;
+        std::cout << "注意: " << std::endl;
+        std::cout << "    此程序不应由用户手动执行，" << std::endl;
+        std::cout << "    应由评测机主程序创建评测任务后新建监听套接字，" << std::endl;
+        std::cout << "    随后评测机主程序调用该程序并利用该套接字通信。" << std::endl;
         return 1;
     }
     // system("export PATH=$PATH:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/sbin");
@@ -62,14 +59,14 @@ int main(int argc, char** argv) {
     __chdir(workPath);
     judge = json_decode(readFile(argv[1]));
     Json::Value data = json_decode(readFile(dataPath + "/config.json"));
-    string serverSock = argv[4];
+    std::string serverSock = argv[4];
     int lang = atoi(argv[5]);
     Client client(serverSock);
     Connection conn = client.connect();
     
-    map<int, int> subtasks = { { 0, 0 } };
-    vector<vector<int> > subtasks_depends(data["subtasks"].size() + 1, vector<int>());
-    vector<vector<int> > subtasks_data(data["subtasks"].size() + 1, vector<int>());
+    std::map<int, int> subtasks = { { 0, 0 } };
+    std::vector<std::vector<int> > subtasks_depends(data["subtasks"].size() + 1, std::vector<int>());
+    std::vector<std::vector<int> > subtasks_data(data["subtasks"].size() + 1, std::vector<int>());
     int *depends = new int[data["subtasks"].size() + 1];
     memset(depends, 0, (data["subtasks"].size() + 1) * sizeof(int));
     for (int i = 0; i < data["subtasks"].size(); i++) subtasks[data["subtasks"][i]["id"].asInt()] = i + 1;
@@ -100,7 +97,7 @@ int main(int argc, char** argv) {
     time_t st = clock2();
     if (judge["languages"][lang]["type"].asInt() != 1) {
         writeLog(LOG_LEVEL_INFO, "Compiling source code...");
-        string info = "";
+        std::string info = "";
         int ret = system2(judge["languages"][lang]["command"].asString() + " 2>&1", info);
         if (ret) {
             writeLog(LOG_LEVEL_INFO, "Failed to compile source code!");
@@ -118,7 +115,7 @@ int main(int argc, char** argv) {
     st = clock2();
     if (data["spj"]["type"].asInt() == 0) {
         writeLog(LOG_LEVEL_INFO, "Compiling special judge..");
-        string info = "";
+        std::string info = "";
         int ret = system2(data["spj"]["compile_cmd"].asString() + " 2>&1", info);
         if (ret) {
             writeLog(LOG_LEVEL_INFO, "Failed to compile special judge!");
@@ -161,7 +158,7 @@ int main(int argc, char** argv) {
 
     // 拓扑排序
     int sum_t = 0, max_m = 0;
-    queue<int> q;
+    std::queue<int> q;
     for (int i = 0; i < data["subtasks"].size() + 1; i++) if (depends[i] == 0) q.push(i);
     int submitResult = -1, cnt = 0;
     while (!q.empty()) {
@@ -204,7 +201,7 @@ int main(int argc, char** argv) {
             int now_status, t, m;
             writeLog(LOG_LEVEL_INFO, "Running test case %d-%d...", curr, i + 1);
             Json::Value status = judge_data(subtasks_data[curr][i], lang, now_status, t, m, judge, data);
-            sum_t += t, max_m = max(max_m, m);
+            sum_t += t, max_m = std::max(max_m, m);
             if (subtaskResult == -1 && now_status != AC) subtaskResult = now_status;
             if (submitResult == -1 && now_status != AC) submitResult = now_status;
             if (now_status != AC) accepted = false;
@@ -230,12 +227,12 @@ int main(int argc, char** argv) {
                 break;
             case 1: 
                 for (int i = 0; i < subtasks_data[curr].size(); i++) 
-                    score = max(score, subtask["datas"][i]["score"].asInt()); 
+                    score = std::max(score, subtask["datas"][i]["score"].asInt()); 
                 break;
             case 2: 
                 score = 1e9; 
                 for (int i = 0; i < subtasks_data[curr].size(); i++) 
-                    score = min(score, subtask["datas"][i]["score"].asInt()); 
+                    score = std::min(score, subtask["datas"][i]["score"].asInt()); 
                 break;
         }
         if (curr && data["subtasks"][curr - 1]["type"].asInt() == 3) score /= subtasks_data[curr].size();

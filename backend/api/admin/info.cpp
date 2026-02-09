@@ -1,10 +1,13 @@
-string trim(string s) {
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
+std::string trim(std::string s) {
     while (s.size() && s.front() == ' ') s = s.substr(1);
     while (s.size() && s.back() == ' ') s.pop_back();
     return s;
 }
 
-string system2(string cmd) {
+std::string system2(std::string cmd) {
     FILE *stream; 
     char buf[1024 * 1024]; 
     memset(buf, '\0', sizeof(buf));
@@ -15,7 +18,7 @@ string system2(string cmd) {
 #endif
     int k = fread(buf, sizeof(char), sizeof(buf), stream);
     pclose(stream);
-    return string(buf);
+    return std::string(buf);
 }
 
 auto AdminInfo = [](client_conn conn, http_request request, param argv) {
@@ -31,20 +34,20 @@ auto AdminInfo = [](client_conn conn, http_request request, param argv) {
 
     // 计算 cpu 信息
     {
-        string cpuInfo = system2("cat /proc/cpuinfo");
+        std::string cpuInfo = system2("cat /proc/cpuinfo");
         auto lines = explode("\n", cpuInfo);
         int cores = 0;
         for (auto line : lines) {
             auto parts = explode(":", line);
-            if (parts[0].find("model name") != string::npos) object["cpu"]["name"] = trim(parts[1]), cores++;
-            if (parts[0].find("cpu MHz") != string::npos) object["cpu"]["speed"] = atof(trim(parts[1]).c_str());
+            if (parts[0].find("model name") != std::string::npos) object["cpu"]["name"] = trim(parts[1]), cores++;
+            if (parts[0].find("cpu MHz") != std::string::npos) object["cpu"]["speed"] = atof(trim(parts[1]).c_str());
         }
         object["cpu"]["cores"] = cores;
 
-        string res = system2("top -bn 1 -i -c");
+        std::string res = system2("top -bn 1 -i -c");
         lines = explode("\n", res);
         for (auto line : lines) {
-            if (line.find("Cpu(s):") != string::npos) {
+            if (line.find("Cpu(s):") != std::string::npos) {
                 auto parts = explode(":", line);
                 auto parts2 = explode(",", parts[1]);
                 for (int i = 0; i < parts2.size(); i++) {
@@ -57,7 +60,7 @@ auto AdminInfo = [](client_conn conn, http_request request, param argv) {
 
     // 计算内存信息
     {
-        string res = system2("free -m");
+        std::string res = system2("free -m");
         auto lines = explode("\n", res);
         for (auto line : lines) {
             auto parts = explode(" ", line);
@@ -81,7 +84,7 @@ auto AdminInfo = [](client_conn conn, http_request request, param argv) {
 
     // 计算磁盘信息
     {
-        string res = system2("df");
+        std::string res = system2("df");
         auto lines = explode("\n", res);
         object["disk"].resize(0);
         for (auto line : lines) {
@@ -123,10 +126,10 @@ auto AdminInfo = [](client_conn conn, http_request request, param argv) {
     object["groups"] = atoi(mysqli_query(mysql, "SELECT COUNT(*) as count FROM userGroup")[0]["count"].c_str());
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

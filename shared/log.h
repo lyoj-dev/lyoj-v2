@@ -1,4 +1,19 @@
-string logLevels[] = {
+#pragma once
+
+#include "proc.h"
+#include <semaphore.h>
+#include <sys/syscall.h>
+#include <cstdarg>
+#include <cstring>
+#include <fstream>
+#include <ios>
+#include <iostream>
+#include <ostream>
+#include <pthread.h>
+#include <string>
+#include <unistd.h>
+
+std::string logLevels[] = {
     "DEBUG",
     "INFO",
     "WARNING",
@@ -24,15 +39,16 @@ class LogHelper {
 
     LOG_LEVEL logLevelId = LOG_LEVEL_INFO;
     LOG_TARGET target = LOG_TARGET_CONSOLE;
-    string targetPath = "log.txt";
-    pthread_mutex_t mutex;
+    std::string targetPath = "log.txt";
+    // pthread_mutex_t mutex;
+    sem_t* sem;
 
     LogHelper() {
-        pthread_mutex_init(&mutex, NULL);
+        sem = proc_sem_init();
     }
 
-    void write(LOG_LEVEL levelId, string codeFile, int line, const char* format, ...) {
-        pthread_mutex_lock(&mutex);
+    void write(LOG_LEVEL levelId, std::string codeFile, int line, const char* format, ...) {
+        proc_sem_lock(sem);
         if (levelId >= logLevelId) {
             // 格式化文本
             va_list args;
@@ -47,30 +63,30 @@ class LogHelper {
             time_t t = time(NULL);
             strftime(st, sizeof st, "%Y-%m-%d %H:%M:%S", localtime(&t));
 
-            // 获取线程id
+            // 获取进程id
             int tid = -1;
             #if __linux__
-            tid = syscall(__NR_gettid);
+            tid = getpid();
             // #elif __windows__
             // tid = GetCurrentThreadId();
             #endif
 
             if (target & LOG_TARGET_FILE) {
-                ofstream fout(targetPath, ios::app);
+                std::ofstream fout(targetPath, std::ios::app);
                 fout << "[" << st << "] "
                      << "[" << logLevels[levelId] << "] "
                      << "[tid:" << tid << "] "
-                     << "[" << codeFile << ":" << line << "] " << buf << endl;
+                     << "[" << codeFile << ":" << line << "] " << buf << std::endl;
                 fout.close();
             }
             if (target & LOG_TARGET_CONSOLE) {
-                cerr << "[" << st << "] "
+                std::cerr << "[" << st << "] "
                      << "[" << logLevels[levelId] << "] "
                      << "[tid:" << tid << "] "
-                     << "[" << codeFile << ":" << line << "] " << buf << endl;
+                     << "[" << codeFile << ":" << line << "] " << buf << std::endl;
             }
         }
-        pthread_mutex_unlock(&mutex);
+        proc_sem_unlock(sem);
     }
 }Log;
 

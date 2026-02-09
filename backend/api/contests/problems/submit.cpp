@@ -1,3 +1,7 @@
+#include "../../../httpd.h"
+#include "../../../utils.cpp"
+#include "../../problems/submit.cpp"
+
 auto ContestsProblemsSubmit = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);

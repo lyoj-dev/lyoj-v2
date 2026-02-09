@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ContestsUnregister = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);

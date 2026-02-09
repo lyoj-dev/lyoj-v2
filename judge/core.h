@@ -1,3 +1,26 @@
+#pragma once
+
+#include"../shared/json.h"
+#include"../shared/log.h"
+#include"../shared/type.h"
+#include"../shared/socket.h"
+#include"../shared/utils.h"
+#include"system.h"
+#include <algorithm>
+#include <csignal>
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iostream>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <vector>
+
+std::string workPath = "", dataPath = "";
+Json::Value judge;
 int runtime_error_state=0;
 int runtime_error_reason=0;
 int process_pid=0;
@@ -27,53 +50,53 @@ void handler(int sig) {
  */
 int get_proc_mem(int pid){
 	char *line_buff;
-	ifstream fin("/proc/" + to_string(pid) + "/status");
+	std::ifstream fin("/proc/" + std::to_string(pid) + "/status");
 	if (!fin) return 0;
-	stringstream tmp; 
+	std::stringstream tmp; 
 	tmp << fin.rdbuf();
-	string buffer = tmp.str();
+	std::string buffer = tmp.str();
 	fin.close(); 
 	char name[64]; int vmrss;
 	line_buff = strtok(const_cast<char*>(buffer.c_str()), "\n");
 	while(line_buff != NULL){
 		sscanf(line_buff, "%s", name);
-		if (name == string("State:")) {
+		if (name == std::string("State:")) {
 			char state[64] = "";
 			sscanf(line_buff, "%s %s", name, state);
-			if (state == string("Z")) return 0;
+			if (state == std::string("Z")) return 0;
 		}
-		if (name == string("VmRSS:")) {
+		if (name == std::string("VmRSS:")) {
 			sscanf(line_buff, "%s %d", name, &vmrss);
 			return vmrss;
 		} line_buff = strtok(NULL,"\n");
 	} return 0;
 }
 
-vector<string> explode(string seperator, string source) {
-	string src = source; vector<string> res;
-	while (src.find(seperator) != string::npos) {
+std::vector<std::string> explode(std::string seperator, std::string source) {
+	std::string src = source; std::vector<std::string> res;
+	while (src.find(seperator) != std::string::npos) {
 		int wh = src.find(seperator);
 		res.push_back(src.substr(0, src.find(seperator)));
-		src = src.substr(wh + string(seperator).size());
+		src = src.substr(wh + std::string(seperator).size());
 	} res.push_back(src);
 	return res;
 }
 
-int getpidByName(string name, int stpid) {
+int getpidByName(std::string name, int stpid) {
     int exec = stpid;
     bool hasBash = false;
     while (1) {
         if (kill(exec, 0) != 0) return -1;
-        ifstream fin("/proc/" + to_string(stpid) + "/status");
+        std::ifstream fin("/proc/" + std::to_string(stpid) + "/status");
         if (!fin) continue;
-        stringstream ss;
+        std::stringstream ss;
         ss << fin.rdbuf();
-        string buffer = ss.str();
+        std::string buffer = ss.str();
         fin.close();
         auto tmp = explode("\n", buffer);
         for (auto i : tmp) {
-            if (i.find("Name:") != string::npos) {
-                string pname = i.substr(i.find("\t") + 1);
+            if (i.find("Name:") != std::string::npos) {
+                std::string pname = i.substr(i.find("\t") + 1);
                 if (pname == "bash") {
                     if (!hasBash) hasBash = true;
                     else stpid--;
@@ -83,6 +106,19 @@ int getpidByName(string name, int stpid) {
             }
         } stpid++;
     }
+}
+
+std::vector<int> getpidsByPpid(int ppid) {
+    std::string pidString = system2("ps -o pid= --ppid \"" + std::to_string(ppid) + "\"");
+    auto pidStrings = explode("\n", pidString);
+    std::vector<int> pids = { ppid };
+    for (int i = 0; i < pidStrings.size(); i++) {
+        int pid = atoi(pidStrings[i].c_str());
+        if (pid == 0) continue;
+        auto res = getpidsByPpid(pid);
+        for (int j = 0; j < res.size(); j++) pids.push_back(res[j]);
+    }
+    return pids;
 }
 
 /**
@@ -98,7 +134,7 @@ int getpidByName(string name, int stpid) {
  * @return 0: AC/WA，1: UE，2: TLE，3: MLE，4: RE
  */
 int run_code(
-    string cmd,
+    std::string cmd,
     int64_t &time,
     int64_t &memory,
     int64_t time_limit,
@@ -107,23 +143,21 @@ int run_code(
     bool stdin = false,
     bool stdout = false
 ) {
-	ofstream fout("run.sh");
-	fout << "ulimit -s 2097152" << endl;
-    fout << "ulimit -u $(($(ps -u " << judge["runas"].asString() << " | wc -l)+10))" << endl; // 防止 fork 炸弹
+	std::ofstream fout("run.sh");
+	fout << "ulimit -s 2097152" << std::endl;
+    fout << "ulimit -u $(($(ps -u " << judge["runas"].asString() << " | wc -l)+10))" << std::endl; // 防止 fork 炸弹
     fout << cmd;
 	if (stdin) fout << " < stdin";
 	if (stdout) fout << " > stdout";
-	fout << endl;
-    fout << "echo $? > .status" << endl;
+	fout << std::endl;
+    fout << "echo $? > .status" << std::endl;
 	fout.close();
     bool key = false;
 	char *argv[1010] = { NULL }; 
-    argv[0] = const_cast<char*>("sudo"); 
-    argv[1] = const_cast<char*>("-u");
-    argv[2] = const_cast<char*>(judge["runas"].asCString());
-    argv[3] = const_cast<char*>("bash"); 
-    argv[4] = const_cast<char*>("run.sh");
-	string process = ""; 
+    argv[0] = const_cast<char*>("su");
+    argv[1] = const_cast<char*>(judge["runas"].asCString());
+    argv[2] = const_cast<char*>("./run.sh"); 
+	std::string process = "";
     time = memory = 0;
 
     pid_t executive = fork(); 
@@ -135,26 +169,24 @@ int run_code(
         return 1;
     }
     else if (executive == 0) {
-		execvp("sudo", argv);
+		execvp("su", argv);
 		exit(0);
 	}
-    else { 
-		string name = cmd; 
-        if (name.find(" ") != string::npos) name = name.substr(0, name.find(" "));
-        if (name.find("/") != string::npos) name = name.substr(name.rfind("/") + 1);
+    else {
+		std::string name = cmd; 
+        if (name.find(" ") != std::string::npos) name = name.substr(0, name.find(" "));
+        if (name.find("/") != std::string::npos) name = name.substr(name.rfind("/") + 1);
 		// while (process == "" && kill(executive,0) == 0) {
         //     time_t st = clock2();
         //     process = system2(("pgrep -u " + judge["runas"].asString() + " " + name + " 2>/dev/null").c_str());
-        //     cout << (clock2() - st) << endl;
+        //     cout << (clock2() - st) << std::endl;
         // }
-		int main_pid = getpidByName(name, executive);
-        // int main_pid = executive + 6;
-        // cout << "Sub Process: " << executive << " " << main_pid << endl;
+		// int main_pid = getpidByName(name, executive);
 		time_t st = clock2(); pid_t ret2 = -1;
 		int status = 0; 
-		while (1) { 
+		while (true) { 
 			if (kill(executive, 0) != 0) {
-				ifstream fin(".status");
+				std::ifstream fin(".status");
 				fin >> runtime_error_reason;
 				if (runtime_error_reason) runtime_error_state = 1, runtime_error_reason = SIGSEGV;
 				fin.close();
@@ -169,29 +201,34 @@ int run_code(
 				else writeLog(LOG_LEVEL_INFO, "SPJ Time usage: %dms. Memory usage: %dkb", time, memory);
 				return 0;
 			} 
-            int64_t mem = get_proc_mem(main_pid);
+            int64_t mem = 0;
+            std::vector<int> main_pids = getpidsByPpid(executive);
+            for (int i = 0; i < main_pids.size(); i++)
+                mem += get_proc_mem(main_pids[i]);
 			if (mem != 0) time = clock2() - st, memory = mem;
-            string killScript = "list_descendants ()\n"
-                "{\n"
-                "  local children=$(ps -o pid= --ppid \"$1\")\n"
-                "\n"
-                "  for pid in $children\n"
-                "  do\n"
-                "    list_descendants \"$pid\"\n"
-                "  done\n"
-                "\n"
-                "  echo \"$children\"\n"
-                "}\n";
+            // std::string killScript = "list_descendants ()\n"
+            //     "{\n"
+            //     "  local children=$(ps -o pid= --ppid \"$1\")\n"
+            //     "\n"
+            //     "  for pid in $children\n"
+            //     "  do\n"
+            //     "    list_descendants \"$pid\"\n"
+            //     "  done\n"
+            //     "\n"
+            //     "  echo \"$children\"\n"
+            //     "}\n";
 			if (mem > memory_limit) {
 				if (!special_judge) writeLog(LOG_LEVEL_INFO, "Time usage: %dms. Memory usage: %dkb", time, memory);
 				else writeLog(LOG_LEVEL_INFO, "SPJ Time usage: %dms. Memory usage: %dkb", time, memory);
-				system2("echo '" + killScript + " kill -9 $(list_descendants " + to_string((executive)) + ")' | bash"); // 杀掉进程
+				// system2("echo '" + killScript + " kill -9 $(list_descendants " + std::to_string((executive)) + ")' | bash"); // 杀掉进程
+                for (int i = 0; i < main_pids.size(); i++) std::cout << main_pids[i] << " " << kill(main_pids[i], SIGTERM) << std::endl;
 				return 3;
 			}
 			if (time > time_limit) {
 				if (!special_judge) writeLog(LOG_LEVEL_INFO, "Time usage: %dms. Memory usage: %dkb", time, memory);
 				else writeLog(LOG_LEVEL_INFO, "SPJ Time usage: %dms. Memory usage: %dkb", time, memory);
-				system2("echo '" + killScript + " kill -9 $(list_descendants " + to_string((executive)) + ")' | bash"); // 杀掉进程
+				// system2("echo '" + killScript + " kill -9 $(list_descendants " + std::to_string((executive)) + ")' | bash"); // 杀掉进程
+                for (int i = 0; i < main_pids.size(); i++) std::cout << main_pids[i] << " " << kill(main_pids[i], SIGTERM) << " " << errno << std::endl;
 				return 2;
 			}
 		}
@@ -200,7 +237,7 @@ int run_code(
 }
 #endif
 
-string RE_reason[] = {
+std::string RE_reason[] = {
     "SIGHUP",
     "SIGINT",
     "SIGQUIT",
@@ -283,7 +320,7 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	
 	int64_t st = clock2();
     int retc = 0;
-    string error = "";
+    std::string error = "";
 	#ifdef __linux__
 	system2("rm ./" + data["input"].asString() + " 2>&1");
 	retc |= system2(
@@ -309,13 +346,13 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	clearFile("./" + data["output"].asString());
 
     // 设置权限
-    vector<string> files = getFiles(".");
+    std::vector<std::string> files = getFiles(".");
     for (int i = 0; i < files.size(); i++) chmod(files[i].c_str(), 0777);
     chmod(("./" + data["input"].asString()).c_str(), 0744);
     // 执行用户程序
 	int64_t t = 0, m = 0, ret; 
-    string command = judge["languages"][lang]["exec_command"].asString();
-	string extra_command = "";
+    std::string command = judge["languages"][lang]["exec_command"].asString();
+	std::string extra_command = "";
 	ret = run_code(
         command.c_str(),
         t,
@@ -335,7 +372,7 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
         single["output"] = single["output"].asString().substr(0, lim) + "...";
 	if (ret) {
 		single["time"] = t, single["memory"] = m;
-		sum_t += t, max_m = max(max_m, m);
+		sum_t += t, max_m = std::max(max_m, m);
 		
 		if (!state) state = ret;
 		
@@ -351,17 +388,17 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	}
 	
 	single["time"] = t, single["memory"] = m;
-	sum_t += t, max_m = max(max_m, m);
+	sum_t += t, max_m = std::max(max_m, m);
 	
     clearFile("./score.txt");
     clearFile("./info.txt");
 	
-	string inputpath = dataPath + "/" + data["datas"][dataid]["input"].asString();
-	string outputpath = "./" + data["output"].asString();
-	string answerpath = dataPath + "/" + data["datas"][dataid]["output"].asString();
-	string resultpath = "./score.txt";
-    string infopath = "./info.txt";
-	string sourcepath = "./" + judge["languages"][lang]["source_path"].asString();
+	std::string inputpath = dataPath + "/" + data["datas"][dataid]["input"].asString();
+	std::string outputpath = "./" + data["output"].asString();
+	std::string answerpath = dataPath + "/" + data["datas"][dataid]["output"].asString();
+	std::string resultpath = "./score.txt";
+    std::string infopath = "./info.txt";
+	std::string sourcepath = "./" + judge["languages"][lang]["source_path"].asString();
 	int64_t spjt, spjm;
 	
 	#ifdef __linux__
@@ -370,7 +407,7 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
     for (int i = 0; i < files.size(); i++) chmod(files[i].c_str(), 0777);
     chmod(("./" + data["input"].asString()).c_str(), 0744);
     // 执行 SPJ
-    string cmd = "./spj \"" + inputpath + "\" \"" + outputpath + "\" \"" + answerpath + "\" " + data["datas"][dataid]["score"].asString() + 
+    std::string cmd = "./spj \"" + inputpath + "\" \"" + outputpath + "\" \"" + answerpath + "\" " + data["datas"][dataid]["score"].asString() + 
         " \"" + resultpath + "\" \"" + infopath + "\" \"" + sourcepath + "\" " + data["spj"]["exec_param"].asString();
 	ret = run_code(
         cmd, 
@@ -381,7 +418,7 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
         true
     );
 	// #elif __windows__
-    // string cmd = "spj.exe \"" + inputpath + "\" \"" + outputpath + "\" \"" + answerpath + "\" " + data["datas"][dataid]["score"].asString() + 
+    // std::string cmd = "spj.exe \"" + inputpath + "\" \"" + outputpath + "\" \"" + answerpath + "\" " + data["datas"][dataid]["score"].asString() + 
     //     " \"" + resultpath + "\" \"" + infopath + "\" \"" + sourcepath + "\" " + data["spj"]["exec_param"].asString();
 	// ret = run_code(
     //     cmd, 
@@ -395,7 +432,7 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	
 	if (ret) {
 		single["time"] = spjt + t, single["memory"] = spjm + m;
-		sum_t += spjt + t, max_m = max(max_m, spjm + m);
+		sum_t += spjt + t, max_m = std::max(max_m, spjm + m);
 		
 		if (!state) state=ret;
 		
@@ -412,7 +449,7 @@ Json::Value judge_data(int dataid, int lang, int& state, int& rest, int& resm, J
 	}
 	
 	int gain_score = atoi(readFile("./score.txt").c_str());
-	string spj_info = readFile("./info.txt");
+	std::string spj_info = readFile("./info.txt");
 
 	int now_state=0; 
 	if (gain_score >= data["datas"][dataid]["score"].asInt()) {

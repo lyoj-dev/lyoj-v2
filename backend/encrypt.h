@@ -1,11 +1,15 @@
 #ifndef ENCRYPT_H
 #define ENCRYPT_H
+#include <iomanip>
+#include <ios>
 #include<openssl/ssl.h>
 #include<openssl/aes.h>
 #include<openssl/err.h>
 #include<openssl/ec.h>
 #include<openssl/ecdsa.h>
 #include<openssl/obj_mac.h>
+#include <string>
+#include <vector>
 
 // base64编码部分
 std::string base64_chars =
@@ -58,13 +62,13 @@ std::string base64_encode(char* bytes_to_encode, int in_len) {
     return ret;
 }
 
-string base64_decode(std::string encoded_string) {
+std::string base64_decode(std::string encoded_string) {
     size_t in_len = encoded_string.size();
     int i = 0;
     int j = 0;
     int in_ = 0;
     unsigned char char_array_4[4], char_array_3[3];
-    vector<int> s;
+    std::vector<int> s;
 
     while (in_len-- && (encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
         char_array_4[i++] = encoded_string[in_]; in_++;
@@ -92,7 +96,7 @@ string base64_decode(std::string encoded_string) {
         for (j = 0; (j < i - 1); j++) s.push_back(char_array_3[j]);
     }
 
-    string res;
+    std::string res;
     for (int i = 0; i < s.size(); i++) res += s[i];
     return res;
 }
@@ -107,10 +111,10 @@ unsigned char* sha1(char* data, int len) {
     int ret = SHA1_Final(sSHA, &ctx);
     return sSHA;
 }
-string sha1(string data) {
+std::string sha1(std::string data) {
     auto res = sha1(const_cast<char*>(data.c_str()), data.length());
-    stringstream buffer;
-    for (int i = 0; i < 20; i++) buffer << hex << setw(2) << setfill('0') << int(res[i]);
+    std::stringstream buffer;
+    for (int i = 0; i < 20; i++) buffer << std::hex << std::setw(2) << std::setfill('0') << int(res[i]);
     delete[] res;
     return buffer.str();
 }
@@ -134,7 +138,7 @@ std::string aes_256_cbc_decode(std::string key, std::string iv, std::string data
 }
 
 // rsa-oaep-sha1编码部分
-string rsa_encode(string source, string key) {
+std::string rsa_encode(std::string source, std::string key) {
     RSA* rsa = RSA_new();
     BIO* keybio;
     keybio = BIO_new_mem_buf((unsigned char*)key.c_str(), -1);
@@ -147,7 +151,7 @@ string rsa_encode(string source, string key) {
     char* pEncode = new char[len + 1];
     int ret = RSA_public_encrypt(source.length(), (const unsigned char*)source.c_str(), (unsigned char*)pEncode, rsa, RSA_PKCS1_OAEP_PADDING);
     if (ret >= 0) {
-        string strRet = base64_encode(pEncode, ret);
+        std::string strRet = base64_encode(pEncode, ret);
         delete[] pEncode;
         RSA_free(rsa);
         return strRet;
@@ -160,17 +164,17 @@ string rsa_encode(string source, string key) {
 }
 
 // sha256编码部分
-string sha256(string src) {
+std::string sha256(std::string src) {
     unsigned char* sSHA = new unsigned char[32];
     SHA256((const unsigned char*)src.c_str(), src.length(), sSHA);
-    string res;
+    std::string res;
     for (int i = 0; i < 32; i++) res += sSHA[i];
     delete[] sSHA;
     return res;
 }
 
 // ecdsa-sha256验签部分
-bool ecdsa_sha256_verify(string msg, string sig, string pemKey) {
+bool ecdsa_sha256_verify(std::string msg, std::string sig, std::string pemKey) {
     // 信息转为 SHA256
     msg = sha256(msg);
 

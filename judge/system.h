@@ -1,7 +1,16 @@
-string system2(string cmd) {
+#pragma once
+
+#include <cstring>
+#include <dirent.h>
+#include <iostream>
+#include <string>
+#include <unistd.h>
+#include <vector>
+
+std::string system2(std::string cmd) {
     FILE *stream; 
     char buf[1024 * 1024]; 
-    memset(buf, '\0', sizeof(buf));
+    std::memset(buf, '\0', sizeof(buf));
 #if __linux__
     stream = popen(cmd.c_str(), "r");
 // #elif __windows__
@@ -9,10 +18,10 @@ string system2(string cmd) {
 #endif
     int k = fread(buf, sizeof(char), sizeof(buf), stream);
     pclose(stream);
-    return string(buf);
+    return std::string(buf);
 }
 
-int system2(string cmd, string& result) {
+int system2(std::string cmd, std::string& result) {
     FILE *stream; 
     char buf[1024 * 1024]; 
     memset(buf, '\0', sizeof(buf));
@@ -22,11 +31,11 @@ int system2(string cmd, string& result) {
 //     stream = _popen(cmd.c_str(), "r");
 #endif
     int k = fread(buf, sizeof(char), sizeof(buf), stream);
-    result = string(buf);
+    result = std::string(buf);
     return pclose(stream);
 }
 
-void __chdir(string path) {
+void __chdir(std::string path) {
 #if __linux__
 	int retc = chdir(path.c_str());
 // #elif __windows__
@@ -34,8 +43,8 @@ void __chdir(string path) {
 #endif
 }
 
-vector<string> getFiles(string path) {
-    vector<string> files;
+std::vector<std::string> getFiles(std::string path) {
+    std::vector<std::string> files;
     DIR *dir;
     struct dirent *ptr;
     dir = opendir(path.c_str());

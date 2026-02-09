@@ -1,3 +1,8 @@
+#pragma once
+
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ProblemsData = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
@@ -15,32 +20,32 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
     if (argv.size() == 1 && !hasIntersection(json_decode(res[0]["groups"]), userInfo["groups"])) quickSendMsg(403);
 
     Json::Value config = json_decode(readFile("../problem/" + argv[0] + "/config.json"));
-    map<int, int> subtasks = { { 0, 0 } };
+    std::map<int, int> subtasks = { { 0, 0 } };
     for (int i = 0; i < config["subtasks"].size(); i++)
         subtasks[config["subtasks"][i]["id"].asInt()] = i + 1;
     Json::Value datas = Json::arrayValue;
     for (int i = 0; i < config["datas"].size(); i++) {
         Json::Value data;
 
-        ifstream fin("../problem/" + argv[0] + "/" + config["datas"][i]["input"].asString());
-        fin.seekg(0, ios::end);
-        int len = fin.tellg(); len = max(0, len);
-        fin.seekg(0, ios::beg);
-        char* ch = new char[min(lim, len)];
-        fin.read(ch, min(lim, len));
-        data["inputIgnored"] = argv.size() == 2 && atoi(argv[1].c_str()) ? 0 : max(0, len - lim);
-        data["input"] = argv.size() == 2 && atoi(argv[1].c_str()) ? "" : string(ch, min(lim, len)) + (len > lim ? "..." : "");
+        std::ifstream fin("../problem/" + argv[0] + "/" + config["datas"][i]["input"].asString());
+        fin.seekg(0, std::ios::end);
+        int len = fin.tellg(); len = std::max(0, len);
+        fin.seekg(0, std::ios::beg);
+        char* ch = new char[std::min(lim, len)];
+        fin.read(ch, std::min(lim, len));
+        data["inputIgnored"] = argv.size() == 2 && atoi(argv[1].c_str()) ? 0 : std::max(0, len - lim);
+        data["input"] = argv.size() == 2 && atoi(argv[1].c_str()) ? "" : std::string(ch, std::min(lim, len)) + (len > lim ? "..." : "");
         fin.close();
 
         fin.open("../problem/" + argv[0] + "/" + config["datas"][i]["output"].asString());
-        fin.seekg(0, ios::end);
-        len = fin.tellg(); len = max(0, len);
-        fin.seekg(0, ios::beg);
+        fin.seekg(0, std::ios::end);
+        len = fin.tellg(); len = std::max(0, len);
+        fin.seekg(0, std::ios::beg);
         delete[] ch;
-        ch = new char[min(lim, len)];
-        fin.read(ch, min(lim, len));
-        data["outputIgnored"] = argv.size() == 2 && atoi(argv[1].c_str()) ? 0 : max(0, len - lim);
-        data["output"] = argv.size() == 2 && atoi(argv[1].c_str()) ? "" : string(ch, min(lim, len)) + (len > lim ? "..." : "");
+        ch = new char[std::min(lim, len)];
+        fin.read(ch, std::min(lim, len));
+        data["outputIgnored"] = argv.size() == 2 && atoi(argv[1].c_str()) ? 0 : std::max(0, len - lim);
+        data["output"] = argv.size() == 2 && atoi(argv[1].c_str()) ? "" : std::string(ch, std::min(lim, len)) + (len > lim ? "..." : "");
         fin.close();
         delete[] ch;
 
@@ -64,10 +69,10 @@ auto ProblemsData = [](client_conn conn, http_request request, param argv) {
     object["items"] = datas;
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

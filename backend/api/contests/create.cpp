@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ContestsCreate = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
@@ -6,15 +9,15 @@ auto ContestsCreate = [](client_conn conn, http_request request, param argv) {
 
     auto $_POST = json_decode(request.postdata);
     int id = atoi(argv[0].c_str());
-    string title = $_POST["title"].asString();
+    std::string title = $_POST["title"].asString();
     time_t starttime = $_POST["starttime"].asInt64();
     time_t duration = $_POST["duration"].asInt64();
     int type = $_POST["type"].asInt();
     bool rated = $_POST["rated"].asBool();
-    string tags = json_encode($_POST["tags"]);
-    string problems = json_encode($_POST["problems"]);
-    string password = $_POST["password"].asString();
-    string info = $_POST["info"].asString();
+    std::string tags = json_encode($_POST["tags"]);
+    std::string problems = json_encode($_POST["problems"]);
+    std::string password = $_POST["password"].asString();
+    std::string info = $_POST["info"].asString();
     int uid = userId;
 
     MYSQL mysql = quick_mysqli_connect();
@@ -67,10 +70,10 @@ auto ContestsCreate = [](client_conn conn, http_request request, param argv) {
     }
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

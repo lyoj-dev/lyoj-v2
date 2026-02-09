@@ -1,7 +1,9 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
 #include<dirent.h>
 
-vector<string> getAllFiles(string path) {
-    vector<string> res;
+std::vector<std::string> getAllFiles(std::string path) {
+    std::vector<std::string> res;
     DIR *dir;
     struct dirent *ptr;
     if ((dir = opendir(path.c_str())) == NULL) return res;
@@ -13,7 +15,7 @@ vector<string> getAllFiles(string path) {
     return res;
 }
 
-bool compareNatural(string a, string b) {
+bool compareNatural(std::string a, std::string b) {
     if (a == "") return true;
     if (b == "") return false;
     if (isdigit(a[0]) && !isdigit(b[0])) return true;
@@ -22,11 +24,11 @@ bool compareNatural(string a, string b) {
         if (toupper(a[0]) == toupper(b[0])) return compareNatural(a.substr(1), b.substr(1));
         return toupper(a[0]) < toupper(b[0]);
     }
-    stringstream ss1(a), ss2(b);
+    std::stringstream ss1(a), ss2(b);
     int val1, val2;
     ss1 >> val1; ss2 >> val2;
     if (val1 != val2) return val1 < val2;
-    string rest1 = a.substr(ss1.tellg()), rest2 = b.substr(ss2.tellg());
+    std::string rest1 = a.substr(ss1.tellg()), rest2 = b.substr(ss2.tellg());
     return compareNatural(rest1, rest2);
 }
 
@@ -47,38 +49,38 @@ auto ProblemsDataUpload = [](client_conn conn, http_request request, param argv)
     data = base64_decode(data);
     int id = atoi(argv[0].c_str());
 
-    system(("find ../problem/" + to_string(id) + "/* | grep -v config.json | xargs rm > /dev/null 2>&1").c_str());
-    ofstream fout("../problem/" + to_string(id) + "/data.zip", ios::binary);
+    system(("find ../problem/" + std::to_string(id) + "/* | grep -v config.json | xargs rm > /dev/null 2>&1").c_str());
+    std::ofstream fout("../problem/" + std::to_string(id) + "/data.zip", std::ios::binary);
     fout.write(data.c_str(), data.size());
     fout.close();
 
-    system(("cd ../problem/" + to_string(id) + " && unzip -n data.zip > /dev/null 2>&1").c_str());
+    system(("cd ../problem/" + std::to_string(id) + " && unzip -n data.zip > /dev/null 2>&1").c_str());
 
-    auto files = getAllFiles("../problem/" + to_string(id));
-    map<string, vector<string> > numbers;
+    auto files = getAllFiles("../problem/" + std::to_string(id));
+    std::map<std::string, std::vector<std::string> > numbers;
     for (auto file : files) {
-        string name = file.find(".") != string::npos ? file.substr(0, file.rfind(".")) : file;
+        std::string name = file.find(".") != std::string::npos ? file.substr(0, file.rfind(".")) : file;
         numbers[name].push_back(file);
     }
-    vector<pair<string, string> > datas;
+    std::vector<std::pair<std::string, std::string> > datas;
     for (auto item : numbers) {
-        string hasInput = "", hasOutput = "";
-        string name = item.first;
-        name = name.find(".") != string::npos ? name.substr(0, name.rfind(".")) : name;
+        std::string hasInput = "", hasOutput = "";
+        std::string name = item.first;
+        name = name.find(".") != std::string::npos ? name.substr(0, name.rfind(".")) : name;
         for (auto file : item.second) {
-            if (file.find(".in") != string::npos) hasInput = file;
-            if (file.find(".out") != string::npos || file.find(".ans") != string::npos) hasOutput = file;
+            if (file.find(".in") != std::string::npos) hasInput = file;
+            if (file.find(".out") != std::string::npos || file.find(".ans") != std::string::npos) hasOutput = file;
         }
         if (hasInput != "" && hasOutput != "") datas.push_back({hasInput, hasOutput});
     }
     sort(datas.begin(), datas.end(), [](auto a, auto b) {
-        string name1 = a.first, name2 = b.first;
-        name1 = name1.find(".") != string::npos ? name1.substr(0, name1.rfind(".")) : name1;
-        name2 = name2.find(".") != string::npos ? name2.substr(0, name2.rfind(".")) : name2;
+        std::string name1 = a.first, name2 = b.first;
+        name1 = name1.find(".") != std::string::npos ? name1.substr(0, name1.rfind(".")) : name1;
+        name2 = name2.find(".") != std::string::npos ? name2.substr(0, name2.rfind(".")) : name2;
         return compareNatural(name1, name2);
     });
 
-    Json::Value configs = json_decode(readFile("../problem/" + to_string(id) + "/config.json"));
+    Json::Value configs = json_decode(readFile("../problem/" + std::to_string(id) + "/config.json"));
     configs["datas"].resize(0);
     for (int i = 0; i < datas.size(); i++) {
         configs["datas"][i]["input"] = datas[i].first;
@@ -88,7 +90,7 @@ auto ProblemsDataUpload = [](client_conn conn, http_request request, param argv)
         configs["datas"][i]["score"] = 100 / datas.size() + (i >= datas.size() - 100 % datas.size());
         configs["datas"][i]["subtask"] = 0;
     }
-    fout.open("../problem/" + to_string(id) + "/config.json");
+    fout.open("../problem/" + std::to_string(id) + "/config.json");
     fout << json_encode(configs);
     fout.close();
 
@@ -103,10 +105,10 @@ auto ProblemsDataUpload = [](client_conn conn, http_request request, param argv)
         object["datas"][i]["output"] = datas[i].second;
     }
 
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

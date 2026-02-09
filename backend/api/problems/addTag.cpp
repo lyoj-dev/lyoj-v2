@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ProblemsAddTag = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
@@ -5,7 +8,7 @@ auto ProblemsAddTag = [](client_conn conn, http_request request, param argv) {
     if (request.method != "POST") quickSendMsgWithoutMySQL(405);
     if (!hasPermission(userInfo, AddTag)) quickSendMsgWithoutMySQL(403);
     Json::Value $_POST = json_decode(request.postdata);
-    string title = $_POST["title"].asString();
+    std::string title = $_POST["title"].asString();
     int type = $_POST["type"].asInt();
 
     MYSQL mysql = quick_mysqli_connect();
@@ -32,10 +35,10 @@ auto ProblemsAddTag = [](client_conn conn, http_request request, param argv) {
     object["id"] = id;
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

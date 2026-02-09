@@ -1,5 +1,10 @@
-string generateSession(int len = 64) {
-    string session = "";
+#pragma once
+
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
+std::string generateSession(int len = 64) {
+    std::string session = "";
     for (int i = 0; i < len; i++) {
         int t = rand() % 62;
         if (t < 10) session += '0' + t;
@@ -18,8 +23,8 @@ auto UsersLogin = [](client_conn conn, http_request request, param argv) {
     auto $_POST = json_decode(request.postdata);
     MYSQL mysql = quick_mysqli_connect();
 
-    string user = $_POST["user"].asString();
-    string passwd = $_POST["passwd"].asString();
+    std::string user = $_POST["user"].asString();
+    std::string passwd = $_POST["passwd"].asString();
     Json::Value object;
     object["code"] = 200;
     object["msg"] = http_code[200];
@@ -46,7 +51,7 @@ auto UsersLogin = [](client_conn conn, http_request request, param argv) {
     }
     
     if (object["success"].asBool()) {
-        string session = generateSession();
+        std::string session = generateSession();
         mysqli_execute(
             mysql,
             "INSERT INTO session VALUES (%d, \"%s\", %lld)",
@@ -58,10 +63,10 @@ auto UsersLogin = [](client_conn conn, http_request request, param argv) {
     }
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

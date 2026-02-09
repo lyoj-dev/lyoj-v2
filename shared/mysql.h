@@ -1,6 +1,13 @@
-#include<mysql/mysql.h>
+#pragma once
 
-const set<int> retryedErrno = { 2013 };
+#include "log.h"
+#include <map>
+#include <mysql/mysql.h>
+#include <set>
+#include <string>
+#include <vector>
+
+const std::set<int> retryedErrno = { 2013 };
 
 /**
  * @brief 连接数据库
@@ -11,7 +18,7 @@ const set<int> retryedErrno = { 2013 };
  * @param port 数据库端口
  * @return MySQL 连接符
  */
-MYSQL mysqli_connect(string host, string user, string passwd, string db, int port) {
+MYSQL mysqli_connect(std::string host, std::string user, std::string passwd, std::string db, int port) {
     MYSQL mysql, *res1; 
     res1 = mysql_init(&mysql); 
     if (res1 == NULL) writeLog(LOG_LEVEL_ERROR, "Failed to connect to database: %s(Errno: %d)", mysql_error(&mysql), mysql_errno(&mysql));
@@ -29,9 +36,9 @@ MYSQL mysqli_connect(string host, string user, string passwd, string db, int por
  * @param sql SQL 语句
  * @return 查询结果
  */
-vector<map<string, string> > mysqli_query(MYSQL &conn, string sql) {
+std::vector<std::map<std::string, std::string> > mysqli_query(MYSQL &conn, std::string sql) {
     writeLog(LOG_LEVEL_DEBUG, "Querying SQL sentence: %s", sql.c_str());
-    vector<map<string, string> > res; 
+    std::vector<std::map<std::string, std::string> > res; 
     bool res1 = mysql_query(&conn, sql.c_str());
     if (res1) {
         if (retryedErrno.count(mysql_errno(&conn))) return mysqli_query(conn, sql);
@@ -39,10 +46,10 @@ vector<map<string, string> > mysqli_query(MYSQL &conn, string sql) {
     }
     MYSQL_RES *res2 = mysql_store_result(&conn);
     if (!res2) writeLog(LOG_LEVEL_ERROR, "Failed to query SQL sentence: %s(Errno: %d)", mysql_error(&conn), mysql_errno(&conn));
-	vector<string> field; MYSQL_FIELD *fd; MYSQL_ROW row;
-    while(fd = mysql_fetch_field(res2)) field.push_back(fd->name);
-	while (row = mysql_fetch_row(res2)) {
-        map<string, string> tmp;
+	std::vector<std::string> field; MYSQL_FIELD *fd; MYSQL_ROW row;
+    while((fd = mysql_fetch_field(res2))) field.push_back(fd->name);
+	while ((row = mysql_fetch_row(res2))) {
+        std::map<std::string, std::string> tmp;
 		for (int i = 0; i < field.size(); i++) tmp[field[i]] = row[i] == NULL ? "" : row[i];
 		res.push_back(tmp);
 	} mysql_free_result(res2);
@@ -55,7 +62,7 @@ vector<map<string, string> > mysqli_query(MYSQL &conn, string sql) {
  * @param format SQL 格式
  * @return 查询结果
  */
-vector<map<string, string> > mysqli_query(MYSQL &conn, const char* format, ...) {
+std::vector<std::map<std::string, std::string> > mysqli_query(MYSQL &conn, const char* format, ...) {
     // 格式化文本
     const int size = 2 * 1024 * 1024;
     va_list args;
@@ -65,7 +72,7 @@ vector<map<string, string> > mysqli_query(MYSQL &conn, const char* format, ...) 
     int n = vsnprintf(buf, size, format, args);
     va_end(args);
     if (n >= size) writeLog(LOG_LEVEL_WARNING, "Buffer size may be not enough! Real size: %d", n);
-    return mysqli_query(conn, string(buf));
+    return mysqli_query(conn, std::string(buf));
 }
 
 /**
@@ -73,7 +80,7 @@ vector<map<string, string> > mysqli_query(MYSQL &conn, const char* format, ...) 
  * @param conn MySQL 连接符
  * @param sql SQL 语句
  */
-void mysqli_execute(MYSQL &conn, string sql) {
+void mysqli_execute(MYSQL &conn, std::string sql) {
     writeLog(LOG_LEVEL_DEBUG, "Executing SQL sentence: %s", sql.c_str());
 	if (mysql_query(&conn, sql.c_str())) {
         if (retryedErrno.count(mysql_errno(&conn))) mysqli_execute(conn, sql);
@@ -96,7 +103,7 @@ void mysqli_execute(MYSQL &conn, const char* format, ...) {
     int n = vsnprintf(buf, size, format, args);
     va_end(args);
     if (n >= size) writeLog(LOG_LEVEL_WARNING, "Buffer size may be not enough! Real size: %d", n);
-    mysqli_execute(conn, string(buf));
+    mysqli_execute(conn, std::string(buf));
 }
 
 void mysqli_close(MYSQL &conn) {

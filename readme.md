@@ -50,6 +50,7 @@ cd ..
 sudo adduser judge
 sudo mkdir tmp
 sudo chmod 0777 tmp -R
+sudo passwd -d judge # Delete judge's password
 ```
 
 You should set an empty password so that judge service can use `judge` user successfully.
@@ -67,7 +68,7 @@ cd judge && sudo ./judge
 ### Backend Service
 
 ```bash
-cd backend && sudo ./main
+cd backend && ./main
 ```
 
 ## Specs

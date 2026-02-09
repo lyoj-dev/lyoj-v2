@@ -2046,6 +2046,24 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 |use|num|分区使用量占比|单位不为 `%`，无单位|
 |mounted|str|挂载点||
 
+### 批量删除题目
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/delete
+
+请求方式：POST
+
+### 批量获取题目信息
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/details
+
+请求方式：GET
+
+### 批量修改题目信息
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/edit
+
+请求方式：POST
+
 ## WebSocket 接口
 
 ### 获取多个提交简要信息更新

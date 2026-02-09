@@ -1,3 +1,6 @@
+#pragma once
+
+#include <string>
 enum JudgeResult {
     AC = 0,
     WA = 1,
@@ -15,7 +18,7 @@ enum JudgeResult {
     Submitted = 13
 };
 
-string JudgeResultInfo[] = {
+std::string JudgeResultInfo[] = {
     "Accepted",
     "Wrong Answer",
     "Time Limited Exceeded",

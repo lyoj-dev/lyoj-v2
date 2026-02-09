@@ -5,8 +5,8 @@ import { goto, locate } from '@/router';
 import { loginAs } from '@/utils';
 
 const t = i18n.global.t;
-const props = defineProps([ 'status', 'id', 'cid', 'alias', 'title', 'tags', 'accepted', 'total', 'difficulty', 'allowEdit', 'allowDelete' ]);
-const emits = defineEmits([ 'addTag', 'deleteProblem' ]);
+const props = defineProps([ 'selected', 'id', 'cid', 'alias', 'title', 'tags', 'accepted', 'total', 'difficulty' ]);
+const emits = defineEmits([ 'addTag', 'updateSelected', 'deleteProblem', 'cloneProblem' ]);
 
 function getColor(d: number) {
     for (var i = 1; i < difficultyList.length; i++) {
@@ -23,19 +23,14 @@ function getColor(d: number) {
 
 <template>
     <v-card class="d-flex ProblemCard card-radius">
-        <router-link 
-            :to="
-                cid != undefined ? 
-                '/contests/' + cid + '/submissions/list' + (loginAs ? '?problems=[' + id + ']&users=[' + loginAs + ']' : '?problems=[' + id + ']') : 
-                '/submissions/list' + (loginAs ? '?problems=[' + id + ']&users=[' + loginAs + ']' : '?problems=[' + id + ']')
-            "
+        <div
+            @click="$emit('updateSelected', !selected)"
             class="ProblemCard-status"
-            :style="'color: ' + statusCardList[status].color + '!important;'"
         >
             <v-icon
-                :icon="statusCardList[status].icon"
+                :icon="selected ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'"
             ></v-icon>
-        </router-link>
+        </div>
         <router-link 
             :to="cid != undefined ? '/contests/' + cid + '/problems/' + id : '/problems/' + id" 
             class="ProblemCard-id ellipsis"
@@ -72,14 +67,18 @@ function getColor(d: number) {
         <div class="ProblemCard-actions d-flex justify-center align-center">
             <v-btn 
                 class="ProblemCard-actionButton" 
-                :disabled="!allowEdit" 
+                icon="mdi-content-copy" 
+                size="x-small"
+                @click="() => emits('cloneProblem', id, title)"
+            ></v-btn>
+            <v-btn 
+                class="ProblemCard-actionButton" 
                 icon="mdi-pen" 
                 size="x-small"
                 @click="locate('/problems/' + id + '/edit')"
             ></v-btn>
             <v-btn 
                 class="ProblemCard-actionButton" 
-                :disabled="!allowDelete" 
                 icon="mdi-trash-can" 
                 size="x-small"
                 @click="() => emits('deleteProblem', id, title)"
@@ -100,17 +99,21 @@ function getColor(d: number) {
 }
 
 .ProblemCard-status {
+    display: block;
     width: 3%;
     position: relative;
     top: -0.8px;
+    padding: 3px;
+    cursor: pointer;
 }
 
 .ProblemCard-id {
+    padding: 3px;
     width: 7%;
 }
 
 .ProblemCard-problem {
-    width: 35%;
+    width: calc(35% - 37px);
 }
 
 .ProblemCard-tags {
@@ -130,7 +133,7 @@ function getColor(d: number) {
 }
 
 .ProblemCard-actions {
-    width: 10%;
+    width: calc(10% + 37px);
     gap: 5px;
 }
 

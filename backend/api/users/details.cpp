@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto UsersDetails = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
@@ -29,17 +32,17 @@ auto UsersDetails = [](client_conn conn, http_request request, param argv) {
         "SELECT MAX(pid) AS pid FROM submission WHERE uid = %d AND contest = 0 AND judged = true AND status = 0 GROUP BY pid",
         atoi(argv[0].c_str())
     );
-    string totalProblem = "", acceptedProblem = "";
+    std::string totalProblem = "", acceptedProblem = "";
     for (int i = 0; i < total.size(); i++) totalProblem += total[i]["pid"] + ",";
     for (int i = 0; i < accepted.size(); i++) acceptedProblem += accepted[i]["pid"] + ",";
     if (totalProblem.size()) totalProblem.pop_back();
     if (acceptedProblem.size()) acceptedProblem.pop_back();
-    auto totalProblems = mysqli_query(
+    auto totalProblems = totalProblem == "" ? std::vector<std::map<std::string, std::string> >() : mysqli_query(
         mysql,
         "SELECT id, alias, title FROM problem WHERE id in (%s)",
         totalProblem.c_str()
     );
-    auto acceptedProblems = mysqli_query(
+    auto acceptedProblems = acceptedProblem == "" ? std::vector<std::map<std::string, std::string> >() : mysqli_query(
         mysql,
         "SELECT id, alias, title FROM problem WHERE id in (%s)",
         acceptedProblem.c_str()
@@ -56,7 +59,7 @@ auto UsersDetails = [](client_conn conn, http_request request, param argv) {
     object["item"]["info"] = res[0]["info"];
     object["item"]["submissions"]["total"] = submissionsTotal;
     object["item"]["submissions"]["accepted"] = submissionsAccepted;
-    object["item"]["problems"]["total"].resize(0);
+    object["item"]["problems"]["accepted"].resize(0);
     object["item"]["problems"]["tried"].resize(0);
     for (int i = 0; i < totalProblems.size(); i++) {
         Json::Value item;
@@ -78,10 +81,10 @@ auto UsersDetails = [](client_conn conn, http_request request, param argv) {
     object["allowEdit"] = userId == atoi(argv[0].c_str()) ? true : hasPermission(userInfo, UserEditOthers);
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

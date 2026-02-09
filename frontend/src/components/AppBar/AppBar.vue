@@ -167,4 +167,7 @@ function setLocale(val: string) {
 .AppBar .v-list-item {
     min-height: 20px!important;
 }
+.v-overlay-container .v-overlay .v-select__content {
+    z-index: 2000;
+}
 </style>

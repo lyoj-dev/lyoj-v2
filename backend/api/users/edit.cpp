@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto UsersEdit = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
@@ -7,8 +10,8 @@ auto UsersEdit = [](client_conn conn, http_request request, param argv) {
 
     auto mysql = quick_mysqli_connect();
     auto data = json_decode(request.postdata);
-    string title = data["title"].asString();
-    string info = data["info"].asString();
+    std::string title = data["title"].asString();
+    std::string info = data["info"].asString();
     if (atoi(mysqli_query(
         mysql,
         "SELECT COUNT(*) AS count FROM user WHERE title = \"%s\"",

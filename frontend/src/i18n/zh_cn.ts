@@ -21,7 +21,9 @@ export const zh_cn = {
         userDetails: "个人主页",
         login: "登录",
         casLogin: "农大登录",
-        adminIndex: "管理首页"
+        adminIndex: "管理首页",
+        adminProblemsList: "题库管理",
+        adminProblemsEdit: "批量编辑题目",
     },
     appbar: {
         index: "首页",
@@ -290,6 +292,19 @@ export const zh_cn = {
             },
             problems: {
                 title: "题库管理",
+                list: {
+                    selectedProblem: "共选中 {count} 项，当前选中 {selected} 项",
+                    deleteSelectedConfirm: "确定删除选中的 {count} 项吗？",
+                    deleteSelectedSuccess: "删除成功",
+                    cloneConfirm: "确定复制题目 \"{name}\" 吗？",
+                    cloneSuccess: "复制成功",
+                },
+                edit: {
+                    hint: "如果您不希望批量修改某些项，请置空！",
+                    casesIsNotSupported: "“测试样例”在“批量编辑题目”中不可用",
+                    datasIsNotSupported: "“数据配置”在“批量编辑题目”中不可用",
+                    spjIsNotSupported: "“SPJ 配置”在“批量编辑题目”中不可用",
+                }
             },
             submissions: {
                 title: "评测管理",

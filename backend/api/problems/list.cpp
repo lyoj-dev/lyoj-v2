@@ -1,16 +1,19 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ProblemsList = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     auto $_GET = getParam(request);
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
 
-    string where = hasIntersection("groups", userInfo["groups"], false);
+    std::string where = hasIntersection("groups", userInfo["groups"], false);
     if ($_GET.find("title") != $_GET.end()) where += " AND title LIKE '%" + urldecode($_GET["title"]) + "%'";
-    if ($_GET.find("tags") != $_GET.end()) where += " AND " + hasIntersection(string("tags"), json_decode($_GET["tags"]));
+    if ($_GET.find("tags") != $_GET.end()) where += " AND " + hasIntersection(std::string("tags"), json_decode($_GET["tags"]));
     if ($_GET.find("minDiff") != $_GET.end())
-        where += " AND difficulty >= " + to_string(atoi($_GET["minDiff"].c_str()));
+        where += " AND difficulty >= " + std::to_string(atoi($_GET["minDiff"].c_str()));
     if ($_GET.find("maxDiff") != $_GET.end())
-        where += " AND difficulty <= " + to_string(atoi($_GET["maxDiff"].c_str()));
+        where += " AND difficulty <= " + std::to_string(atoi($_GET["maxDiff"].c_str()));
 
     int page = $_GET.find("page") == $_GET.end() ? 1 : atoi($_GET["page"].c_str());
     int pageCount = (atoi(mysqli_query(
@@ -29,44 +32,44 @@ auto ProblemsList = [](client_conn conn, http_request request, param argv) {
         "ORDER BY id DESC LIMIT 10 OFFSET %d", 
         where.c_str(),
         (page - 1) * 10
-    ) : vector<argvar>();
-    string problemList = "";
+    ) : std::vector<argvar>();
+    std::string problemList = "";
     for (int i = 0; i < res.size(); i++) problemList += (i ? "," : "") + res[i]["id"];
-    set<int> tagsSet;
+    std::set<int> tagsSet;
     for (int i = 0; i < res.size(); i++) {
         Json::Value tags = json_decode(res[i]["tags"]);
         for (int j = 0; j < tags.size(); j++) if (tags[j].asInt()) tagsSet.insert(tags[j].asInt());
     }
-    string tagsList = "";
-    for (auto v : tagsSet) tagsList += to_string(v) + ",";
+    std::string tagsList = "";
+    for (auto v : tagsSet) tagsList += std::to_string(v) + ",";
     if (tagsSet.size()) tagsList = tagsList.substr(0, tagsList.size() - 1);
     auto tags = tagsSet.size() ? mysqli_query(
         mysql,
         "SELECT * FROM tags WHERE id in (%s)",
         tagsList.c_str()
-    ) : vector<map<string, string> >();
+    ) : std::vector<std::map<std::string, std::string> >();
     auto accepted = pageCount ? mysqli_query(
         mysql,
         "SELECT COUNT(*) AS count, pid FROM submission WHERE judged = true AND status = 0 AND contest = 0 AND pid in (%s) GROUP BY pid",
         problemList.c_str()
-    ) : vector<map<string, string> >();
+    ) : std::vector<std::map<std::string, std::string> >();
     auto myAccepted = pageCount ? mysqli_query(
         mysql,
         "SELECT COUNT(*) AS count, pid FROM submission WHERE judged = true AND status = 0 AND uid = %d AND contest = 0 AND pid in (%s) GROUP BY pid",
         userId,
         problemList.c_str()
-    ) : vector<map<string, string> >();
+    ) : std::vector<std::map<std::string, std::string> >();
     auto total = pageCount ? mysqli_query(
         mysql,
         "SELECT COUNT(*) AS count, pid FROM submission WHERE contest = 0 AND pid in (%s) GROUP BY pid",
         problemList.c_str()
-    ) : vector<map<string, string> >();
+    ) : std::vector<std::map<std::string, std::string> >();
     auto myTotal = pageCount ? mysqli_query(
         mysql,
         "SELECT COUNT(*) AS count, pid FROM submission WHERE uid = %d AND contest = 0 AND pid in (%s) GROUP BY pid",
         userId,
         problemList.c_str()
-    ) : vector<map<string, string> >();
+    ) : std::vector<std::map<std::string, std::string> >();
 
     Json::Value object;
     object["code"] = 200;
@@ -116,10 +119,10 @@ auto ProblemsList = [](client_conn conn, http_request request, param argv) {
     }
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

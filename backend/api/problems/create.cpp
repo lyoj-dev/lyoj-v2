@@ -1,3 +1,6 @@
+#include "../../httpd.h"
+#include "../../utils.cpp"
+
 auto ProblemsCreate = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
@@ -6,21 +9,21 @@ auto ProblemsCreate = [](client_conn conn, http_request request, param argv) {
 
     auto $_POST = json_decode(request.postdata);
     int id = atoi(argv[0].c_str());
-    string alias = $_POST["item"]["alias"].asString();
-    string title = $_POST["item"]["title"].asString();
-    string bg = $_POST["item"]["bg"].asString();
-    string descrip = $_POST["item"]["descrip"].asString();
-    string input = $_POST["item"]["input"].asString();
-    string output = $_POST["item"]["output"].asString();
-    string cases = json_encode($_POST["item"]["cases"]);
-    string hint = $_POST["item"]["hint"].asString();
+    std::string alias = $_POST["item"]["alias"].asString();
+    std::string title = $_POST["item"]["title"].asString();
+    std::string bg = $_POST["item"]["bg"].asString();
+    std::string descrip = $_POST["item"]["descrip"].asString();
+    std::string input = $_POST["item"]["input"].asString();
+    std::string output = $_POST["item"]["output"].asString();
+    std::string cases = json_encode($_POST["item"]["cases"]);
+    std::string hint = $_POST["item"]["hint"].asString();
     bool hidden = false;
     bool banned = false;
     int difficulty = 0;
-    string tags = json_encode($_POST["item"]["tags"]);
+    std::string tags = json_encode($_POST["item"]["tags"]);
     int uid = userId;
-    string groups = json_encode($_POST["item"]["groups"]);
-    string langs = json_encode($_POST["item"]["langs"]);
+    std::string groups = json_encode($_POST["item"]["groups"]);
+    std::string langs = json_encode($_POST["item"]["langs"]);
 
     MYSQL mysql = quick_mysqli_connect();
     
@@ -55,8 +58,8 @@ auto ProblemsCreate = [](client_conn conn, http_request request, param argv) {
         );
         object["id"] = id;
 
-        mkdir(("../problem/" + to_string(id)).c_str(), 0777);
-        ofstream fout("../problem/" + to_string(id) + "/config.json");
+        mkdir(("../problem/" + std::to_string(id)).c_str(), 0777);
+        std::ofstream fout("../problem/" + std::to_string(id) + "/config.json");
         fout << json_encode($_POST["config"]);
         fout.close();
     } else {
@@ -81,16 +84,16 @@ auto ProblemsCreate = [](client_conn conn, http_request request, param argv) {
             id
         );
         object["id"] = id;
-        ofstream fout("../problem/" + to_string(id) + "/config.json");
+        std::ofstream fout("../problem/" + std::to_string(id) + "/config.json");
         fout << json_encode($_POST["config"]);
         fout.close();
     }
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

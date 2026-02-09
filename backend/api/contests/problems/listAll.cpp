@@ -1,3 +1,6 @@
+#include "../../../httpd.h"
+#include "../../../utils.cpp"
+
 auto ContestsProblemsListAll = [](client_conn conn, http_request request, param argv) {
     MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
@@ -11,7 +14,7 @@ auto ContestsProblemsListAll = [](client_conn conn, http_request request, param 
         atoi(argv[0].c_str())
     );
     if (contest.size() == 0) quickSendMsg(404);
-    string where = "id in (" + contest[0]["problems"].substr(1, contest[0]["problems"].size() - 2) + ")";
+    std::string where = "id in (" + contest[0]["problems"].substr(1, contest[0]["problems"].size() - 2) + ")";
     auto res = mysqli_query(
         mysql, 
         "SELECT id, title FROM problem WHERE %s",
@@ -45,10 +48,10 @@ auto ContestsProblemsListAll = [](client_conn conn, http_request request, param 
     }
 
     mysqli_close(mysql);
-    string responseBody = json_encode(object);
+    std::string responseBody = json_encode(object);
     auto response = __api_default_response;
     response["Access-Control-Allow-Origin"] = request.argv["origin"];
-    response["Content-Length"] = to_string(responseBody.size());
+    response["Content-Length"] = std::to_string(responseBody.size());
     putRequest(conn, 200, response);
     send(conn, responseBody);
     exitRequest(conn);

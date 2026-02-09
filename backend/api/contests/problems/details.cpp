@@ -1,3 +1,7 @@
+#include "../../../httpd.h"
+#include "../../../utils.cpp"
+#include "../../problems/details.cpp"
+
 auto ContestsProblemsDetails = [](client_conn conn, http_request request, param argv) {MYSQL mysql = quick_mysqli_connect();
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);

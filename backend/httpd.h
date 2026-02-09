@@ -8,12 +8,27 @@
  * @copyright Copyright (c) 2023 LittleYang0531
  * 
  */
-const std::string httpd_version = "1.0.7";
 
 #ifndef _HTTPD_H_
 #define _HTTPD_H_
-#define __windows__ (defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
+#include <algorithm>
+#include <cassert>
+#include <csetjmp>
+#include <cstdarg>
+#include <cstdio>
+#include <fstream>
+#include <functional>
+#include <map>
+#include <netinet/in.h>
+#include <sstream>
+#include <string>
+#include <vector>
+#include "../shared/log.h"
+#include "../shared/utils.h"
+#include "../shared/proc.h"
+#include "encrypt.h"
 
+#define __windows__ (defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__))
 #if __linux__ 
 #include<sys/socket.h>
 #include<sys/types.h>
@@ -23,6 +38,7 @@ const std::string httpd_version = "1.0.7";
 #include<unistd.h>
 #include<syscall.h>
 #include<signal.h>
+#include<semaphore.h>
 #elif __windows__
 #include<Windows.h>
 #include<direct.h>
@@ -30,29 +46,35 @@ const std::string httpd_version = "1.0.7";
 #endif
 #include<openssl/ssl.h>
 #include<pthread.h>
-using namespace std;
 
-pthread_mutex_t g_mutex_lock;
-const string magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-typedef map<string, string> argvar;
+const std::string httpd_version = "1.0.7";
+
+// pthread_mutex_t g_mutex_lock;
+sem_t* http_sem = proc_sem_init(); // 信号量进程锁
+const std::string magic_string = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+typedef std::map<std::string, std::string> argvar;
 argvar _e, __default_response, __api_default_response;
-string _endl = "<br/>";
-map<string, argvar> http_mime;
-map<int, time_t> runTime;
+std::string _endl = "<br/>";
+std::map<std::string, argvar> http_mime;
+std::map<int, time_t> runTime;
 
 /** 全局参数列表 */
 #define HTTP_ENABLE_SSL 1
 bool https = false; // 是否开启https
 #define HTTP_LISTEN_HOST 2
-string http_host = "0.0.0.0"; // 运行主机名
+std::string http_host = "0.0.0.0"; // 运行主机名
 #define HTTP_LISTEN_PORT 3
 int http_port = 8888; // 监听端口
 #define HTTP_SSL_CACERT 4
-string http_cacert = "cert.pem"; // 证书路径
+std::string http_cacert = "cert.pem"; // 证书路径
 #define HTTP_SSL_PRIVKEY 5
-string http_privkey = "privkey.pem"; // 私钥路径
+std::string http_privkey = "privkey.pem"; // 私钥路径
 #define HTTP_MULTI_THREAD 6
 int http_thread_num = 8; // 运行线程数
+#define HTTP_WORKER_TITLE 7
+std::string http_worker_title = "http worker process"; // Worker 进程名
+#define HTTP_WS_WORKER_TITLE 8
+std::string http_ws_worker_title = "websocket worker process"; // Websocket Worker 进程名
 /** 全局参数结束 */
 
 struct client_conn {
@@ -70,22 +92,22 @@ void exitRequest(client_conn&);
 void ws_exitRequest(client_conn&, bool);
 void putRequest(client_conn&, int, argvar);
 bool isCgi = false;
-string cgiRequest, cgiResponse;
-ofstream responseOut;
+std::string cgiRequest, cgiResponse;
+std::ofstream responseOut;
 
 /** WebSocket数据收发相关函数 */
 const int http_len = 1 << 12;
 /** 二进制转换 */
-vector<int> to2(unsigned char x) {
-    vector<int> st;
+std::vector<int> to2(unsigned char x) {
+    std::vector<int> st;
     for (int j = 0; j < 8; j++) st.push_back(x % 2), x /= 2;
-    reverse(st.begin(), st.end());
+    std::reverse(st.begin(), st.end());
     return st;
 }
 /** 获取十进制值 */
-int getval(vector<int> x, int st, int len) {
+int getval(std::vector<int> x, int st, int len) {
     int e = st + len - 1;
-    e = min(e, int(x.size() - 1));
+    e = std::min(e, int(x.size() - 1));
     int res = 0;
     for (int i = st; i <= e; i++) res *= 2, res += x[i];
     return res;
@@ -111,7 +133,7 @@ int ws_recv_data(client_conn __fd, char __buf[http_len], int len) {
  * @param __buf 信息主体
  * @return ssize_t 
  */
-ssize_t send(client_conn __fd, string __buf) {
+ssize_t send(client_conn __fd, std::string __buf) {
 	if (isCgi) return cgiResponse += __buf, __buf.size();
     int s = -1;
     char* ch = new char[__buf.size()];
@@ -153,7 +175,7 @@ ssize_t send(client_conn __fd, char* __buf, int len) {
  * @param __buf 信息主体
  * @return ssize_t 
  */
-ssize_t ws_send(client_conn __fd, string __buf, int opcode = 1) {
+ssize_t ws_send(client_conn __fd, std::string __buf, int opcode = 1) {
     const int MaxL = 131000;
     char dat[MaxL]; int pt = 0;
     memset(dat, '\0', MaxL);
@@ -168,7 +190,7 @@ ssize_t ws_send(client_conn __fd, string __buf, int opcode = 1) {
 
     /** 构造数据长度帧 */
     int MASK = 0;
-    int len = min(int(__buf.size()), MaxL);
+    int len = std::min(int(__buf.size()), MaxL);
     if (len <= 125) dat[pt++] = MASK << 7 | len;
     else if (len < (1 << 16)) {
         dat[pt++] = MASK << 7 | 126;
@@ -191,9 +213,9 @@ ssize_t ws_send(client_conn __fd, string __buf, int opcode = 1) {
     if (!https) s = send(__fd.conn, dat, pt, 0);
     else s = SSL_write(__fd.ssl, dat, pt);
     if (s == -1) {
-        writeLog(LOG_LEVEL_WARNING, "Failed to send data frame! Error: %d", &errno);
+        writeLog(LOG_LEVEL_WARNING, "Failed to send data frame! Error: %d", errno);
         ws_exitRequest(__fd, true);
-        pthread_exit(NULL);
+        exit(0);
     } else if (s != pt) writeLog(LOG_LEVEL_WARNING, "The data wasn't send completely! Send %d/%d bytes.", s, pt);
     else writeLog(LOG_LEVEL_DEBUG, "Send %d bytes to client.", s);
 
@@ -213,7 +235,8 @@ int recvchar(client_conn __fd) {
 	if (isCgi) {
 		if (cgiRequest.size() == 0) return -1;
 		char ch = cgiRequest.front();
-		cgiRequest = cgiRequest.substr(1); return ch;
+		cgiRequest = cgiRequest.substr(1); 
+        return ch;
 	} const int length = 1;
     char* __buf = new char[length];
     int s = -1;
@@ -229,10 +252,10 @@ int recvchar(client_conn __fd) {
  * @brief 接收信息
  * 
  * @param __fd 客户端连接符
- * @return string 
+ * @return std::string 
  */
-string recv(client_conn __fd, int siz = -1) {
-    string __buf = "";
+std::string recv(client_conn __fd, int siz = -1) {
+    std::string __buf = "";
     const int lim = 1e6;
     if (siz == -1) {
         int times = 0;
@@ -241,7 +264,7 @@ string recv(client_conn __fd, int siz = -1) {
             if (ch == -65535) {
                 if (times <= lim) times++;
                 else {
-                    writeLog(LOG_LEVEL_WARNING, "Failed to recieve data! Error: %d", &errno);
+                    writeLog(LOG_LEVEL_WARNING, "Failed to recieve data! Error: %d", errno);
                     return "";    
                 }
             }
@@ -253,7 +276,7 @@ string recv(client_conn __fd, int siz = -1) {
         while (__buf.size() != siz) {
             int ch = recvchar(__fd);
             if (ch == -65535) {
-                writeLog(LOG_LEVEL_WARNING, "Failed to recieve data! Error: %d", &errno);
+                writeLog(LOG_LEVEL_WARNING, "Failed to recieve data! Error: %d", errno);
                 return "";
             }
             __buf.push_back(char(ch));
@@ -263,9 +286,9 @@ string recv(client_conn __fd, int siz = -1) {
     }
 }
 
-const string ws_recv_error = [](){
+const std::string ws_recv_error = [](){
     int len = 128; srand(time(0));
-    string table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", res = "";
+    std::string table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", res = "";
     for (int i = 0; i < len; i++) res += table[rand() % 62];
     return res;
 }();
@@ -273,10 +296,9 @@ const string ws_recv_error = [](){
  * @brief WebSocket信息接收与解密
  * 
  * @param conn 客户端连接符
- * @return string 
+ * @return std::string 
  */
-string ws_recv(client_conn conn) {
-
+std::string ws_recv(client_conn conn) {
     /** 接受数据 */
     char __buf[http_len] = "";
     int s = ws_recv_data(conn, __buf, 2);
@@ -286,7 +308,7 @@ string ws_recv(client_conn conn) {
         writeLog(LOG_LEVEL_WARNING, "Invalid WebSocket Data Frame!");
         return ws_recv_error;
     }
-    vector<int> frame0 = to2(__buf[0]);
+    std::vector<int> frame0 = to2(__buf[0]);
     int FIN = frame0[0];
     int RSV1 = frame0[1];
     int RSV2 = frame0[2];
@@ -294,7 +316,7 @@ string ws_recv(client_conn conn) {
     int opcode = getval(frame0, 4, 4);
 
     /** 解析数据长度 */
-    vector<int> frame1 = to2(__buf[1]);
+    std::vector<int> frame1 = to2(__buf[1]);
     int MASK = frame1[0];
     int type = 0;
     long long len = getval(frame1, 1, 7);
@@ -336,14 +358,14 @@ string ws_recv(client_conn conn) {
 
     /** 解析文本 */
     int x = 0;
-    string res = "";
+    std::string res = "";
     const long long MaxL = http_len;
-    s = ws_recv_data(conn, __buf, min(len, MaxL));
+    s = ws_recv_data(conn, __buf, std::min(len, MaxL));
     int pt = 0;
     for (long long i = 0; i < len; i++) {
         /** 由于TCP缓冲区的原因，导致数据传输不完整，需要多次调用recv读取 */
         if (pt >= s) {
-            s = ws_recv_data(conn, __buf, min(len - i, MaxL));
+            s = ws_recv_data(conn, __buf, std::min(len - i, MaxL));
             pt = 0;
         }
 
@@ -361,17 +383,17 @@ string ws_recv(client_conn conn) {
 }
 
 struct http_request {
-    string method = "";
-    string path = "";
-    string protocol = "";
+    std::string method = "";
+    std::string path = "";
+    std::string protocol = "";
     argvar argv;
-    string postdata;
+    std::string postdata;
 };
 
 int sock;
 struct sockaddr_in server_address;
-string http_code[1024];
-jmp_buf buf[1024 * 1024];
+std::string http_code[1024];
+jmp_buf buf[1024];
 
 SSL_CTX *ctx;
 
@@ -546,14 +568,14 @@ int accept(sockaddr_in& client_addr) {
  * 
  * @param seperator 分隔符
  * @param source 源字符串
- * @return vector<string> 
+ * @return std::vector<std::string> 
  */
-vector<string> explode(string seperator, string source) {
-	string src = source; vector<string> res;
-	while (src.find(seperator) != string::npos) {
+std::vector<std::string> explode(std::string seperator, std::string source) {
+	std::string src = source; std::vector<std::string> res;
+	while (src.find(seperator) != std::string::npos) {
 		int wh = src.find(seperator);
 		res.push_back(src.substr(0, src.find(seperator)));
-		src = src.substr(wh + string(seperator).size());
+		src = src.substr(wh + std::string(seperator).size());
 	} res.push_back(src);
 	return res;
 }
@@ -588,7 +610,7 @@ void exitRequest(client_conn& conn) {
  */
 void ws_exitRequest(client_conn& conn, bool forceClose = false) {
     if (!forceClose) {
-        string s;
+        std::string s;
         s.push_back(1000 / 256);
         s.push_back(1000 % 256);
         s += "Remote server closed a connection proactively.";
@@ -612,7 +634,7 @@ void ws_exitRequest(client_conn& conn, bool forceClose = false) {
  */
 http_request getRequest(client_conn& conn) {
     /** 获取请求头 */
-    string s = recv(conn);
+    std::string s = recv(conn);
     if (s == "") {
         writeLog(LOG_LEVEL_WARNING, "Empty Request Header!");
         exitRequest(conn);
@@ -620,17 +642,17 @@ http_request getRequest(client_conn& conn) {
     writeLog(LOG_LEVEL_DEBUG, "Recieved Request Header from client!");
 
     /** 判断请求方式 */
-    vector<string> __arg = explode("\r\n", s);
+    std::vector<std::string> __arg = explode("\r\n", s);
     if (__arg.size() < 1) {
         writeLog(LOG_LEVEL_WARNING, "Invalid HTTP Request in line 1: eof!");
-        stringstream buffer;
-        buffer << "<html>" << endl;
-        buffer << "<head><title>500 Internal Server Error</title></head>" << endl;
-        buffer << "<body>" << endl;
-        buffer << "<center><h1>500 Internal Server Error</h1></center>" << endl;
-        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << endl;
-        buffer << "</body>" << endl;
-        buffer << "</html>" << endl;
+        std::stringstream buffer;
+        buffer << "<html>" << std::endl;
+        buffer << "<head><title>500 Internal Server Error</title></head>" << std::endl;
+        buffer << "<body>" << std::endl;
+        buffer << "<center><h1>500 Internal Server Error</h1></center>" << std::endl;
+        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << std::endl;
+        buffer << "</body>" << std::endl;
+        buffer << "</html>" << std::endl;
         putRequest(conn, 500, __default_response);
         send(conn, buffer.str());
         exitRequest(conn);
@@ -639,22 +661,21 @@ http_request getRequest(client_conn& conn) {
 
 
     /** 读取请求头的第一行 */
-    vector<string> header = explode(" ", __arg[0]);
+    std::vector<std::string> header = explode(" ", __arg[0]);
     if (header.size() < 3 || (
         header[0] != "GET" && header[0] != "HEAD" && header[0] != "POST" &&
         header[0] != "PUT" && header[0] != "DELETE" && header[0] != "CONNECT" && 
         header[0] != "OPTIONS" && header[0] != "TRACE" && header[0] != "PATCH"
     )) {
-    	cout << header[0].size() << " " << header[0][0] << endl;
         writeLog(LOG_LEVEL_WARNING, "Invalid HTTP Request in line 1: Invalid Request Method!");
-        stringstream buffer;
-        buffer << "<html>" << endl;
-        buffer << "<head><title>500 Internal Server Error</title></head>" << endl;
-        buffer << "<body>" << endl;
-        buffer << "<center><h1>500 Internal Server Error</h1></center>" << endl;
-        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << endl;
-        buffer << "</body>" << endl;
-        buffer << "</html>" << endl;
+        std::stringstream buffer;
+        buffer << "<html>" << std::endl;
+        buffer << "<head><title>500 Internal Server Error</title></head>" << std::endl;
+        buffer << "<body>" << std::endl;
+        buffer << "<center><h1>500 Internal Server Error</h1></center>" << std::endl;
+        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << std::endl;
+        buffer << "</body>" << std::endl;
+        buffer << "</html>" << std::endl;
         putRequest(conn, 500, __default_response);
         send(conn, buffer.str());
         exitRequest(conn);
@@ -668,11 +689,11 @@ http_request getRequest(client_conn& conn) {
     /** 读取请求头参数 */
     int pt = 1;
     for (; pt < __arg.size(); pt++) {
-        if (__arg[pt].find(": ") == string::npos) break;
+        if (__arg[pt].find(": ") == std::string::npos) break;
         int __wh = __arg[pt].find(": ");
-        string key = __arg[pt].substr(0, __wh);
+        std::string key = __arg[pt].substr(0, __wh);
         for (int i = 0; i < key.size(); i++) if (key[i] >= 'A' && key[i] <= 'Z') key[i] -= 'A', key[i] += 'a';
-        string value = __arg[pt].substr(__wh + 2);
+        std::string value = __arg[pt].substr(__wh + 2);
         request.argv.insert(make_pair(key, value));
     }
     if (request.argv["content-length"] != "0") request.postdata = recv(conn, atoi(request.argv["content-length"].c_str()));
@@ -694,14 +715,14 @@ void putRequest(client_conn& conn, int code, argvar argv) {
     /** 判断响应代码 */
     if (code <= 0 || code >= 1000 || http_code[code] == "") {
         writeLog(LOG_LEVEL_WARNING, "Invalid Response Code!");
-        stringstream buffer;
-        buffer << "<html>" << endl;
-        buffer << "<head><title>500 Internal Server Error</title></head>" << endl;
-        buffer << "<body>" << endl;
-        buffer << "<center><h1>500 Internal Server Error</h1></center>" << endl;
-        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << endl;
-        buffer << "</body>" << endl;
-        buffer << "</html>" << endl;
+        std::stringstream buffer;
+        buffer << "<html>" << std::endl;
+        buffer << "<head><title>500 Internal Server Error</title></head>" << std::endl;
+        buffer << "<body>" << std::endl;
+        buffer << "<center><h1>500 Internal Server Error</h1></center>" << std::endl;
+        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << std::endl;
+        buffer << "</body>" << std::endl;
+        buffer << "</html>" << std::endl;
         putRequest(conn, 500, __default_response);
         send(conn, buffer.str());
         exitRequest(conn);
@@ -710,14 +731,14 @@ void putRequest(client_conn& conn, int code, argvar argv) {
     writeLog(LOG_LEVEL_DEBUG, "Valid Response Code!");
 
     /** 构造响应头 */
-    stringstream __buf;
+    std::stringstream __buf;
     __buf << "HTTP/1.1 " << code << " " << http_code[code] << "\r\n";
     writeLog(LOG_LEVEL_DEBUG, "Response Info: HTTP/1.1 %d %s", code, http_code[code].c_str());
-    argv["Execute-Time"] = to_string(clock2() - runTime[conn.thread_id]);
+    argv["Execute-Time"] = std::to_string(clock2() - runTime[conn.thread_id]);
     for (auto it = argv.begin(); it != argv.end(); it++)
         __buf << (*it).first << ": " << (*it).second << "\r\n";
     __buf << "\r\n";
-    // cout << __buf.str() << endl;
+    // cout << __buf.str() << std::endl;
 
     /** 发送响应头 */
     writeLog(LOG_LEVEL_DEBUG, "Send Response Header to client");
@@ -734,26 +755,26 @@ argvar getParam(http_request request) {
     writeLog(LOG_LEVEL_DEBUG, "Analysing GET parameters...");
 
     /** 读取路径信息 */
-    string path = request.path;
-    if (path.find("?") == string::npos) {
+    std::string path = request.path;
+    if (path.find("?") == std::string::npos) {
         writeLog(LOG_LEVEL_DEBUG, "Empty GET parameters!");
         return _e;
     }
 
     /** 提取参数信息 */
-    string param = path.substr(path.find("?") + 1);
-    vector<string> __arg = explode("&", param);
+    std::string param = path.substr(path.find("?") + 1);
+    std::vector<std::string> __arg = explode("&", param);
     writeLog(LOG_LEVEL_DEBUG, "GET parameter length: %d", __arg.size());
 
     /** 逐个处理 */
     argvar $_GET;
     for (int i = 0; i < __arg.size(); i++) {
-        if (__arg[i].find("=") == string::npos) 
+        if (__arg[i].find("=") == std::string::npos) 
             writeLog(LOG_LEVEL_DEBUG, "Could find value of key \"%s\"", __arg[i].c_str()),
             $_GET.insert(make_pair(__arg[i], ""));
         else {
-            string key = __arg[i].substr(0, __arg[i].find("="));
-            string val = __arg[i].substr(__arg[i].find("=") + 1);
+            std::string key = __arg[i].substr(0, __arg[i].find("="));
+            std::string val = __arg[i].substr(__arg[i].find("=") + 1);
             writeLog(LOG_LEVEL_DEBUG, "Add key \"%s\" to $_GET", key.c_str());
             $_GET.insert(make_pair(key, val));
         }
@@ -769,19 +790,19 @@ argvar getParam(http_request request) {
  * @param param 参数
  * @return argvar
  */
-argvar getParam(string param) {
-    vector<string> __arg = explode("&", param);
+argvar getParam(std::string param) {
+    std::vector<std::string> __arg = explode("&", param);
     writeLog(LOG_LEVEL_DEBUG, "GET parameter length: %d", __arg.size());
 
     /** 逐个处理 */
     argvar $_GET;
     for (int i = 0; i < __arg.size(); i++) {
-        if (__arg[i].find("=") == string::npos) 
+        if (__arg[i].find("=") == std::string::npos) 
             writeLog(LOG_LEVEL_DEBUG, "Could find value of key \"%s\"", __arg[i].c_str()),
             $_GET.insert(make_pair(__arg[i], ""));
         else {
-            string key = __arg[i].substr(0, __arg[i].find("="));
-            string val = __arg[i].substr(__arg[i].find("=") + 1);
+            std::string key = __arg[i].substr(0, __arg[i].find("="));
+            std::string val = __arg[i].substr(__arg[i].find("=") + 1);
             writeLog(LOG_LEVEL_DEBUG, "Add key \"%s\" to $_GET", key.c_str());
             $_GET.insert(make_pair(key, val));
         }
@@ -795,10 +816,10 @@ argvar getParam(string param) {
  * @brief 将GET参数字符串化
  * 
  * @param $_GET GET参数
- * @return string
+ * @return std::string
  */
-string getStringfy(argvar $_GET) {
-    string res = "";
+std::string getStringfy(argvar $_GET) {
+    std::string res = "";
     for (auto v : $_GET) {
         if (v.first == "" && v.second == "") continue;
         res += v.first + "=" + v.second + "&";
@@ -817,19 +838,19 @@ argvar postParam(http_request request) {
 
 
     /** 提取参数信息 */
-    vector<string> __arg = explode("&", request.postdata);
+    std::vector<std::string> __arg = explode("&", request.postdata);
     writeLog(LOG_LEVEL_DEBUG, "POST parameter length: %d", __arg.size());
 
     /** 逐个处理 */
     argvar $_POST;
     for (int i = 0; i < __arg.size(); i++) {
         if (__arg[i] == "") continue;
-        if (__arg[i].find("=") == string::npos) 
+        if (__arg[i].find("=") == std::string::npos) 
             writeLog(LOG_LEVEL_DEBUG, "Could find value of key \"%s\"", __arg[i].c_str()),
             $_POST.insert(make_pair(__arg[i], ""));
         else {
-            string key = __arg[i].substr(0, __arg[i].find("="));
-            string val = __arg[i].substr(__arg[i].find("=") + 1);
+            std::string key = __arg[i].substr(0, __arg[i].find("="));
+            std::string val = __arg[i].substr(__arg[i].find("=") + 1);
             writeLog(LOG_LEVEL_DEBUG, "Add key \"%s\" to $_POST", key.c_str());
             $_POST.insert(make_pair(key, val));
         }
@@ -853,16 +874,16 @@ argvar cookieParam(http_request request) {
         writeLog(LOG_LEVEL_DEBUG, "Empty COOKIE parameters!");
         return _e;
     }
-    string s = request.argv["cookie"];
+    std::string s = request.argv["cookie"];
 
     /** 拆散字符串 */
-    vector<string> arr = explode("; ", s);
+    std::vector<std::string> arr = explode("; ", s);
     writeLog(LOG_LEVEL_DEBUG, "COOKIE parameter length: %d", arr.size());
     argvar $_COOKIE;
     for (int i = 0; i < arr.size(); i++) {
-        if (arr[i].find("=") != string::npos) {
-            string key = arr[i].substr(0, arr[i].find("="));
-            string val = arr[i].substr(arr[i].find("=") + 1);
+        if (arr[i].find("=") != std::string::npos) {
+            std::string key = arr[i].substr(0, arr[i].find("="));
+            std::string val = arr[i].substr(arr[i].find("=") + 1);
             writeLog(LOG_LEVEL_DEBUG, "Add key \"%s\" to $_COOKIE", key.c_str());
             $_COOKIE.insert(make_pair(key, val));
         } else writeLog(LOG_LEVEL_WARNING, "Invalid COOKIE parameter!");
@@ -890,7 +911,7 @@ argvar merge(argvar a, argvar b) {
  * @param ext 文件后缀名
  * @return argvar 
  */
-argvar mime(string ext) {
+argvar mime(std::string ext) {
     argvar _r = _e;
     if (ext == ".aac") _r["Content-Type"] = "audio/aac";
     else if (ext == ".abw") _r["Content-Type"] = "application/x-abiword";
@@ -967,25 +988,33 @@ argvar mime(string ext) {
     return _r;
 }
 
-typedef vector<string> param;
+typedef std::vector<std::string> param;
 
-const int PoolSize = 1024 * 1024;
+const int PoolSize = 1024 + 1;
 class thread_pool {
     private: 
-        pthread_t pt[PoolSize];
-        pair<int, sockaddr_in> connlist[PoolSize];
-        int l = 1, r = 0;
+        class thread_pool_data {
+            public:
 
-        int cnt = 0;
+            pid_t masterPid;
+            pid_t pt[PoolSize];
+            bool busy[PoolSize];
+            int sockfd[PoolSize][2]; // 父进程统一用 0，子进程统一用 1
+
+            int cnt;
+            int thread_num;
+        };
+        thread_pool_data* data = createSharedMemory(thread_pool_data);
+        
         /**
          * @brief 获取当前线程id
          * 
          * @return int 
          */
         int get_thread_id() {
-            pthread_mutex_lock(&g_mutex_lock);
-            int res = ++cnt;
-            pthread_mutex_unlock(&g_mutex_lock);
+            proc_sem_lock(http_sem);
+            int res = ++data->cnt;
+            proc_sem_unlock(http_sem);
             return res;
         }
 
@@ -994,13 +1023,20 @@ class thread_pool {
          * 
          * @return int 
          */
-        int getConn(sockaddr_in& client_addr) {
-            pthread_mutex_lock(&g_mutex_lock);
-            int conn = (r + 1) % PoolSize != l ? connlist[l].first : -1;
-            if (conn != -1) client_addr = connlist[l].second, l = (l + 1) % PoolSize;
-            pthread_mutex_unlock(&g_mutex_lock);
-            if (conn != -1) writeLog(LOG_LEVEL_DEBUG, "Get connection %d from connlist!", conn);
+        int getConn(int proc_id, sockaddr_in& client_addr) {
+            if (data->busy[proc_id]) updateBusy(proc_id);
+            // writeLog(LOG_LEVEL_DEBUG, "Waiting connection from master process, proc_id = %d", proc_id);
+            int conn = proc_getfd(data->sockfd[proc_id][1]);
+            updateBusy(proc_id);
+            sockaddr_in* sockAddr = new sockaddr_in;
+            recv(data->sockfd[proc_id][1], (void*)sockAddr, sizeof(sockaddr_in), 0);
+            client_addr = *sockAddr;
+            writeLog(LOG_LEVEL_DEBUG, "Get connection %d from master process", conn);
             return conn;
+        }
+
+        bool updateBusy(int proc_id) {
+            return data->busy[proc_id] = !data->busy[proc_id];
         }
 
         void work_thread();
@@ -1012,10 +1048,13 @@ class thread_pool {
          * @return void* 
          */
         static void* pre_thread(void* arg) {
+            proc_settitle(http_worker_title.c_str());
             thread_pool* is = (thread_pool*)arg;
             is->work_thread();
             return (void*)NULL;
         }
+
+        int lastproc;
 
     public:
         /**
@@ -1024,8 +1063,14 @@ class thread_pool {
          * @param thread_num 线程数
          */
         void init(int thread_num) {
+            data->masterPid = getpid();
+            data->thread_num = thread_num;
+            lastproc = thread_num;
             for (int i = 1; i <= thread_num; i++) {
-                pthread_create(&pt[i], NULL, pre_thread, (void*)this);
+                int fd[2];
+                socketpair(AF_LOCAL, SOCK_STREAM, 0, fd);
+                data->sockfd[i][0] = fd[0], data->sockfd[i][1] = fd[1];
+                proc_create(&data->pt[i], thread_pool::pre_thread, (void*)this);
             }
         }
 
@@ -1035,22 +1080,34 @@ class thread_pool {
          * @param conn 客户端连接符
          */
         void addConn(int conn, sockaddr_in client_addr) {
-            ++r; r %= PoolSize;
-            connlist[r] = make_pair(conn, client_addr);
-            writeLog(LOG_LEVEL_DEBUG, "Insert connection %d to connlist.", conn);
+            int id = lastproc + 1;
+            if (id > data->thread_num) id -= data->thread_num;
+            while (true) {
+                if (data->busy[id]) {
+                    id++;
+                    if (id > data->thread_num) id -= data->thread_num;
+                    continue;
+                }
+                lastproc = id;
+                writeLog(LOG_LEVEL_DEBUG, "Send connection %d to worker %d", conn, id);
+                proc_sendfd(data->sockfd[id][0], conn);
+                send(data->sockfd[id][0], (void*)&client_addr, sizeof(sockaddr_in), 0);
+                close(conn);
+                break;
+            }
         }
 }pool;
 
 class application {
     public: 
         struct r {
-            string path;
-            function<void(client_conn, http_request, param)> main;
+            std::string path;
+            std::function<void(client_conn, http_request, param)> main;
             r(){}
-            r(string path, function<void(client_conn, http_request, param)> main):path(path),main(main){}
+            r(std::string path, std::function<void(client_conn, http_request, param)> main):path(path),main(main){}
         }; 
-        vector<r> route;
-        vector<r> ws_route;
+        std::vector<r> route;
+        std::vector<r> ws_route;
 
         /**
          * @brief 判断是否为整数
@@ -1059,7 +1116,7 @@ class application {
          * @return true 
          * @return false 
          */
-        bool isInt(string x) {
+        bool isInt(std::string x) {
             if (x.size() == 0) return false;
             int st = 0; 
             if (x[0] == '-') st++;
@@ -1075,7 +1132,7 @@ class application {
          * @return true 
          * @return false 
          */
-        bool isDouble(string x) {
+        bool isDouble(std::string x) {
             if (x.size() == 0) return false;
             bool pointed = false; int st = 0;
             if (x[0] == '-') st++;
@@ -1095,13 +1152,13 @@ class application {
          * @return true 匹配成功
          * @return false 匹配失败
          */
-        bool matchPath(r __route, string path) {
+        bool matchPath(r __route, std::string path) {
             /** 特判 */
             if (__route.path == "*") return true;
             
             /** 拆散字符串 */
-            vector<string> __goal = explode("/", __route.path);
-            vector<string> __path = explode("/", path);
+            std::vector<std::string> __goal = explode("/", __route.path);
+            std::vector<std::string> __path = explode("/", path);
             while (__goal.size() && __goal.back() == "") __goal.pop_back();
             while (__path.size() && __path.back() == "") __path.pop_back();
             if (__goal.size() != __path.size()) return false;
@@ -1126,7 +1183,7 @@ class application {
          * @param path 路由路径
          * @param func 执行函数
          */
-        void addRoute(string path, function<void(client_conn, http_request, param)> func) {
+        void addRoute(std::string path, std::function<void(client_conn, http_request, param)> func) {
             route.push_back(r(path, func));
         }
 
@@ -1136,7 +1193,7 @@ class application {
          * @param path 路由路径
          * @param func 执行函数
          */
-        void ws_addRoute(string path, function<void(client_conn, http_request, param)> func) {
+        void ws_addRoute(std::string path, std::function<void(client_conn, http_request, param)> func) {
             ws_route.push_back(r(path, func));
         }
 
@@ -1168,10 +1225,10 @@ class application {
             #endif
             
             http_init(); pool.init(http_thread_num);
-            string address = "";
+            std::string address = "";
             address += https ? "https://" : "http://";
             address += http_host;
-            if (https && http_port != 443 || !https && http_port != 80) address += ":" + to_string(http_port);
+            if (https && http_port != 443 || !https && http_port != 80) address += ":" + std::to_string(http_port);
             address += "/";
             writeLog(LOG_LEVEL_INFO, "Listening on %s...", address.c_str());
             while(1) {
@@ -1182,14 +1239,14 @@ class application {
             }
         }
 
-		void cgiRun(string requestFile, string responseFile) {
+		void cgiRun(std::string requestFile, std::string responseFile) {
 			isCgi = true;
-			ifstream fin(requestFile);
+			std::ifstream fin(requestFile);
 			responseOut.open(responseFile);
-			fin.seekg(0, ios::end);
+			fin.seekg(0, std::ios::end);
 			int len = fin.tellg();
 			char* ch = new char[len];
-			fin.seekg(0, ios::beg);
+			fin.seekg(0, std::ios::beg);
 			fin.read(ch, len);
 			for (int i = 0; i < len; i++) cgiRequest.push_back(ch[i]);
 			delete[] ch;
@@ -1201,8 +1258,8 @@ class application {
 //					                 " [" + inet_ntoa(client_addr.sin_addr) + ":" + to_string(client_addr.sin_port) + "]");
 
 			/** 提取路径 */
-			string rlpath = request.path;
-			if (rlpath.find("?") != string::npos) rlpath = rlpath.substr(0, rlpath.find("?"));
+			std::string rlpath = request.path;
+			if (rlpath.find("?") != std::string::npos) rlpath = rlpath.substr(0, rlpath.find("?"));
 
 			/** 分发路由 */
 			for (int i = 0; i < route.size(); i++) {
@@ -1211,10 +1268,10 @@ class application {
 
 					/** 参数提取 */
 					param argv;
-					string __goal = route[i].path;
-					string __path = rlpath;
-					vector<string> __a1 = explode("/", __goal);
-					vector<string> __a2 = explode("/", __path);
+					std::string __goal = route[i].path;
+					std::string __path = rlpath;
+					std::vector<std::string> __a1 = explode("/", __goal);
+					std::vector<std::string> __a2 = explode("/", __path);
 					for (int j = 0; j < __a1.size(); j++)
 						if (__a1[j] == "%d" || __a1[j] == "%D" ||
 							__a1[j] == "%f" || __a1[j] == "%F" ||
@@ -1248,6 +1305,8 @@ class application {
                 case HTTP_SSL_CACERT: http_cacert = va_arg(arg, const char*); break;
                 case HTTP_SSL_PRIVKEY: http_privkey = va_arg(arg, const char*); break;
                 case HTTP_MULTI_THREAD: http_thread_num = va_arg(arg, int); break;
+                case HTTP_WORKER_TITLE: http_worker_title = va_arg(arg, const char*); break;
+                case HTTP_WS_WORKER_TITLE: http_ws_worker_title = va_arg(arg, const char*); break;
                 default: va_end(arg); return false;
             }
             va_end(arg);
@@ -1268,7 +1327,7 @@ unsigned char FromHex(unsigned char x) {
     return y;
 }
 
-string urlencode(string str)
+std::string urlencode(std::string str)
 {
     std::string strTemp = "";
     size_t length = str.length();
@@ -1288,9 +1347,9 @@ string urlencode(string str)
     return strTemp;
 }
 
-string urldecode(string str)
+std::string urldecode(std::string str)
 {
-    string strTemp = "";
+    std::string strTemp = "";
     size_t length = str.length();
     for (size_t i = 0; i < length; i++) {
         if (str[i] == '+') strTemp += ' ';
@@ -1298,7 +1357,7 @@ string urldecode(string str)
             assert(i + 2 < length);
             unsigned char high = FromHex((unsigned char)str[++i]);
             unsigned char low = FromHex((unsigned char)str[++i]);
-            strTemp += high*16 + low;
+            strTemp += high * 16 + low;
         }
         else strTemp += str[i];
     }
@@ -1328,7 +1387,7 @@ void* ws_work_thread(void* arg) {
  */
 void thread_pool::work_thread() {
     int id = this->get_thread_id();
-    writeLog(LOG_LEVEL_DEBUG, "Created thread #%d", id);
+    writeLog(LOG_LEVEL_DEBUG, "Created process #%d", id);
     while (1) {
         #ifdef __linux__
         usleep(1000 * 30);
@@ -1337,7 +1396,7 @@ void thread_pool::work_thread() {
         #endif
         setjmp(buf[id]);
         sockaddr_in client_addr;
-        int conn = this->getConn(client_addr);
+        int conn = this->getConn(id, client_addr);
         if (conn == -1) continue;
 
         client_conn conn2;
@@ -1361,8 +1420,8 @@ void thread_pool::work_thread() {
         writeLog(LOG_LEVEL_INFO, "New Connection: %s %s [%s:%d]", request.method.c_str(), request.path.c_str(), inet_ntoa(client_addr.sin_addr), client_addr.sin_port);
                                  
         /** 提取路径 */
-        string rlpath = request.path;
-        if (rlpath.find("?") != string::npos) 
+        std::string rlpath = request.path;
+        if (rlpath.find("?") != std::string::npos) 
             rlpath = rlpath.substr(0, rlpath.find("?"));
 
 		/** WebSocket 分发路由 */
@@ -1372,32 +1431,32 @@ void thread_pool::work_thread() {
 		            writeLog(LOG_LEVEL_DEBUG, "Matched websocket route \"%s\"", app.ws_route[i].path.c_str());
 		
 		            /** 计算Sec_WebSocket_Accept的值 */
-		            string req_key = request.argv["sec-websocket-key"];
-		            string key = req_key + magic_string;
+		            std::string req_key = request.argv["sec-websocket-key"];
+		            std::string key = req_key + magic_string;
 		            SHA_CTX sha_ctx;
 		            unsigned char result[20] = ""; char enc[20] = "";
 		            SHA1_Init(&sha_ctx);
 		            SHA1_Update(&sha_ctx, key.c_str(), key.size());
 		            SHA1_Final(&(result[0]), &sha_ctx);
 		            for (int i = 0; i < 20; i++) enc[i] = result[i];
-		            string sec_key = "";
+		            std::string sec_key = "";
 		            sec_key = base64_encode(enc, 20);
 		            argvar ret = __default_response;
 		            ret["Sec-WebSocket-Accept"] = sec_key;
 		            ret["Upgrade"] = "websocket";
 		            ret["Connection"] = "Upgrade";
 
-					stringstream buffer;
+					std::stringstream buffer;
 		            buffer << "Secure WebSocket Accept: " << sec_key;
 		            writeLog(LOG_LEVEL_INFO, buffer.str().c_str());
 		            putRequest(conn2, 101, ret);
 		            
 		            /** 参数提取 */
 		            param argv;
-		            string __goal = app.ws_route[i].path;
-		            string __path = rlpath;
-		            vector<string> __a1 = explode("/", __goal);
-		            vector<string> __a2 = explode("/", __path);
+		            std::string __goal = app.ws_route[i].path;
+		            std::string __path = rlpath;
+		            std::vector<std::string> __a1 = explode("/", __goal);
+		            std::vector<std::string> __a2 = explode("/", __path);
 		            for (int j = 0; j < __a1.size(); j++) 
 		                if (__a1[j] == "%d" || __a1[j] == "%D" ||
 		                    __a1[j] == "%f" || __a1[j] == "%F" || 
@@ -1405,8 +1464,10 @@ void thread_pool::work_thread() {
 		                    argv.push_back(__a2[j]);
 		
 		            /** 主函数执行 */
-		            wsarg args = { i, conn2, request, argv }; pthread_t pt;
-		            pthread_create(&pt, NULL, ws_work_thread, (void*)&args);
+		            wsarg args = { i, conn2, request, argv }; 
+                    pid_t pt;
+                    proc_settitle((http_ws_worker_title + " " + request.path).c_str());
+		            proc_create(&pt, ws_work_thread, (void*)&args);
 		            longjmp(buf[id], 0);
 		        }
 		    }
@@ -1420,10 +1481,10 @@ void thread_pool::work_thread() {
 
                 /** 参数提取 */
                 param argv;
-                string __goal = app.route[i].path;
-                string __path = rlpath;
-                vector<string> __a1 = explode("/", __goal);
-                vector<string> __a2 = explode("/", __path);
+                std::string __goal = app.route[i].path;
+                std::string __path = rlpath;
+                std::vector<std::string> __a1 = explode("/", __goal);
+                std::vector<std::string> __a2 = explode("/", __path);
                 for (int j = 0; j < __a1.size(); j++) 
                     if (__a1[j] == "%d" || __a1[j] == "%D" ||
                         __a1[j] == "%f" || __a1[j] == "%F" || 
@@ -1451,14 +1512,14 @@ void thread_pool::work_thread() {
 
         /** 无效路由 */
         writeLog(LOG_LEVEL_DEBUG, "Couldn't find any routes for this request!");
-        stringstream buffer;
-        buffer << "<html>" << endl;
-        buffer << "<head><title>404 Not Found</title></head>" << endl;
-        buffer << "<body>" << endl;
-        buffer << "<center><h1>404 Not Found</h1></center>" << endl;
-        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << endl;
-        buffer << "</body>" << endl;
-        buffer << "</html>" << endl;
+        std::stringstream buffer;
+        buffer << "<html>" << std::endl;
+        buffer << "<head><title>404 Not Found</title></head>" << std::endl;
+        buffer << "<body>" << std::endl;
+        buffer << "<center><h1>404 Not Found</h1></center>" << std::endl;
+        buffer << "<hr><center>Made by <a href='https://github.com/lyoj-dev/webserver'>webserver</a> v" << httpd_version << "</center>" << std::endl;
+        buffer << "</body>" << std::endl;
+        buffer << "</html>" << std::endl;
         putRequest(conn2, 404, __default_response);
         send(conn2, buffer.str());
         exitRequest(conn2);
