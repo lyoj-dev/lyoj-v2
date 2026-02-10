@@ -13,7 +13,7 @@
 #include <vector>
 
 template<typename T>
-T* __my_builtin_createSharedMemory(std::string typeName, int len) {
+T* __my_builtin_createSharedMemory(std::string typeName, std::size_t len) {
     void *addr = mmap(NULL, len * sizeof(T), PROT_READ | PROT_WRITE, MAP_ANON | MAP_SHARED, -1, 0);
     // std::cout << "Allocated shared memory, type = " << typeName << ", len = " << len << ", size = " << len * sizeof(T) << std::endl;
     if (addr == MAP_FAILED) return NULL;
@@ -28,15 +28,19 @@ struct SharedMemoryAllocator {
     using value_type = T;
 
     SharedMemoryAllocator() = default;
+    ~SharedMemoryAllocator() = default;
 
     template <typename U>
-    constexpr SharedMemoryAllocator(const SharedMemoryAllocator<U>&) noexcept {}
+    SharedMemoryAllocator(const SharedMemoryAllocator<U>&) noexcept {}
 
     T* allocate(std::size_t n) {
-        return createSharedMemoryArray(T, n);
+        T* addr = createSharedMemoryArray(T, n);
+        // if (addr == NULL) std::cerr << "!!!!!!!!!!!!!!!!!!!!!!!!!1=====================" << std::endl;
+        return addr;
     }
 
     void deallocate(T* p, std::size_t n) noexcept {
+        // std::cout << "Deallocated shared memory, type = T, len = " << n << ", size = " << n * sizeof(T) << std::endl;
         munmap(p, n * sizeof(T));
     }
 };
@@ -46,7 +50,7 @@ using SharedVector = std::vector<Tp, SharedMemoryAllocator<Tp> >;
 template<typename Key, typename Compare = std::less<Key> >
 using SharedSet = std::set<Key, Compare, SharedMemoryAllocator<Key> >;
 template<typename Key, typename Tp, typename Compare = std::less<Key> >
-using SharedMap = std::map<Key, Tp, Compare, SharedMemoryAllocator<Key> >;
+using SharedMap = std::map<Key, Tp, Compare, SharedMemoryAllocator<std::pair<const Key, Tp> > >;
 
 void proc_create(pid_t* pid, std::function<void*(void*)> worker, void* args) {
     *pid = fork();

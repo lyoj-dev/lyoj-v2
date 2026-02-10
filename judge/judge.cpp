@@ -56,17 +56,17 @@ struct Args {
     MYSQL mysql; // mysql 连接符
 };
 void* unit_work_thread(void* arg) {
-    proc_settitle("lyoj-judge: unit worker process");
+    // proc_settitle("lyoj-judge: unit worker process");
     system((*(std::string*)arg).c_str());
     return NULL;
 }
 void* work_thread(void* arg) {
-    proc_settitle("lyoj-judge: worker process");
+    // proc_settitle("lyoj-judge: worker process");
     auto args = *(Args*)arg;
     delete (Args*)arg;
     Server server("../tmp/" + std::to_string(args.id) + "/server.sock");
-    pid_t pt;
-    proc_create(&pt, unit_work_thread, (void*)&args.cmd);
+    pthread_t pt;
+    pthread_create(&pt, NULL, unit_work_thread, (void*)&args.cmd);
     Connection conn = server.accept();
     Json::Value &result = results[args.sid];
     int score = 0, testing = 0;
@@ -148,6 +148,7 @@ void* work_thread(void* arg) {
         args.sid,
         args.cid
     );
+    
     if (args.cid) {
         auto res = mysqli_query(
             args.mysql,
@@ -236,7 +237,7 @@ MYSQL quick_mysqli_connect() {
     );
 }
 void* webserver_work_thread(void* arg) {
-    proc_settitle("lyoj-judge: socket worker process");
+    // proc_settitle("lyoj-judge: socket worker process");
     Connection conn = *(Connection*)arg;
     delete (Connection*)arg;
     Json::Value data = json_decode(conn.recv());
@@ -336,21 +337,21 @@ void* webserver_work_thread(void* arg) {
     return NULL;
 }
 void* socket_work_thread(void* arg) {
-    proc_settitle("lyoj-judge: socket master process");
+    // proc_settitle("lyoj-judge: socket master process");
     Server server(judge["sock"].asString());
     writeLog(LOG_LEVEL_INFO, "Listening to web server connection...");
     while (1) {
         Connection *conn = new Connection;
         *conn = server.accept();
-        pid_t pt;
-        proc_create(&pt, webserver_work_thread, (void*)conn);
+        pthread_t pt;
+        pthread_create(&pt, NULL, webserver_work_thread, (void*)conn);
     }
     return NULL;
 }
 
 int main(int argc, char** argv) {
     proc_inittitle(argv);
-    proc_settitle("lyoj-judge: master process");
+    proc_settitle("lyoj-judge");
 
     judge = json_decode(readFile("./judge.json"));
     for (int i = 1; i <= judge["thread"].asInt(); i++)
@@ -359,8 +360,8 @@ int main(int argc, char** argv) {
     mysql = quick_mysqli_connect();
     writeLog(LOG_LEVEL_INFO, "Listening to mysql server...");
 
-    pid_t pt;
-    proc_create(&pt, socket_work_thread, NULL);
+    pthread_t pt;
+    pthread_create(&pt, NULL, socket_work_thread, NULL);
 
     while(1) {
         usleep(100 * 1000);
@@ -396,7 +397,7 @@ int main(int argc, char** argv) {
                         "SELECT starttime, duration FROM contest WHERE id = %d",
                         atoi(list[i]["contest"].c_str())
                     );
-                    pid_t pt; 
+                    pthread_t pt; 
                     Args *arg = new Args;
                     *arg = { 
                         j, 
@@ -409,7 +410,7 @@ int main(int argc, char** argv) {
                     };
                     arg->cmd = "./unit ../../judge/judge.json ../../problem/" + list[i]["pid"] + " ../tmp/" + std::to_string(j) + " ./server.sock " + list[i]["lang"] + " >> ./log.txt 2>&1";
                     arg->mysql = quick_mysqli_connect();
-                    proc_create(&pt, work_thread, (void*)arg);
+                    pthread_create(&pt, NULL, work_thread, (void*)arg);
                     break;
                 }
                 if (added) break;

@@ -1222,6 +1222,9 @@ class application {
                 exit(3);
             }
             writeLog(LOG_LEVEL_DEBUG, "Successfully block SIGPIPE!");
+
+            signal(SIGCHLD, SIG_IGN); // block sigchld to avoid defunct
+            writeLog(LOG_LEVEL_DEBUG, "Successfully block SIGCHLD!");
             #endif
             
             http_init(); pool.init(http_thread_num);
