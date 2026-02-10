@@ -1,7 +1,5 @@
 #include "../../../httpd.h"
 #include "../../../utils.cpp"
-#include <cstdlib>
-#include <string>
 
 auto AdminProblemsDetails = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);

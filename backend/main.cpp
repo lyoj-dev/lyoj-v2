@@ -62,6 +62,7 @@
 #include"api/admin/problems/clone.cpp"
 #include"api/admin/problems/details.cpp"
 #include"api/admin/problems/edit.cpp"
+#include"api/admin/problems/rejudge.cpp"
 #include"ws/submissions/list.cpp"
 #include"ws/submissions/details.cpp"
 
@@ -129,6 +130,7 @@ int main(int argc, char** argv) {
     app.addRoute("/admin/problems/clone", AdminProblemsClone);
     app.addRoute("/admin/problems/details", AdminProblemsDetails);
     app.addRoute("/admin/problems/edit", AdminProblemsEdit);
+    app.addRoute("/admin/problems/rejudge", AdminProblemsRejudge);
 
     app.ws_addRoute("/submissions/list", WSSubmissionsList);
     app.ws_addRoute("/submissions/%d", WSSubmissionsDetails);

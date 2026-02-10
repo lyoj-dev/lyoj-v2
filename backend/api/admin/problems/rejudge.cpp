@@ -1,7 +1,7 @@
 #include "../../../httpd.h"
 #include "../../../utils.cpp"
 
-auto AdminProblemsClone = [](client_conn conn, http_request request, param argv) {
+auto AdminProblemsRejudge = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
     if (!hasPermission(userInfo, AdminPage)) quickSendMsgWithoutMySQL(403);
@@ -13,17 +13,17 @@ auto AdminProblemsClone = [](client_conn conn, http_request request, param argv)
     bool exist = atoi(mysqli_query(mysql, "SELECT COUNT(*) AS count FROM problem WHERE id = %d", id)[0]["count"].c_str());
     if (!exist) quickSendMsg(404);
 
-    int newid = atoi(mysqli_query(mysql, "SELECT MAX(id) AS count FROM problem")[0]["count"].c_str()) + 1;
-    mysqli_execute(mysql, "INSERT INTO problem SELECT * FROM problem WHERE id = %d", id);
-    mysqli_execute(mysql, "UPDATE problem SET id = %d WHERE id = %d LIMIT 1", 0, id);
-    mysqli_execute(mysql, "UPDATE problem SET id = %d WHERE id = %d", newid, id);
-    mysqli_execute(mysql, "UPDATE problem SET id = %d WHERE id = %d", id, 0);
-    system(("cp ../problem/" + std::to_string(id) + " ../problem/" + std::to_string(newid) + " -r").c_str());
+    mysqli_execute(
+        mysql,
+        "UPDATE submission SET judged = 0, status = %d, score = 0, result = \"{}\", time = %ld WHERE pid = %d",
+        Waiting, 
+        time(NULL),
+        id
+    );
 
     Json::Value object;
     object["code"] = 200;
     object["msg"] = http_code[200];
-    object["id"] = newid;
     object["loginAs"] = userId;
     object["loginInfo"] = userInfo;
 

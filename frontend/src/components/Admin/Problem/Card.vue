@@ -6,7 +6,7 @@ import { loginAs } from '@/utils';
 
 const t = i18n.global.t;
 const props = defineProps([ 'selected', 'id', 'cid', 'alias', 'title', 'tags', 'accepted', 'total', 'difficulty' ]);
-const emits = defineEmits([ 'addTag', 'updateSelected', 'deleteProblem', 'cloneProblem' ]);
+const emits = defineEmits([ 'addTag', 'updateSelected', 'deleteProblem', 'cloneProblem', 'rejudge' ]);
 
 function getColor(d: number) {
     for (var i = 1; i < difficultyList.length; i++) {
@@ -67,6 +67,12 @@ function getColor(d: number) {
         <div class="ProblemCard-actions d-flex justify-center align-center">
             <v-btn 
                 class="ProblemCard-actionButton" 
+                icon="mdi-restart" 
+                size="x-small"
+                @click="() => emits('rejudge', id, title)"
+            ></v-btn>
+            <v-btn 
+                class="ProblemCard-actionButton" 
                 icon="mdi-content-copy" 
                 size="x-small"
                 @click="() => emits('cloneProblem', id, title)"
@@ -113,7 +119,7 @@ function getColor(d: number) {
 }
 
 .ProblemCard-problem {
-    width: calc(35% - 37px);
+    width: calc(35% - 74px);
 }
 
 .ProblemCard-tags {
@@ -133,7 +139,7 @@ function getColor(d: number) {
 }
 
 .ProblemCard-actions {
-    width: calc(10% + 37px);
+    width: calc(10% + 74px);
     gap: 5px;
 }
 

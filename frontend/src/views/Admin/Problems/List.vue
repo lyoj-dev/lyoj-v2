@@ -147,6 +147,12 @@ async function deleteProblem(id: number, name: string) {
     updatePage(originalQuery.value);
 }
 
+async function rejudge(id: number, name: string) {
+    if (!confirm(t('pages.admin.problems.list.rejudgeConfirm', { name: name }))) return;
+    var res = await myFetch(config.apiBase + "/admin/problems/rejudge", { method: "POST", body: JSON.stringify({ id: id }) });
+    showMsg("success", t('pages.admin.problems.list.rejudgeSuccess'));
+}
+
 async function cloneProblem(id: number, name: string) {
     if (!confirm(t('pages.admin.problems.list.cloneConfirm', { name: name }))) return;
     var res = await myFetch(config.apiBase + "/admin/problems/clone", { method: "POST", body: JSON.stringify({ id: id }) });
@@ -263,6 +269,7 @@ watchEffect(() => {
             :allowEdit="item.allowEdit"
             :allowDelete="item.allowDelete"
             @addTag="addTag"
+            @rejudge="rejudge"
             @deleteProblem="deleteProblem"
             @cloneProblem="cloneProblem"
             @updateSelected="(value) => selected(item.id, value)"
