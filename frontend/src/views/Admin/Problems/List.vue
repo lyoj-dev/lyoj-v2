@@ -147,18 +147,18 @@ async function deleteProblem(id: number, name: string) {
     updatePage(originalQuery.value);
 }
 
-async function rejudge(id: number, name: string) {
-    if (!confirm(t('pages.admin.problems.list.rejudgeConfirm', { name: name }))) return;
-    var res = await myFetch(config.apiBase + "/admin/problems/rejudge", { method: "POST", body: JSON.stringify({ id: id }) });
-    showMsg("success", t('pages.admin.problems.list.rejudgeSuccess'));
-}
-
 async function cloneProblem(id: number, name: string) {
     if (!confirm(t('pages.admin.problems.list.cloneConfirm', { name: name }))) return;
     var res = await myFetch(config.apiBase + "/admin/problems/clone", { method: "POST", body: JSON.stringify({ id: id }) });
     showMsg("success", t('pages.admin.problems.list.cloneSuccess'));
     await sleep(1000);
     locate("/problems/" + res.id + "/edit");
+}
+
+async function rejudgeProblem(id: number, name: string) {
+    if (!confirm(t('pages.admin.problems.list.rejudgeConfirm', { name: name }))) return;
+    var res = await myFetch(config.apiBase + "/admin/problems/rejudge", { method: "POST", body: JSON.stringify({ ids: [ id ] }) });
+    showMsg("success", t('pages.admin.problems.list.rejudgeSuccess'));
 }
 
 async function deleteProblems() {
@@ -173,6 +173,15 @@ async function deleteProblems() {
     selectedList.value = [];
     if (selectedOnly.value) updateSelectedOnly();
     else updatePage(originalQuery.value);
+}
+
+async function rejudgeProblems() {
+    if (!confirm(t('pages.admin.problems.list.rejudgeSelectedConfirm', { count: selectedList.value.length }))) return;
+    var res = await myFetch(config.apiBase + "/admin/problems/rejudge", { 
+        method: "POST", 
+        body: JSON.stringify({ ids: selectedList.value.map((e: any) => e.id) }) 
+    });
+    showMsg("success", t('pages.admin.problems.list.rejudgeSelectedSuccess'));
 }
 
 function editProblems() {
@@ -233,14 +242,14 @@ watchEffect(() => {
                 ></v-icon>
             </div>
             <div 
-                style="width: calc(87% - 37px); padding: 3px;"
+                style="width: calc(87% - 74px); padding: 3px;"
             >{{ t('pages.admin.problems.list.selectedProblem', { count: selectedList.length, selected: fullSelected }) }}</div>
             <div class="ProblemCard-actions d-flex justify-center align-center">
                 <v-btn 
                     class="ProblemCard-actionButton" 
-                    :icon="selectedOnly ? 'mdi-eye-off' : 'mdi-eye'" 
+                    :icon="'mdi-restart'" 
                     size="x-small"
-                    @click="updateSelectedOnly()"
+                    @click="rejudgeProblems()"
                 ></v-btn>
                 <v-btn 
                     class="ProblemCard-actionButton" 
@@ -253,6 +262,12 @@ watchEffect(() => {
                     icon="mdi-trash-can" 
                     size="x-small"
                     @click="deleteProblems()"
+                ></v-btn>
+                <v-btn 
+                    class="ProblemCard-actionButton" 
+                    :icon="selectedOnly ? 'mdi-eye-off' : 'mdi-eye'" 
+                    size="x-small"
+                    @click="updateSelectedOnly()"
                 ></v-btn>
             </div>
         </v-card>
@@ -269,7 +284,7 @@ watchEffect(() => {
             :allowEdit="item.allowEdit"
             :allowDelete="item.allowDelete"
             @addTag="addTag"
-            @rejudge="rejudge"
+            @rejudge="rejudgeProblem"
             @deleteProblem="deleteProblem"
             @cloneProblem="cloneProblem"
             @updateSelected="(value) => selected(item.id, value)"
@@ -304,7 +319,7 @@ watchEffect(() => {
 }
 
 .ProblemCard-actions {
-    width: calc(10% + 37px);
+    width: calc(10% + 74px);
     gap: 5px;
 }
 

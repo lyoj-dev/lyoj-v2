@@ -8,17 +8,22 @@ auto AdminProblemsRejudge = [](client_conn conn, http_request request, param arg
     auto $_POST = json_decode(request.postdata);
 
     MYSQL mysql = quick_mysqli_connect();
-    int id = $_POST["id"].asInt();
+    std::string ids = json_encode($_POST["ids"]);
+    ids[0] = '(', ids[ids.size() - 1] = ')';
 
-    bool exist = atoi(mysqli_query(mysql, "SELECT COUNT(*) AS count FROM problem WHERE id = %d", id)[0]["count"].c_str());
-    if (!exist) quickSendMsg(404);
+    auto details = mysqli_query(
+        mysql,
+        "SELECT * FROM problem WHERE id in %s", 
+        ids.c_str()
+    );
+    if (details.size() != $_POST["ids"].size()) quickSendMsg(404);
 
     mysqli_execute(
         mysql,
-        "UPDATE submission SET judged = 0, status = %d, score = 0, result = \"{}\", time = %ld WHERE pid = %d",
+        "UPDATE submission SET judged = 0, status = %d, score = 0, result = \"{}\", time = %ld WHERE pid in %s",
         Waiting, 
         time(NULL),
-        id
+        ids.c_str()
     );
 
     Json::Value object;

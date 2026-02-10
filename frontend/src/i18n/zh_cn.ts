@@ -296,8 +296,12 @@ export const zh_cn = {
                     selectedProblem: "共选中 {count} 项，当前选中 {selected} 项",
                     deleteSelectedConfirm: "确定删除选中的 {count} 项吗？",
                     deleteSelectedSuccess: "删除成功",
+                    rejudgeSelectedConfirm: "确定重测选中的 {count} 项吗？",
+                    rejudgeSelectedSuccess: "重测成功",
                     cloneConfirm: "确定复制题目 \"{name}\" 吗？",
                     cloneSuccess: "复制成功",
+                    rejudgeConfirm: "确定重测题目 \"{name}\" 吗？",
+                    rejudgeSuccess: "重测成功",
                 },
                 edit: {
                     hint: "如果您不希望批量修改某些项，请置空！",

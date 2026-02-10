@@ -73,12 +73,6 @@ function getColor(d: number) {
             ></v-btn>
             <v-btn 
                 class="ProblemCard-actionButton" 
-                icon="mdi-content-copy" 
-                size="x-small"
-                @click="() => emits('cloneProblem', id, title)"
-            ></v-btn>
-            <v-btn 
-                class="ProblemCard-actionButton" 
                 icon="mdi-pen" 
                 size="x-small"
                 @click="locate('/problems/' + id + '/edit')"
@@ -88,6 +82,12 @@ function getColor(d: number) {
                 icon="mdi-trash-can" 
                 size="x-small"
                 @click="() => emits('deleteProblem', id, title)"
+            ></v-btn>
+            <v-btn 
+                class="ProblemCard-actionButton" 
+                icon="mdi-content-copy" 
+                size="x-small"
+                @click="() => emits('cloneProblem', id, title)"
             ></v-btn>
         </div>
     </v-card>

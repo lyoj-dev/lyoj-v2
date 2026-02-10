@@ -2064,6 +2064,12 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 
 请求方式：POST
 
+### 重测整题
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/rejudge
+
+请求方式：POST
+
 ## WebSocket 接口
 
 ### 获取多个提交简要信息更新
