@@ -1380,6 +1380,7 @@ struct wsarg {
  */
 void* ws_work_thread(void* arg) {
 	wsarg args = *(wsarg*)arg;
+    proc_settitle((http_ws_worker_title + " " + args.request.path).c_str());
 	app.ws_route[args.routeId].main(args.conn, args.request, args.argv);
 	return NULL;
 }
@@ -1469,7 +1470,6 @@ void thread_pool::work_thread() {
 		            /** 主函数执行 */
 		            wsarg args = { i, conn2, request, argv }; 
                     pid_t pt;
-                    proc_settitle((http_ws_worker_title + " " + request.path).c_str());
 		            proc_create(&pt, ws_work_thread, (void*)&args);
 		            longjmp(buf[id], 0);
 		        }
