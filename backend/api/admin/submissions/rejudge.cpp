@@ -13,7 +13,7 @@ auto AdminSubmissionRejudge = [](client_conn conn, http_request request, param a
 
     auto details = mysqli_query(
         mysql,
-        "SELECT * FROM submission WHERE id in %s", 
+        "SELECT id FROM submission WHERE id in %s", 
         ids.c_str()
     );
     if (details.size() != $_POST["ids"].size()) quickSendMsg(404);

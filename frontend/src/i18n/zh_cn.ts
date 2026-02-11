@@ -26,6 +26,7 @@ export const zh_cn = {
         adminProblemsEdit: "批量编辑题目",
         adminSubmissionsList: "评测管理",
         adminContestsList: "比赛管理",
+        adminTagsList: "标签管理",
     },
     appbar: {
         index: "首页",
@@ -335,9 +336,21 @@ export const zh_cn = {
             },
             contests: {
                 title: "比赛管理",
+                list: {
+                    editButton: "编辑"
+                }
             },
             tags: {
                 title: "标签管理",
+                list: {
+                    addTag: "新建{type}",
+                    deleteTagConfirm: "确定删除标签 \"{name}\" 吗？这将导致 {countProblem} 个题目和 {countContest} 个比赛失去该标签",
+                    deleteTagSuccess: "删除成功",
+                    renameTag: "重命名标签",
+                    renameTagTitleEmpty: "标签名称不能为空",
+                    renameTagSuccess: "重命名成功",
+                    renameTagFailed: "重命名失败",
+                }
             },
             users: {
                 title: "用户管理",

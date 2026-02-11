@@ -13,7 +13,7 @@ auto AdminProblemsDetails = [](client_conn conn, http_request request, param arg
 
     auto details = mysqli_query(
         mysql,
-        "SELECT * FROM problem WHERE id in %s", 
+        "SELECT id FROM problem WHERE id in %s", 
         ids.c_str()
     );
     if (details.size() != json_decode($_GET["ids"]).size()) quickSendMsg(404);

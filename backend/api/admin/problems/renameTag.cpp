@@ -1,30 +1,22 @@
 #include "../../../httpd.h"
 #include "../../../utils.cpp"
+#include <cstdlib>
 
-auto AdminProblemsRejudge = [](client_conn conn, http_request request, param argv) {
+auto AdminProblemsRenameTag = [](client_conn conn, http_request request, param argv) {
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
     if (!hasPermission(userInfo, AdminPage)) quickSendMsgWithoutMySQL(403);
     auto $_POST = json_decode(request.postdata);
 
     MYSQL mysql = quick_mysqli_connect();
-    std::string ids = json_encode($_POST["ids"]);
-    ids[0] = '(', ids[ids.size() - 1] = ')';
+    int id = $_POST["id"].asInt();
+    std::string title = $_POST["title"].asString();
+    int type = $_POST["type"].asInt();
+    
+    bool exist = atoi(mysqli_query(mysql, "SELECT COUNT(*) AS count FROM tags WHERE id = %d", id)[0]["count"].c_str());
+    if (!exist) quickSendMsg(404);
 
-    auto details = mysqli_query(
-        mysql,
-        "SELECT id FROM problem WHERE id in %s", 
-        ids.c_str()
-    );
-    if (details.size() != $_POST["ids"].size()) quickSendMsg(404);
-
-    mysqli_execute(
-        mysql,
-        "UPDATE submission SET judged = 0, status = %d, score = 0, result = \"{}\", time = %ld WHERE pid in %s",
-        Waiting, 
-        time(NULL),
-        ids.c_str()
-    );
+    mysqli_execute(mysql, "UPDATE tags SET title = \"%s\", type = %d WHERE id = %d", title.c_str(), type, id);
 
     Json::Value object;
     object["code"] = 200;

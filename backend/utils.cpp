@@ -2,6 +2,7 @@
 
 #include <jsoncpp/json/value.h>
 #include <mysql/mysql.h>
+#include <string>
 #include "../shared/mysql.h"
 #include "../shared/json.h"
 #include "../shared/type.h"

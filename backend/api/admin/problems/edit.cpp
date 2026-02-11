@@ -13,7 +13,7 @@ auto AdminProblemsEdit = [](client_conn conn, http_request request, param argv) 
 
     auto details = mysqli_query(
         mysql,
-        "SELECT * FROM problem WHERE id in %s", 
+        "SELECT id FROM problem WHERE id in %s", 
         ids.c_str()
     );
     if (details.size() != $_POST["ids"].size()) quickSendMsg(404);

@@ -17,6 +17,7 @@ import AdminProblemsList from '@/views/Admin/Problems/List.vue'
 import AdminProblemsEdit from '@/views/Admin/Problems/Edit.vue'
 import AdminSubmissionsList from '@/views/Admin/Submissions/List.vue'
 import AdminContestsList from '@/views/Admin/Contests/List.vue'
+import AdminTagsList from '@/views/Admin/Tags/List.vue'
 import UserDetails from '@/views/User/Details.vue'
 import Login from '@/views/Login.vue'
 import CasLogin from '@/views/CasLogin.vue'
@@ -135,6 +136,11 @@ export const router = createRouter({
       path: '/admin/contests/list',
       name: 'adminContestsList',
       component: AdminContestsList
+    },
+    {
+      path: '/admin/tags/list',
+      name: 'adminTagsList',
+      component: AdminTagsList
     },
     {
       path: '/users/:id',

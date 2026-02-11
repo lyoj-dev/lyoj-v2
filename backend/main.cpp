@@ -63,6 +63,9 @@
 #include"api/admin/problems/details.cpp"
 #include"api/admin/problems/edit.cpp"
 #include"api/admin/problems/rejudge.cpp"
+#include"api/admin/problems/checkTag.cpp"
+#include"api/admin/problems/deleteTag.cpp"
+#include"api/admin/problems/renameTag.cpp"
 #include"api/admin/submissions/list.cpp"
 #include"api/admin/submissions/rejudge.cpp"
 #include"ws/submissions/list.cpp"
@@ -133,6 +136,9 @@ int main(int argc, char** argv) {
     app.addRoute("/admin/problems/details", AdminProblemsDetails);
     app.addRoute("/admin/problems/edit", AdminProblemsEdit);
     app.addRoute("/admin/problems/rejudge", AdminProblemsRejudge);
+    app.addRoute("/admin/problems/checkTag", AdminProblemsCheckTag);
+    app.addRoute("/admin/problems/deleteTag", AdminProblemsDeleteTag);
+    app.addRoute("/admin/problems/renameTag", AdminProblemsRenameTag);
     app.addRoute("/admin/submissions/list", AdminSubmissionList);
     app.addRoute("/admin/submissions/rejudge", AdminSubmissionRejudge);
 
