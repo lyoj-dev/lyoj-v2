@@ -92,7 +92,9 @@ export const zh_cn = {
                 tags: "标签",
                 minDifficulty: "最小难度",
                 maxDifficulty: "最大难度",
-                searchButton: "搜索"
+                searchButton: "搜索",
+                editButton: "编辑",
+                deleteButton: "删除",
             },
             edit: {
                 baseInfo: "题目基本信息",
@@ -302,6 +304,13 @@ export const zh_cn = {
                     cloneSuccess: "复制成功",
                     rejudgeConfirm: "确定重测题目 \"{name}\" 吗？",
                     rejudgeSuccess: "重测成功",
+                    rejudgeSelectedButton: "重测选中题目",
+                    editSelectedButton: "编辑选中题目",
+                    deleteSelectedButton: "删除选中题目",
+                    showSelectedButton: "仅显示选中题目",
+                    showAllButton: "显示全部题目",
+                    rejudgeButton: "重测",
+                    cloneButton: "复制"
                 },
                 edit: {
                     hint: "如果您不希望批量修改某些项，请置空！",

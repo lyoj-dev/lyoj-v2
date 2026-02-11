@@ -247,26 +247,34 @@ watchEffect(() => {
             <div class="ProblemCard-actions d-flex justify-center align-center">
                 <v-btn 
                     class="ProblemCard-actionButton" 
-                    :icon="'mdi-restart'" 
+                    icon="mdi-restart" 
                     size="x-small"
+                    :title="t('pages.admin.problems.list.rejudgeSelectedButton')"
+                    :disabled="selectedList.length == 0"
                     @click="rejudgeProblems()"
                 ></v-btn>
                 <v-btn 
                     class="ProblemCard-actionButton" 
                     icon="mdi-pen" 
                     size="x-small"
+                    :title="t('pages.admin.problems.list.editSelectedButton')"
+                    :disabled="selectedList.length == 0"
                     @click="editProblems()"
                 ></v-btn>
                 <v-btn 
                     class="ProblemCard-actionButton" 
                     icon="mdi-trash-can" 
                     size="x-small"
+                    :title="t('pages.admin.problems.list.deleteSelectedButton')"
+                    :disabled="selectedList.length == 0"
                     @click="deleteProblems()"
                 ></v-btn>
                 <v-btn 
                     class="ProblemCard-actionButton" 
                     :icon="selectedOnly ? 'mdi-eye-off' : 'mdi-eye'" 
                     size="x-small"
+                    :title="t('pages.admin.problems.list.' + (selectedOnly ? 'showAllButton' : 'showSelectedButton'))"
+                    :disabled="selectedList.length == 0"
                     @click="updateSelectedOnly()"
                 ></v-btn>
             </div>

@@ -69,24 +69,28 @@ function getColor(d: number) {
                 class="ProblemCard-actionButton" 
                 icon="mdi-restart" 
                 size="x-small"
+                :title="t('pages.admin.problems.list.rejudgeButton')"
                 @click="() => emits('rejudge', id, title)"
             ></v-btn>
             <v-btn 
                 class="ProblemCard-actionButton" 
                 icon="mdi-pen" 
                 size="x-small"
+                :title="t('pages.problems.search.editButton')"
                 @click="locate('/problems/' + id + '/edit')"
             ></v-btn>
             <v-btn 
                 class="ProblemCard-actionButton" 
                 icon="mdi-trash-can" 
                 size="x-small"
+                :title="t('pages.problems.search.deleteButton')"
                 @click="() => emits('deleteProblem', id, title)"
             ></v-btn>
             <v-btn 
                 class="ProblemCard-actionButton" 
                 icon="mdi-content-copy" 
                 size="x-small"
+                :title="t('pages.admin.problems.list.cloneButton')"
                 @click="() => emits('cloneProblem', id, title)"
             ></v-btn>
         </div>

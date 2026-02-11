@@ -75,6 +75,7 @@ function getColor(d: number) {
                 :disabled="!allowEdit" 
                 icon="mdi-pen" 
                 size="x-small"
+                :title="t('pages.problems.search.editButton')"
                 @click="locate('/problems/' + id + '/edit')"
             ></v-btn>
             <v-btn 
@@ -82,6 +83,7 @@ function getColor(d: number) {
                 :disabled="!allowDelete" 
                 icon="mdi-trash-can" 
                 size="x-small"
+                :title="t('pages.problems.search.deleteButton')"
                 @click="() => emits('deleteProblem', id, title)"
             ></v-btn>
         </div>
