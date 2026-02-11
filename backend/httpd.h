@@ -1071,6 +1071,15 @@ class thread_pool {
                 socketpair(AF_LOCAL, SOCK_STREAM, 0, fd);
                 data->sockfd[i][0] = fd[0], data->sockfd[i][1] = fd[1];
                 proc_create(&data->pt[i], thread_pool::pre_thread, (void*)this);
+                send(data->sockfd[i][0], "Server hello", 12, 0);
+                char* msg = new char[13];
+                int len = recv(data->sockfd[i][0], msg, 12, 0);
+                if (len != 12 || std::string(msg) != "Client hello") {
+                    writeLog(LOG_LEVEL_WARNING, "Invalid socketpair for process #%d. Recreating a process...", i);
+                    i--;
+                    data->cnt--;
+                }
+                delete[] msg;
             }
         }
 
@@ -1392,6 +1401,14 @@ void* ws_work_thread(void* arg) {
 void thread_pool::work_thread() {
     int id = this->get_thread_id();
     writeLog(LOG_LEVEL_DEBUG, "Created process #%d", id);
+    char* msg = new char[13];
+    int len = recv(data->sockfd[id][1], msg, 12, 0);
+    if (len != 12 || std::string(msg) != "Server hello") {
+        writeLog(LOG_LEVEL_WARNING, "Invalid socketpair. Exiting...");
+        return;
+    }
+    delete[] msg;
+    send(data->sockfd[id][1], "Client hello", 12, 0);
     while (1) {
         #ifdef __linux__
         usleep(1000 * 30);
