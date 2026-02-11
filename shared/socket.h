@@ -26,7 +26,7 @@ struct Connection {
         while(true) {
             int64_t s = ::send(conn, msg.substr(send).c_str(), msg.size() - send, 0);
             if (s == -1) {
-                writeLog(LOG_LEVEL_ERROR, "Failed to send message! Errno: %d", &errno);
+                writeLog(LOG_LEVEL_ERROR, "Failed to send message! Errno: %d", errno);
                 return false;
             }
             send += s;
@@ -51,7 +51,7 @@ struct Connection {
         while(true) {
             int64_t s = ::recv(conn, msg + recv, msgLen - recv, 0);
             if (s == -1) {
-                writeLog(LOG_LEVEL_ERROR, "Failed to recv message! Error: %d", &errno);
+                writeLog(LOG_LEVEL_ERROR, "Failed to recv message! Error: %d", errno);
                 return errorKey;
             }
             recv += s;
