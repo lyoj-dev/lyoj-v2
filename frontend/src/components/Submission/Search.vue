@@ -8,7 +8,7 @@ const languages: any = defineModel('languages');
 const status: any = defineModel('status');
 
 const t = i18n.global.t;
-const props = defineProps([ 'problemsList', 'usersList', 'languagesList' ]);
+const props = defineProps([ 'problemsList', 'usersList', 'languagesList', 'disableSearch' ]);
 const emits = defineEmits([ 'search' ]);
 const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.text, id: index }));
 </script>
@@ -73,6 +73,7 @@ const statusL = statusList.slice(0, 9).map((item: any, index) => ({ name: item.t
                 <div class="d-flex justify-center">
                     <v-btn 
                         @click="emits('search')" 
+                        :disabled="disableSearch"
                         class="SubmissionSearch-button"
                     >{{ t('pages.submissions.search.searchButton') }}</v-btn>
                 </div>

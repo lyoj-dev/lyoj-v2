@@ -35,7 +35,11 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
         for (int i = 0; i < status.size(); i++) where += (i ? "," : "") + std::to_string(status[i].asInt());
         where += ")";
     }
-    where += " AND contest = " + (argv.size() ? std::to_string(atoi(argv[0].c_str())) : "0");
+    if (argv.size() && atoi(argv[0].c_str()) == -1) {
+        if (!hasPermission(userInfo, AdminPage)) quickSendMsg(403);
+    } else {
+        where += " AND contest = " + (argv.size() ? std::to_string(atoi(argv[0].c_str())) : "0");
+    }
     if (!hasPermission(userInfo, SubmissionListOthers)) where += " AND s.uid = " + std::to_string(userId);
 
     int page = $_GET.find("page") == $_GET.end() ? 1 : atoi($_GET["page"].c_str());

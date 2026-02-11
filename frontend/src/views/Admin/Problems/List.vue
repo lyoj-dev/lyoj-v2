@@ -141,7 +141,7 @@ function addTag(id: number) {
 
 async function deleteProblem(id: number, name: string) {
     if (!confirm(t('pages.problems.deleteConfirm', { name: name }))) return;
-    var res = await myFetch(config.apiBase + "/problems/" + id + "/delete", { method: "POST" });
+    var res = await myFetch(config.apiBase + "/admin/problems/delete", { method: "POST", body: JSON.stringify({ ids: [ id ] }) });
     showMsg("success", t('pages.problems.deleteSuccess'));
     await sleep(1000);
     updatePage(originalQuery.value);
@@ -222,6 +222,7 @@ watchEffect(() => {
             v-model:maxDiff="maxDiff"
             v-model:title="title"
             :tagsList="tagsList"
+            :disableSearch="selectedOnly"
             @search="search"
         ></ProblemSearch>
         <v-card class="d-flex ProblemCard card-radius">
@@ -329,10 +330,6 @@ watchEffect(() => {
 .ProblemCard-actions {
     width: calc(10% + 74px);
     gap: 5px;
-}
-
-.ProblemCard-problem {
-    width: 97%;
 }
 
 .ProblemCard-actionButton {

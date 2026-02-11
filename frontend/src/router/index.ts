@@ -15,6 +15,7 @@ import ContestsEdit from '@/views/Contests/Edit.vue'
 import AdminIndex from '@/views/Admin/Index.vue'
 import AdminProblemsList from '@/views/Admin/Problems/List.vue'
 import AdminProblemsEdit from '@/views/Admin/Problems/Edit.vue'
+import AdminSubmissionsList from '@/views/Admin/Submissions/List.vue'
 import UserDetails from '@/views/User/Details.vue'
 import Login from '@/views/Login.vue'
 import CasLogin from '@/views/CasLogin.vue'
@@ -123,6 +124,11 @@ export const router = createRouter({
       path: '/admin/problems/edit',
       name: 'adminProblemsEdit',
       component: AdminProblemsEdit
+    },
+    {
+      path: '/admin/submissions/list',
+      name: 'adminSubmissionsList',
+      component: AdminSubmissionsList
     },
     {
       path: '/users/:id',

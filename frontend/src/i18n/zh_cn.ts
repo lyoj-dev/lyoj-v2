@@ -24,6 +24,7 @@ export const zh_cn = {
         adminIndex: "管理首页",
         adminProblemsList: "题库管理",
         adminProblemsEdit: "批量编辑题目",
+        adminSubmissionsList: "评测管理",
     },
     appbar: {
         index: "首页",
@@ -321,6 +322,15 @@ export const zh_cn = {
             },
             submissions: {
                 title: "评测管理",
+                list: {
+                    selectedSubmission: "共选中 {count} 项，当前选中 {selected} 项",
+                    rejudgeSelectedConfirm: "确定重测选中的 {count} 项吗？",
+                    rejudgeSelectedSuccess: "重测成功",
+                    rejudgeSelectedButton: "重测选中提交",
+                    showSelectedButton: "仅显示选中提交",
+                    showAllButton: "显示全部提交",
+                    rejudgeButton: "重测",
+                }
             },
             contests: {
                 title: "比赛管理",

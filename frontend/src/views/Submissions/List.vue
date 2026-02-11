@@ -106,7 +106,7 @@ function loading(data: any) {
 
     loaded.value = true;
 }
-defineExpose({ loading, list })
+defineExpose({ loading })
 
 function search() {
     var data: any = {};

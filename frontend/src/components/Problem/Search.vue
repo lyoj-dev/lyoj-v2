@@ -8,7 +8,7 @@ const minDiff: any = defineModel('minDiff');
 const maxDiff: any = defineModel('maxDiff');
 
 const t = i18n.global.t;
-const props = defineProps([ 'tagsList' ]);
+const props = defineProps([ 'tagsList', 'disableSearch' ]);
 const emits = defineEmits([ 'search' ]);
 </script>
 
@@ -96,6 +96,7 @@ const emits = defineEmits([ 'search' ]);
                 <div class="d-flex justify-center">
                     <v-btn 
                         @click="emits('search', 1)" 
+                        :disabled="disableSearch"
                         class="SubmissionSearch-button"
                     >{{ t('pages.problems.search.searchButton') }}</v-btn>
                 </div>
