@@ -25,6 +25,7 @@ export const zh_cn = {
         adminProblemsList: "题库管理",
         adminProblemsEdit: "批量编辑题目",
         adminSubmissionsList: "评测管理",
+        adminContestsList: "比赛管理",
     },
     appbar: {
         index: "首页",

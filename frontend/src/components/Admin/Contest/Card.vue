@@ -7,6 +7,7 @@ import { computed } from 'vue';
 
 const t = i18n.global.t;
 const props = defineProps([ 'id', 'title', 'tags', 'startTime', 'endTime', 'problems' ]);
+const emits = defineEmits([ 'edit' ])
 
 const status = computed(() => {
     var now = Math.floor(Date.now() / 1000);
@@ -41,6 +42,15 @@ function formatTime(t: number) {
         </div>
         <p class="ContestCard-time">{{ formatTime(startTime) + ' ～ ' + formatTime(endTime) }}</p>
         <p class="ContestCard-problems">{{ t('pages.contests.problemNumber') }}：{{ problems }}</p>
+        <div class="ContestCard-actions d-flex justify-center align-center">
+            <v-btn 
+                class="ContestCard-actionButton" 
+                icon="mdi-pen"
+                size="x-small"
+                :title="t('pages.admin.contests.list.editButton')"
+                @click="() => emits('edit', id)"
+            ></v-btn>
+        </div>
     </v-card>
 </template>
 
@@ -60,7 +70,7 @@ function formatTime(t: number) {
 }
 
 .ContestCard-title {
-    width: 40%;
+    width: calc(30% + 37px);
 }
 
 .ContestCard-tags {
@@ -76,5 +86,15 @@ function formatTime(t: number) {
 
 .ContestCard-problems {
     width: 10%;
+}
+
+.ContestCard-actions {
+    width: calc(10% - 37px);
+    gap: 5px;
+}
+
+.ContestCard-actionButton {
+    color: var(--color-text)!important;
+    background-color: var(--color-background-mute)!important;
 }
 </style>
