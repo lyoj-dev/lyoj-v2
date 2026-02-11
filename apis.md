@@ -2070,6 +2070,30 @@ Token 需要通过登录 api 获取，有效时长 30 分钟。
 
 请求方式：POST
 
+### 复制整题
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/clone
+
+请求方式：POST
+
+### 获取与特定标签相关的题目和比赛数量
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/checkTag
+
+请求方式：GET
+
+### 删除标签
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/deleteTag
+
+请求方式：POST
+
+### 重命名标签
+
+> https://api-v2.lyoj.littleyang.com.cn/admin/problems/renameTag
+
+请求方式：POST
+
 ## WebSocket 接口
 
 ### 获取多个提交简要信息更新
