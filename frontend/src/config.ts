@@ -108,43 +108,43 @@ export const difficultyList = [
         r: 254,
         g: 76,
         b: 97,
-        color: "rgb(254,76,97)"
+        color: "rgb(254, 76, 97)"
     }, {
         t: 1 / 6,
         r: 243,
         g: 156,
         b: 17,
-        color: "rgb(243,156,17)"
+        color: "rgb(243, 156, 17)"
     }, {
         t: 2 / 6,
         r: 255,
         g: 193,
         b: 22,
-        color: "rgb(255,193,22)"
+        color: "rgb(255, 193, 22)"
     }, {
         t: 3 / 6,
         r: 82,
         g: 196,
         b: 26,
-        color: "rgb(82,196,26)"
+        color: "rgb(82, 196, 26)"
     }, {
         t: 4 / 6,
         r: 52,
         g: 152,
         b: 219,
-        color: "rgb(52,152,219)"
+        color: "rgb(52, 152, 219)"
     }, {
         t: 5 / 6,
         r: 157,
         g: 61,
         b: 207,
-        color: "rgb(157,61,207)"
+        color: "rgb(157, 61, 207)"
     }, {
         t: 1,
         r: 14,
         g: 29,
         b: 105,
-        color: "rgb(14,29,105)"
+        color: "rgb(14, 29, 105)"
     }
 ];
 export const maxDifficulty = 4000;
@@ -158,6 +158,18 @@ export const tagsTypeList = [
         id: 1,
         title: "日期标签",
         color: "rgb(180, 41, 41)"
+    }, {
+        id: 2,
+        title: "来源标签",
+        color: "rgb(255, 193, 22)"
+    }, {
+        id: 3,
+        title: "学校标签",
+        color: "rgb(82, 196, 26)"
+    }, {
+        id: 4,
+        title: "其他标签",
+        color: "rgb(52, 152, 219)"
     }
 ]
 
