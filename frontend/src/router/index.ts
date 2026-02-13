@@ -18,6 +18,9 @@ import AdminProblemsEdit from '@/views/Admin/Problems/Edit.vue'
 import AdminSubmissionsList from '@/views/Admin/Submissions/List.vue'
 import AdminContestsList from '@/views/Admin/Contests/List.vue'
 import AdminTagsList from '@/views/Admin/Tags/List.vue'
+import AdminUsersList from '@/views/Admin/Users/List.vue'
+import AdminUsersCreate from '@/views/Admin/Users/Create.vue'
+import AdminUserGroupsList from '@/views/Admin/UserGroups/List.vue'
 import UserDetails from '@/views/User/Details.vue'
 import Login from '@/views/Login.vue'
 import CasLogin from '@/views/CasLogin.vue'
@@ -141,6 +144,21 @@ export const router = createRouter({
       path: '/admin/tags/list',
       name: 'adminTagsList',
       component: AdminTagsList
+    },
+    {
+      path: '/admin/users/list',
+      name: 'adminUsersList',
+      component: AdminUsersList
+    },
+    {
+      path: '/admin/users/create',
+      name: 'adminUsersCreate',
+      component: AdminUsersCreate
+    },
+    {
+      path: '/admin/usergroups/list',
+      name: 'adminUserGroupsList',
+      component: AdminUserGroupsList
     },
     {
       path: '/users/:id',

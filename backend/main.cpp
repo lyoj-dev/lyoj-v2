@@ -68,6 +68,9 @@
 #include"api/admin/problems/renameTag.cpp"
 #include"api/admin/submissions/list.cpp"
 #include"api/admin/submissions/rejudge.cpp"
+#include"api/admin/users/list.cpp"
+#include"api/admin/users/addGroup.cpp"
+#include"api/admin/users/removeGroup.cpp"
 #include"ws/submissions/list.cpp"
 #include"ws/submissions/details.cpp"
 
@@ -141,6 +144,9 @@ int main(int argc, char** argv) {
     app.addRoute("/admin/problems/renameTag", AdminProblemsRenameTag);
     app.addRoute("/admin/submissions/list", AdminSubmissionList);
     app.addRoute("/admin/submissions/rejudge", AdminSubmissionRejudge);
+    app.addRoute("/admin/users/list", AdminUsersList);
+    app.addRoute("/admin/users/addGroup", AdminUsersAddGroup);
+    app.addRoute("/admin/users/removeGroup", AdminUsersRemoveGroup);
 
     app.ws_addRoute("/submissions/list", WSSubmissionsList);
     app.ws_addRoute("/submissions/%d", WSSubmissionsDetails);

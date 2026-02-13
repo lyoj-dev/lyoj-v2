@@ -148,6 +148,7 @@ export const difficultyList = [
     }
 ];
 export const maxDifficulty = 4000;
+export const maxRating = 4000;
 
 export const tagsTypeList = [
     {

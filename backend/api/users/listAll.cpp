@@ -8,7 +8,7 @@ auto UsersListAll = [](client_conn conn, http_request request, param argv) {
 
     auto res = mysqli_query(
         mysql, 
-        "SELECT id, title FROM user ORDER BY id ASC"
+        "SELECT id, title FROM user WHERE id != 0 ORDER BY id ASC"
     );
 
     Json::Value object;

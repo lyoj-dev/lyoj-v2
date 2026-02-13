@@ -38,7 +38,6 @@ export default defineComponent({
 
 <script setup lang="ts">
 const t = i18n.global.t;
-const router = useRouter();
 
 const list: any = ref({});
 const loaded = ref(false);
@@ -82,6 +81,7 @@ async function updatePage(data: any) {
 
     var url = config.apiBase + "/problems/list";
     if ("page" in data) url += "?page=" + data["page"];
+    else url += "?page=1";
     if ("title" in data) url += "&title=" + data["title"];
     if ("tags" in data) url += "&tags=" + data["tags"];
     if ("minDiff" in data) url += "&minDiff=" + data["minDiff"];

@@ -15,9 +15,11 @@ async function load(to: any, from: any, next: any) {
     NProgress.inc();
 
     var json = await myFetch(config.apiBase + '/users/' + to.params.id);
+    var edit = to.query.edit != undefined;
 
     next((e: any) => e.loading({
-        data: json
+        data: json,
+        edit: edit
     }));
 }
 export default defineComponent({
@@ -44,6 +46,7 @@ const headerSrc = ref("");
 const bannerSrc = ref("");
 
 function loading(data: any) {
+    if (data.edit) currPage.value = "edit";
     item.value = data.data;
     username.value = data.data.item.title;
     info.value = data.data.item.info;

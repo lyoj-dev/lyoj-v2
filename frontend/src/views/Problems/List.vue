@@ -15,6 +15,7 @@ async function load(to: any, from: any, next: any) {
     
     var url = config.apiBase + "/problems/list";
     if ("page" in to.query) url += "?page=" + to.query["page"];
+    else url += "?page=1";
     if ("title" in to.query) url += "&title=" + to.query["title"];
     if ("tags" in to.query) url += "&tags=" + to.query["tags"];
     if ("minDiff" in to.query) url += "&minDiff=" + to.query["minDiff"];

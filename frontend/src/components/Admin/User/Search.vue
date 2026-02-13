@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { difficultyList, maxDifficulty, tagsTypeList } from '@/config';
+import { groupColor, maxRating } from '@/config';
 import { i18n } from '@/i18n';
 
 const title: any = defineModel('title');
-const tags: any = defineModel('tags');
-const minDiff: any = defineModel('minDiff');
-const maxDiff: any = defineModel('maxDiff');
+const groups: any = defineModel('groups');
+const minRatingValue: any = defineModel('minRating');
+const maxRatingValue: any = defineModel('maxRating');
 
 const t = i18n.global.t;
-const props = defineProps([ 'tagsList', 'disableSearch' ]);
+const props = defineProps([ 'groupsList', 'disableSearch' ]);
 const emits = defineEmits([ 'search' ]);
 </script>
 
 <template>
     <v-expansion-panels static :model-value="[0]">
-        <v-expansion-panel class="ProblemSearch card-radius" style="padding: 10px;">
-            <v-expansion-panel-title style="padding: 0px 20px; font-size: 1.25rem;">{{ t('pages.problems.searchTitle') }}</v-expansion-panel-title>
+        <v-expansion-panel class="UserSearch card-radius" style="padding: 10px;">
+            <v-expansion-panel-title style="padding: 0px 20px; font-size: 1.25rem;">{{ t('pages.admin.users.list.searchTitle') }}</v-expansion-panel-title>
             <v-expansion-panel-text>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.problems.search.title') }}：</p>
+                    <p>{{ t('pages.admin.users.list.title') }}：</p>
                     <v-text-field
                         v-model="title"
                         dense
@@ -28,10 +28,10 @@ const emits = defineEmits([ 'search' ]);
                     ></v-text-field>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.problems.search.tags') }}：</p>
+                    <p>{{ t('pages.admin.users.list.groups') }}：</p>
                     <v-autocomplete
-                        v-model="tags"
-                        :items="tagsList"
+                        v-model="groups"
+                        :items="groupsList"
                         density="compact"
                         item-title="title"
                         item-value="id"
@@ -43,25 +43,25 @@ const emits = defineEmits([ 'search' ]);
                         <template v-slot:chip="{ item, }">
                             <v-chip
                                 size="small" 
-                                :color="tagsTypeList[(item.raw as any).type].color" 
+                                :color="groupColor" 
                                 variant="flat"
                             >{{ (item.raw as any).title }}</v-chip>
                         </template>
                     </v-autocomplete>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.problems.search.minDifficulty') }}：</p>
+                    <p>{{ t('pages.admin.users.list.minRating') }}：</p>
                     <v-slider
-                        v-model="minDiff"
+                        v-model="minRatingValue"
                         :min="0"
-                        :max="maxDifficulty"
+                        :max="maxRating"
                         :step="1"
                         class="align-center"
                         hide-details
                     >
                         <template v-slot:append>
                             <v-text-field
-                                v-model="minDiff"
+                                v-model="minRatingValue"
                                 density="compact"
                                 style="width: 100px"
                                 type="number"
@@ -72,18 +72,18 @@ const emits = defineEmits([ 'search' ]);
                     </v-slider>
                 </div>
                 <div class="d-flex align-center mb-3">
-                    <p>{{ t('pages.problems.search.maxDifficulty') }}：</p>
+                    <p>{{ t('pages.admin.users.list.maxRating') }}：</p>
                     <v-slider
-                        v-model="maxDiff"
+                        v-model="maxRatingValue"
                         :min="0"
-                        :max="maxDifficulty"
+                        :max="maxRating"
                         :step="1"
                         class="align-center"
                         hide-details
                     >
                         <template v-slot:append>
                             <v-text-field
-                                v-model="maxDiff"
+                                v-model="maxRatingValue"
                                 density="compact"
                                 style="width: 100px"
                                 type="number"
@@ -97,8 +97,8 @@ const emits = defineEmits([ 'search' ]);
                     <v-btn 
                         @click="emits('search', 1)" 
                         :disabled="disableSearch"
-                        class="ProblemSearch-button"
-                    >{{ t('pages.problems.search.searchButton') }}</v-btn>
+                        class="UserSearch-button"
+                    >{{ t('pages.admin.users.list.searchButton') }}</v-btn>
                 </div>
             </v-expansion-panel-text>
         </v-expansion-panel>
@@ -106,7 +106,7 @@ const emits = defineEmits([ 'search' ]);
 </template>
 
 <style scoped>
-.ProblemSearch {
+.UserSearch {
     color: var(--color-text)!important;
     background-color: var(--color-background)!important;
     margin-bottom: 20px;
@@ -114,7 +114,7 @@ const emits = defineEmits([ 'search' ]);
     width: 100%;
 }
 
-.ProblemSearch-button {
+.UserSearch-button {
     color: var(--color-text)!important;
     background-color: var(--color-background-mute)!important;
 }

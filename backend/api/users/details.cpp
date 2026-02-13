@@ -8,7 +8,7 @@ auto UsersDetails = [](client_conn conn, http_request request, param argv) {
 
     auto res = mysqli_query(
         mysql, 
-        "SELECT * FROM user WHERE id = %d", 
+        "SELECT * FROM user WHERE id = %d AND id != 0", 
         atoi(argv[0].c_str())
     );
     if (res.size() == 0) quickSendMsg(404);
