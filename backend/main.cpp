@@ -71,6 +71,7 @@
 #include"api/admin/users/list.cpp"
 #include"api/admin/users/addGroup.cpp"
 #include"api/admin/users/removeGroup.cpp"
+#include"api/admin/users/create.cpp"
 #include"ws/submissions/list.cpp"
 #include"ws/submissions/details.cpp"
 
@@ -147,6 +148,7 @@ int main(int argc, char** argv) {
     app.addRoute("/admin/users/list", AdminUsersList);
     app.addRoute("/admin/users/addGroup", AdminUsersAddGroup);
     app.addRoute("/admin/users/removeGroup", AdminUsersRemoveGroup);
+    app.addRoute("/admin/users/create", AdminUsersCreate);
 
     app.ws_addRoute("/submissions/list", WSSubmissionsList);
     app.ws_addRoute("/submissions/%d", WSSubmissionsDetails);

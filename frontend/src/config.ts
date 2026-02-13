@@ -175,3 +175,27 @@ export const tagsTypeList = [
 ]
 
 export const groupColor = "rgb(41, 73, 180)";
+
+export const idTypes = [
+    {
+        id: 1,
+        title: "本科生"
+    }
+];
+
+export const unitTypes = [
+    {
+        id: 308,
+        title: "信息与电气工程学院"
+    }
+]
+
+export const sexTypes = [
+    {
+        id: 1,
+        title: "男"
+    }, {
+        id: 2,
+        title: "女"
+    }
+]

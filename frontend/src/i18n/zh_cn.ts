@@ -1,5 +1,6 @@
 import { status } from "nprogress";
 import { OutputFileType } from "typescript";
+import { createSSRApp } from "vue";
 
 export const zh_cn = {
     route: {
@@ -385,6 +386,21 @@ export const zh_cn = {
                     noGroup: "用户组不能为空",
                     addGroupSuccess: "添加用户组成功",
                     removeGroupSuccess: "删除用户组成功",
+                },
+                create: {
+                    createTitle: "用户信息",
+                    title: "用户名",
+                    titleIsEmpty: "用户名不能为空",
+                    name: "姓名",
+                    idNumber: "学号",
+                    idType: "用户身份",
+                    unitId: "单位名称",
+                    sex: "性别",
+                    password: "用户密码",
+                    passwordHint: "如果不启用密码登录，请留空",
+                    groups: "用户组",
+                    submit: "提交",
+                    createSuccess: "创建用户成功",
                 }
             },
             groups: {
