@@ -84,6 +84,12 @@ async function updatePage(data: any) {
     NProgress.start();
     NProgress.inc();
     
+    history.pushState(null, "", "/admin/users/list?page=" + (data["page"] || 1) + 
+        (data["title"] ? "&title=" + data["title"] : "") + 
+        (data["groups"] ? "&groups=" + data["groups"] : "") + 
+        (data["minRating"] ? "&minRating=" + data["minRating"] : "") + 
+        (data["maxRating"] ? "&maxRating=" + data["maxRating"] : "")
+    );
     var url = config.apiBase + "/admin/users/list";
     if ("page" in data) url += "?page=" + data["page"];
     else url += "?page=1";
@@ -110,7 +116,7 @@ async function search() {
     if (title.value != "") data.title = title.value;
     if (groups.value.length) data.groups = JSON.stringify(groups.value);
     if (minRatingValue.value != 0) data.minRating = minRatingValue.value;
-    if (maxRatingValue.value != maxRating) data.maxDiff = maxRatingValue.value;
+    if (maxRatingValue.value != maxRating) data.maxRating = maxRatingValue.value;
 
     updatePage(data);
 }

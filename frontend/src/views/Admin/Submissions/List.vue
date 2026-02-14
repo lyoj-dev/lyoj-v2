@@ -125,6 +125,12 @@ async function updatePage(data: any) {
     NProgress.start();
     NProgress.inc();
 
+    history.pushState(null, "", "/admin/submissions/list?page=" + (data["page"] || 1) + 
+        ("problems" in data ? "&problems=" + data["problems"] : "") + 
+        ("users" in data ? "&users=" + data["users"] : "") + 
+        ("languages" in data ? "&languages=" + data["languages"] : "") + 
+        ("status" in data ? "&status=" + data["status"] : "")
+    );
     var url = config.apiBase + "/admin/submissions/list";
     if ("page" in data) url += "?page=" + data["page"];
     else url += "?page=1";

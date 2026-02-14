@@ -79,6 +79,12 @@ async function updatePage(data: any) {
     NProgress.start();
     NProgress.inc();
 
+    history.pushState(null, "", "/admin/problems/list?page=" + (data["page"] || 1) + 
+        (data["title"] ? "&title=" + data["title"] : "") + 
+        (data["tags"] ? "&tags=" + data["tags"] : "") + 
+        (data["minDiff"] ? "&minDiff=" + data["minDiff"] : "") + 
+        (data["maxDiff"] ? "&maxDiff=" + data["maxDiff"] : "")
+    );
     var url = config.apiBase + "/problems/list";
     if ("page" in data) url += "?page=" + data["page"];
     else url += "?page=1";
