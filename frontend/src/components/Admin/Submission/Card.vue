@@ -16,10 +16,10 @@ const t = i18n.global.t;
                 :icon="selected ? 'mdi-checkbox-marked' : 'mdi-checkbox-blank-outline'"
             ></v-icon>
         </div>
-        <router-link :to="(cid == undefined ? '' : '/contests/' + cid) + '/submissions/' + id" class="SubmissionCard-id ellipsis">#{{ id }}</router-link>
+        <router-link :to="(cid == undefined || cid == 0 ? '' : '/contests/' + cid) + '/submissions/' + id" class="SubmissionCard-id ellipsis">#{{ id }}</router-link>
         <router-link :to="'/users/' + uid" class="SubmissionCard-user ellipsis">{{ user }}</router-link>
-        <router-link :to="(cid == undefined ? '' : '/contests/' + cid) + '/problems/' + pid" class="SubmissionCard-problem ellipsis">{{ problem }}</router-link>
-        <router-link :to="(cid == undefined ? '' : '/contests/' + cid) + '/submissions/' + id" :style="'color:' + statusList[statusType].color" class="SubmissionCard-results">
+        <router-link :to="(cid == undefined || cid == 0 ? '' : '/contests/' + cid) + '/problems/' + pid" class="SubmissionCard-problem ellipsis">{{ problem }}</router-link>
+        <router-link :to="(cid == undefined || cid == 0 ? '' : '/contests/' + cid) + '/submissions/' + id" :style="'color:' + statusList[statusType].color" class="SubmissionCard-results">
             <v-icon :icon="statusList[statusType].icon" class="SubmissionCard-icon"></v-icon>
             &nbsp;
             {{ score }}

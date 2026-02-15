@@ -199,3 +199,18 @@ export const sexTypes = [
         title: "女"
     }
 ]
+
+export const permissionList = [
+    "problemEdit",
+    "problemEditOthers",
+    "addTag",
+    "submissionListOthers",
+    "submissionCodeOthers",
+    "submissionRejudge",
+    "submissionRejudgeOthers",
+    "submissionData",
+    "contestEdit",
+    "contestEditOthers",
+    "userEditOthers",
+    "adminPage"
+];

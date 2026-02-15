@@ -116,7 +116,7 @@ async function search() {
     if (title.value != "") data.title = title.value;
     if (groups.value.length) data.groups = JSON.stringify(groups.value);
     if (minRatingValue.value != 0) data.minRating = minRatingValue.value;
-    if (maxRatingValue.value != maxRating) data.maxRating = maxRatingValue.value;
+    if (maxRatingValue.value != maxRating) data.maxDiff = maxRatingValue.value;
 
     updatePage(data);
 }

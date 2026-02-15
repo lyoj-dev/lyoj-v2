@@ -290,6 +290,7 @@ onBeforeRouteLeave((to, from, next) => {
             :id="item.id"
             :pid="item.pid"
             :uid="item.uid"
+            :cid="item.cid"
             :problem="item.problem"
             :user="item.user"
             :statusType="item.statusType"

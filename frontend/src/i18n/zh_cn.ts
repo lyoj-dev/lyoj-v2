@@ -405,6 +405,28 @@ export const zh_cn = {
             },
             groups: {
                 title: "用户组管理",
+                list: {
+                    count: "共 {count} 人",
+                    title: "用户组标题",
+                    description: "用户组描述",
+                    permissionTitle: "用户组权限",
+                    permission: {
+                        problemEdit: "新建题目，编辑自己的题目，删除自己的题目",
+                        problemEditOthers: "编辑别人的题目，删除别人的题目",
+                        addTag: "新建未知标签权限",
+                        submissionListOthers: "列举他人提交代码",
+                        submissionCodeOthers: "查看他人提交代码",
+                        submissionRejudge: "重测自己提交的代码",
+                        submissionRejudgeOthers: "重测他人提交的代码",
+                        submissionData: "查看测试数据",
+                        contestEdit: "新建比赛，编辑比赛",
+                        contestEditOthers: "高级比赛管理员权限",
+                        userEditOthers: "编辑他人信息权限",
+                        adminPage: "管理员页面权限"
+                    },
+                    users: "用户组成员",
+                    submit: "提交"
+                }
             }
         }
     }

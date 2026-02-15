@@ -55,7 +55,7 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
 
     auto res = pageCount ? mysqli_query(
         mysql, 
-        "SELECT s.id, s.uid, s.pid, s.judged FROM submission AS s "
+        "SELECT s.id, s.uid, s.pid, s.judged, s.contest FROM submission AS s "
         "INNER JOIN problem AS p ON s.pid = p.id "
         "WHERE %s "
         "ORDER BY id DESC "
@@ -129,6 +129,11 @@ auto SubmissionsList = [](client_conn conn, http_request request, param argv) {
             single["judged"] = status[j]["judged"].asBool();
             single["score"] = status[j]["score"].asInt();
             break;
+        }
+        
+        // 对 cid = -1 进行特殊处理
+        if (argv.size() == 1 && atoi(argv[0].c_str()) == -1) {
+            single["cid"] = atoi(res[i]["contest"].c_str());
         }
 
         // 对特定比赛进行数据修改
