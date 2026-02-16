@@ -2,11 +2,11 @@
 import { permissionList, statusList } from '@/config.ts'
 import { i18n } from '@/i18n';
 import { ref } from 'vue';
-const title = defineModel("title");
-const description = defineModel("description");
+const newTitle = defineModel("newTitle");
+const newDescription = defineModel("newDescription");
 const users = defineModel("users");
 const permission = defineModel("permission");
-const props = defineProps([ 'id', 'count', 'usersList' ]);
+const props = defineProps([ 'id', 'count', 'usersList', 'title', 'description' ]);
 const emits = defineEmits([ 'submit' ]);
 const t = i18n.global.t;
 
@@ -19,15 +19,15 @@ const isPreview = ref(false);
         <v-expansion-panel class="UserGroupCard card-radius" style="padding: 10px;">
             <v-expansion-panel-title>
                 <div>
-                    <p style="font-size: 1.25rem;">{{ title }}（{{ t('pages.admin.groups.list.count', { count: count }) }}）</p>
-                    <p class="mt-2">{{ description }}</p>
+                    <p style="font-size: 1.25rem;">{{ title }}{{ count != undefined ? '（' + t('pages.admin.groups.list.count', { count: count }) + '）' : '' }}</p> 
+                    <p class="mt-2" v-if="description != undefined">{{ description }}</p>
                 </div>
             </v-expansion-panel-title>
             <v-expansion-panel-text>
                 <div class="d-flex align-center">
                     <p>{{ t('pages.admin.groups.list.title') }}：</p>
                     <v-text-field
-                        v-model="title"
+                        v-model="newTitle"
                         dense
                         hide-details
                         clearable
@@ -37,7 +37,7 @@ const isPreview = ref(false);
                 <div class="d-flex align-center mt-3">
                     <p>{{ t('pages.admin.groups.list.description') }}：</p>
                     <v-text-field
-                        v-model="description"
+                        v-model="newDescription"
                         dense
                         hide-details
                         clearable

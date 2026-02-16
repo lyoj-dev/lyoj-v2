@@ -73,10 +73,13 @@
 #include"api/admin/users/removeGroup.cpp"
 #include"api/admin/users/create.cpp"
 #include"api/admin/userGroups/list.cpp"
+#include"api/admin/userGroups/create.cpp"
 #include"ws/submissions/list.cpp"
 #include"ws/submissions/details.cpp"
 
 int main(int argc, char** argv) {
+    // Log.logLevelId = LOG_LEVEL_DEBUG;
+
     std::string proc_name = argv[0];
     proc_inittitle(argv);
     proc_settitle(("lyoj-backend: master process " + proc_name).c_str());
@@ -151,6 +154,7 @@ int main(int argc, char** argv) {
     app.addRoute("/admin/users/removeGroup", AdminUsersRemoveGroup);
     app.addRoute("/admin/users/create", AdminUsersCreate);
     app.addRoute("/admin/userGroups/list", AdminUserGroupsList);
+    app.addRoute("/admin/userGroups/create", AdminUserGroupsCreate);
 
     app.ws_addRoute("/submissions/list", WSSubmissionsList);
     app.ws_addRoute("/submissions/%d", WSSubmissionsDetails);

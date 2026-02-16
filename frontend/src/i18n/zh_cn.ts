@@ -425,7 +425,11 @@ export const zh_cn = {
                         adminPage: "管理员页面权限"
                     },
                     users: "用户组成员",
-                    submit: "提交"
+                    submit: "提交",
+                    create: "新建用户组",
+                    emptyName: "用户组名称不能为空",
+                    createSuccess: "创建用户组成功",
+                    updateSuccess: "修改用户组成功",
                 }
             }
         }

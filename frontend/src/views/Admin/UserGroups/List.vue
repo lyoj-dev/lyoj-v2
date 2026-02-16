@@ -1,6 +1,6 @@
 <script lang="ts">
 import { config, tagsTypeList } from '@/config';
-import { myFetch, showMsg } from '@/utils';
+import { myFetch, showMsg, sleep } from '@/utils';
 import NProgress from 'nprogress';
 import { defineComponent, ref } from 'vue';
 import AdminUserGroupCard from '@/components/Admin/UserGroup/Card.vue';
@@ -8,6 +8,7 @@ import { goto, locate } from '@/router';
 import { i18n } from '@/i18n';
 import AdminNavigation from '@/components/Admin/Navigation.vue';
 import { editor } from 'monaco-editor';
+import Data from '@/components/Submission/Data.vue';
 
 async function load(to: any, from: any, next: any) {
     NProgress.start();
@@ -19,9 +20,12 @@ async function load(to: any, from: any, next: any) {
     var json = await myFetch(url);
     var users = await myFetch(config.apiBase + "/users/listAll");
 
-    for (var i = 0; i < json.items.length; i++) 
+    for (var i = 0; i < json.items.length; i++) {
         for (var j = 0; j < json.items[i].users.length; j++) 
             json.items[i].users[j] = json.items[i].users[j].uid;
+        json.items[i].newTitle = json.items[i].title;
+        json.items[i].newDescription = json.items[i].description;
+    }
 
     next((e: any) => e.loading({
         data: json,
@@ -58,8 +62,47 @@ function jump() {
     locate("/admin/usergroups/list?page=" + currPage.value);
 }
 
-async function submit(id: number) {
+const title = ref("");
+const description = ref("");
+const users = ref([]);
+const permission = ref(0);
+async function call(data: any) {
+    if (data.title == "") {
+        showMsg("error", t('pages.admin.groups.list.emptyName'));
+        throw new Error(t('pages.admin.groups.list.emptyName'));
+    }
+    await myFetch(config.apiBase + "/admin/userGroups/create", {
+        method: "POST",
+        body: JSON.stringify(data),
+    });
+}
 
+async function create() {
+    await call({
+        id: 0,
+        title: title.value,
+        description: description.value,
+        users: users.value,
+        permission: permission.value,
+    });
+    showMsg("success", t('pages.admin.groups.list.createSuccess'));
+    await sleep(1000);
+    history.go(0);
+}
+
+async function submit(id: number) {
+    var item = list.value.items.find((x: any) => x.id == id);
+    await call({
+        id: id,
+        title: item.newTitle,
+        description: item.newDescription,
+        users: item.users,
+        permission: item.permission,
+    });
+    item.title = item.newTitle;
+    item.description = item.newDescription;
+    item.userCount = item.users.length;
+    showMsg("success", t('pages.admin.groups.list.updateSuccess'));
 }
 </script>
 
@@ -67,13 +110,25 @@ async function submit(id: number) {
     <div v-if="loaded">
         <AdminNavigation current="groups"></AdminNavigation>
         <AdminUserGroupCard
+            :id="0"
+            :title="t('pages.admin.groups.list.create')"
+            :usersList="usersList"
+            v-model:newTitle="title"
+            v-model:newDescription="description"
+            v-model:permission="permission"
+            v-model:users="users"
+            @submit="create()"
+        ></AdminUserGroupCard>
+        <AdminUserGroupCard
             v-for="item in list.items"
             :key="item.id"
             :id="item.id"
+            :title="item.title"
+            :description="item.description"
             :count="item.userCount"
             :usersList="usersList"
-            v-model:title="item.title"
-            v-model:description="item.description"
+            v-model:newTitle="item.newTitle"
+            v-model:newDescription="item.newDescription"
             v-model:permission="item.permission"
             v-model:users="item.users"
             @submit="submit(item.id)"
