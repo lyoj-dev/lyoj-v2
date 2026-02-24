@@ -9,6 +9,7 @@ BRANCH="main"
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
+ORANGE='\033[38;5;208m'
 CLEAR='\033[0m'
 
 if [[  ! -f .version ]]; then
@@ -105,9 +106,11 @@ if [[ $TYPE == "dev" ]]; then
             if [[ ${STATUS[$i]} == "added" ]]; then
                 DETAILS+=$GREEN"A"$CLEAR
             elif [[ ${STATUS[$i]} == "removed" ]]; then
-                DETAILS+=$RED"R"$CLEAR
+                DETAILS+=$RED"D"$CLEAR
             elif [[ ${STATUS[$i]} == "modified" ]]; then
                 DETAILS+=$YELLOW"M"$CLEAR
+            elif [[ ${STATUS[$i]} == "renamed" ]]; then
+                DETAILS+=$ORANGE"R"$CLEAR
             fi
             DETAILS+=" "${FILENAME[$i]}"\n"
         done
