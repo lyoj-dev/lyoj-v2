@@ -408,7 +408,7 @@ int main(int argc, char** argv) {
                         "", 
                         NULL
                     };
-                    arg->cmd = "./unit ../../judge/judge.json ../../problem/" + list[i]["pid"] + " ../tmp/" + std::to_string(j) + " ./server.sock " + list[i]["lang"] + " >> ./log.txt 2>&1";
+                    arg->cmd = "./unit ../../judge.json ../../problem/" + list[i]["pid"] + " ./tmp/" + std::to_string(j) + " ./server.sock " + list[i]["lang"] + " >> ./log.txt 2>&1";
                     arg->mysql = quick_mysqli_connect();
                     pthread_create(&pt, NULL, work_thread, (void*)arg);
                     break;

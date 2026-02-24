@@ -2,7 +2,7 @@
 #include "../../utils.cpp"
 
 auto ConfigurationsSPJs = [](client_conn conn, http_request request, param argv) {
-    Json::Value judge = json_decode(readFile("../judge/judge.json"));
+    Json::Value judge = json_decode(readFile("judge.json"));
     int userId = getUserId(request);
     auto userInfo = getUserInfo(userId);
 
