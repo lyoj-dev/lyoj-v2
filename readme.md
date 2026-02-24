@@ -8,13 +8,21 @@
 
 ## Build
 
-### Install Dependencies
+### One-Click Script
+
+```bash
+bash <(curl -s -L https://raw.githubusercontent.com/lyoj-dev/lyoj-v2/refs/heads/main/autoupdate.sh)
+```
+
+### Build Manually
+
+#### Install Dependencies
 
 ```bash
 sudo apt install g++ libjsoncpp-dev libmysqlclient-dev openssl
 ```
 
-### Compile Judge Service
+#### Compile Judge Service
 
 ```bash
 cd judge
@@ -25,7 +33,7 @@ g++ 1.cpp -o1 -O3
 cd ..
 ```
 
-### Compile Backend Service
+#### Compile Backend Service
 
 ```bash
 cd backend
@@ -33,7 +41,7 @@ g++ main.cpp -omain -ljsoncpp -lmysqlclient -lcrypto -lssl -O3 -w
 cd ..
 ```
 
-### Build Frontend Service
+#### Build Frontend Service
 
 Please modify `frontend/src/config.ts` before build.
 
@@ -44,7 +52,7 @@ npm run build
 cd ..
 ```
 
-### Create `judge` user
+#### Create `judge` user
 
 ```bash
 sudo adduser judge
