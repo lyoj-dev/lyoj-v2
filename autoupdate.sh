@@ -1,7 +1,7 @@
 set -e
 
-API_ROOT="https://cors.littleyang.com.cn/https://api.github.com"
-MAIN_ROOT="https://cors.littleyang.com.cn/https://github.com"
+API_ROOT="https://api.github.com"
+MAIN_ROOT="https://github.com"
 ORG="lyoj-dev"
 REPO="lyoj-v2"
 BRANCH="main"
