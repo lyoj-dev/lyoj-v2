@@ -356,6 +356,7 @@ void proc_daemon(char** argv, const char* daemon_title, std::vector<std::string>
                 else assert(false);
             }
         }
+        waitpid(pid, NULL, 0);
         execv(oldargv[0], oldargv);
         exit(0);
     }
