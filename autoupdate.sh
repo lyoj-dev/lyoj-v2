@@ -226,8 +226,8 @@ install_package mysqlclient libmysqlclient-dev mysql-devel
 
 echo -e $YELLOW"Building..."$CLEAR
 g++ $TMP/backend/main.cpp -o./backend -lssl -lcrypto -ljsoncpp -lmysqlclient -O3 -Wno-unused-result -Wno-deprecated-declarations
-g++ $TMP/judge/judge.cpp -o./judge -ljsoncpp -lmysqlclient -O3 -Wno-unused-result -Wno-deprecated-declarations
-g++ $TMP/judge/unit.cpp -o./unit -ljsoncpp -O3 -Wno-unused-result -Wno-deprecated-declarations
+g++ $TMP/judge/judge.cpp -o./judge -lcrypto -ljsoncpp -lmysqlclient -O3 -Wno-unused-result -Wno-deprecated-declarations
+g++ $TMP/judge/unit.cpp -o./unit -lcrypto -ljsoncpp -O3 -Wno-unused-result -Wno-deprecated-declarations
 mkdir -p spj
 g++ $TMP/spj/1.cpp -o./spj/1 -O3
 

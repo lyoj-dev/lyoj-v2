@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
     // Log.logLevelId = LOG_LEVEL_DEBUG;
 
     std::string proc_name = argv[0];
-    proc_daemon(argv, "lyoj-backend: daemon process");
+    proc_daemon(argv, "lyoj-backend: daemon process", { "config.json" });
     proc_settitle(("lyoj-backend: master process " + proc_name).c_str());
 
     appConfig = json_decode(readFile("./config.json"));

@@ -5,9 +5,11 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <map>
+#include <openssl/sha.h>
 #include <semaphore.h>
 #include <set>
 #include <string.h>
@@ -166,43 +168,6 @@ void proc_settitle(const char* title) {
     return;
 }
 
-std::string __builtin_proc_system2(std::string cmd) {
-    FILE *stream; 
-    char buf[1024 * 1024]; 
-    std::memset(buf, '\0', sizeof(buf));
-#if __linux__
-    stream = popen(cmd.c_str(), "r");
-// #elif __windows__
-//     stream = _popen(cmd.c_str(), "r");
-#endif
-    int k = fread(buf, sizeof(char), sizeof(buf), stream);
-    pclose(stream);
-    return std::string(buf);
-}
-
-std::vector<std::string> __builtin_proc_explode(std::string seperator, std::string source) {
-	std::string src = source; std::vector<std::string> res;
-	while (src.find(seperator) != std::string::npos) {
-		int wh = src.find(seperator);
-		res.push_back(src.substr(0, src.find(seperator)));
-		src = src.substr(wh + std::string(seperator).size());
-	} res.push_back(src);
-	return res;
-}
-
-std::vector<int> __builtin_proc_getpidsByPpid(int ppid) {
-    std::string pidString = __builtin_proc_system2("ps -o pid= --ppid \"" + std::to_string(ppid) + "\"");
-    auto pidStrings = __builtin_proc_explode("\n", pidString);
-    std::vector<int> pids = { ppid };
-    for (int i = 0; i < pidStrings.size(); i++) {
-        int pid = atoi(pidStrings[i].c_str());
-        if (pid == 0) continue;
-        auto res = __builtin_proc_getpidsByPpid(pid);
-        for (int j = 0; j < res.size(); j++) pids.push_back(res[j]);
-    }
-    return pids;
-}
-
 const std::string singal_strings[] = {
     "SIGHUP",
     "SIGINT",
@@ -270,7 +235,68 @@ const std::string singal_strings[] = {
     "SIGRTMAX"
 };
 
-void proc_daemon(char** argv, const char* daemon_title) {
+std::string __builtin_proc_system2(std::string cmd) {
+    FILE *stream; 
+    char buf[1024 * 1024]; 
+    std::memset(buf, '\0', sizeof(buf));
+#if __linux__
+    stream = popen(cmd.c_str(), "r");
+// #elif __windows__
+//     stream = _popen(cmd.c_str(), "r");
+#endif
+    int k = fread(buf, sizeof(char), sizeof(buf), stream);
+    pclose(stream);
+    return std::string(buf);
+}
+
+std::vector<std::string> __builtin_proc_explode(std::string seperator, std::string source) {
+	std::string src = source; std::vector<std::string> res;
+	while (src.find(seperator) != std::string::npos) {
+		int wh = src.find(seperator);
+		res.push_back(src.substr(0, src.find(seperator)));
+		src = src.substr(wh + std::string(seperator).size());
+	} res.push_back(src);
+	return res;
+}
+
+std::vector<int> __builtin_proc_getpidsByPpid(int ppid) {
+    std::string pidString = __builtin_proc_system2("ps -o pid= --ppid \"" + std::to_string(ppid) + "\"");
+    auto pidStrings = __builtin_proc_explode("\n", pidString);
+    std::vector<int> pids = { ppid };
+    for (int i = 0; i < pidStrings.size(); i++) {
+        int pid = atoi(pidStrings[i].c_str());
+        if (pid == 0) continue;
+        auto res = __builtin_proc_getpidsByPpid(pid);
+        for (int j = 0; j < res.size(); j++) pids.push_back(res[j]);
+    }
+    return pids;
+}
+
+std::string __builtin_proc_readFile(std::string path) {
+    std::ifstream fin(path);
+    if (!fin) return "";
+    fin.seekg(0, std::ios::end);
+    int len = fin.tellg();
+    if (len == -1) return "";
+    fin.seekg(0, std::ios::beg);
+    char *ch = new char[len];
+    fin.read(ch, len);
+    fin.close();
+    std::string res = std::string(ch, len);
+    delete[] ch;
+    return res;
+}
+
+std::string __builtin_proc_sha256(std::string src) {
+    unsigned char* sSHA = new unsigned char[32];
+    SHA256((const unsigned char*)src.c_str(), src.length(), sSHA);
+    std::string res;
+    for (int i = 0; i < 32; i++) res += sSHA[i];
+    delete[] sSHA;
+    return res;
+}
+
+void proc_daemon(char** argv, const char* daemon_title, std::vector<std::string> hotreloads = {}) {
     int argc = 0;
     for (; argv[argc]; argc++) ;
 	char *oldargv[argc + 1];
@@ -281,10 +307,31 @@ void proc_daemon(char** argv, const char* daemon_title) {
     oldargv[argc] = NULL;
     proc_inittitle(argv);
     pid_t pid = fork();
+    std::vector<std::string> hashes;
+    for (int i = 0; i < hotreloads.size(); i++) {
+        std::string content = __builtin_proc_readFile(hotreloads[i]);
+        std::string hash = __builtin_proc_sha256(content);
+        hashes.push_back(hash);
+    }
     if (pid > 0) {
         proc_settitle(daemon_title);
         auto pids = __builtin_proc_getpidsByPpid(pid);
+        usleep(100 * 1000);
         while (true) {
+            // 监视文件修改 => 热重载
+            bool shouldHotReload = false;
+            for (int i = 0; i < hotreloads.size(); i++) {
+                std::string content = __builtin_proc_readFile(hotreloads[i]);
+                std::string hash = __builtin_proc_sha256(content);
+                if (hash != hashes[i]) {
+                    std::cout << "\033[0;33m[Daemon] File \"" << hotreloads[i] << "\" updated, hot reloading...\033[0m" << std::endl;
+                    shouldHotReload = true;
+                    break;
+                }
+            }
+            if (shouldHotReload) break;
+
+            // 监视子进程状态
             int status;
             auto newpids = __builtin_proc_getpidsByPpid(pid);
             pid_t newpid = waitpid(pid, &status, WNOHANG);
@@ -300,14 +347,14 @@ void proc_daemon(char** argv, const char* daemon_title) {
                 std::cout << " abnormally, exit signal = " << singal_strings[status & 0x3f];
             }
             std::cout << ", restarting...\033[0m" << std::endl;
-            for (int i = 0; i < pids.size(); i++) {
-                int ret = kill(pids[i], SIGTERM);
-                if (ret) {
-                    if (errno == ESRCH) continue;
-                    else assert(false);
-                }
-            }
             break;
+        }
+        for (int i = 0; i < pids.size(); i++) {
+            int ret = kill(pids[i], SIGTERM);
+            if (ret) {
+                if (errno == ESRCH) continue;
+                else assert(false);
+            }
         }
         execv(oldargv[0], oldargv);
         exit(0);
