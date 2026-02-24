@@ -231,9 +231,9 @@ g++ $TMP/judge/unit.cpp -o./unit -ljsoncpp -O3 -Wno-unused-result -Wno-deprecate
 mkdir -p spj
 g++ $TMP/spj/1.cpp -o./spj/1 -O3
 
-cp $TMP/backend/data ./ -r
-cp $TMP/backend/config.json ./
-cp $TMP/judge/judge.json ./
+cp $TMP/data ./ -r
+cp $TMP/config.json ./
+cp $TMP/judge.json ./
 cp $TMP/frontend ./ -r
 cd frontend
 npm install && npm run build-only
