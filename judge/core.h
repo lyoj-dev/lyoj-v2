@@ -162,7 +162,7 @@ int run_code(
 
     pid_t executive = fork(); 
 	process_pid = executive;
-    signal(SIGCHLD,handler);
+    signal(SIGCHLD, handler);
 	runtime_error_reason = 0;
     if(executive < 0) {
         writeLog(LOG_LEVEL_WARNING, "Failed to start child process!");

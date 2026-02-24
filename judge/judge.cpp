@@ -350,8 +350,9 @@ void* socket_work_thread(void* arg) {
 }
 
 int main(int argc, char** argv) {
-    proc_inittitle(argv);
-    proc_settitle("lyoj-judge");
+    std::string proc_name = argv[0];
+    proc_daemon(argv, "lyoj-judge: daemon process");
+    proc_settitle(("lyoj-judge: master process " + proc_name).c_str());
 
     judge = json_decode(readFile("./judge.json"));
     for (int i = 1; i <= judge["thread"].asInt(); i++)

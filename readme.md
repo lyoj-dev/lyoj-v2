@@ -26,8 +26,8 @@ sudo apt install g++ libjsoncpp-dev libmysqlclient-dev openssl
 
 ```bash
 cd judge
-g++ unit.cpp -ounit -ljsoncpp -O3 -w
-g++ judge.cpp -ojudge -ljsoncpp -lmysqlclient -O3 -w
+g++ unit.cpp -o../unit -ljsoncpp -O3 -w
+g++ judge.cpp -o../judge -ljsoncpp -lmysqlclient -O3 -w # You should change output name `judge` to other name.
 cd ../spj
 g++ 1.cpp -o1 -O3
 cd ..
@@ -37,7 +37,7 @@ cd ..
 
 ```bash
 cd backend
-g++ main.cpp -omain -ljsoncpp -lmysqlclient -lcrypto -lssl -O3 -w
+g++ main.cpp -o../backend -ljsoncpp -lmysqlclient -lcrypto -lssl -O3 -w # You should change output name `backend` to other name.
 cd ..
 ```
 
@@ -70,13 +70,13 @@ When system reminds you to put password, you should enter `Ctrl + D` to set an e
 ### Judge Service
 
 ```bash
-cd judge && sudo ./judge
+sudo ./judge
 ```
 
 ### Backend Service
 
 ```bash
-cd backend && ./main
+./backend
 ```
 
 ## Specs

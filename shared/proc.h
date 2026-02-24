@@ -1,5 +1,10 @@
 #pragma once
 
+#include <cassert>
+#include <cerrno>
+#include <csignal>
+#include <cstdlib>
+#include <cstring>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -7,6 +12,8 @@
 #include <set>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
@@ -126,6 +133,7 @@ int proc_getfd(int sockfd) {
 extern char** environ;
 char** cachedargv;
 char* cachedlast = NULL;
+bool proc_initedtitle = false;
 
 void proc_inittitle(char** argv) {
     char* tmp = NULL;
@@ -156,4 +164,152 @@ void proc_settitle(const char* title) {
     char* tmp = cachedargv[0];
     strncpy(tmp, title, cachedlast - tmp);
     return;
+}
+
+std::string __builtin_proc_system2(std::string cmd) {
+    FILE *stream; 
+    char buf[1024 * 1024]; 
+    std::memset(buf, '\0', sizeof(buf));
+#if __linux__
+    stream = popen(cmd.c_str(), "r");
+// #elif __windows__
+//     stream = _popen(cmd.c_str(), "r");
+#endif
+    int k = fread(buf, sizeof(char), sizeof(buf), stream);
+    pclose(stream);
+    return std::string(buf);
+}
+
+std::vector<std::string> __builtin_proc_explode(std::string seperator, std::string source) {
+	std::string src = source; std::vector<std::string> res;
+	while (src.find(seperator) != std::string::npos) {
+		int wh = src.find(seperator);
+		res.push_back(src.substr(0, src.find(seperator)));
+		src = src.substr(wh + std::string(seperator).size());
+	} res.push_back(src);
+	return res;
+}
+
+std::vector<int> __builtin_proc_getpidsByPpid(int ppid) {
+    std::string pidString = __builtin_proc_system2("ps -o pid= --ppid \"" + std::to_string(ppid) + "\"");
+    auto pidStrings = __builtin_proc_explode("\n", pidString);
+    std::vector<int> pids = { ppid };
+    for (int i = 0; i < pidStrings.size(); i++) {
+        int pid = atoi(pidStrings[i].c_str());
+        if (pid == 0) continue;
+        auto res = __builtin_proc_getpidsByPpid(pid);
+        for (int j = 0; j < res.size(); j++) pids.push_back(res[j]);
+    }
+    return pids;
+}
+
+const std::string singal_strings[] = {
+    "SIGHUP",
+    "SIGINT",
+    "SIGQUIT",
+    "SIGILL",
+    "SIGTRAP",
+    "SIGABRT",
+    "SIGBUS",
+    "SIGFPE",
+    "SIGKILL",
+    "SIGUSR1",
+    "SIGSEGV",
+    "SIGUSR2",
+    "SIGPIPE",
+    "SIGALRM",
+    "SIGTERM",
+    "SIGSTKFLT",
+    "SIGCHLD",
+    "SIGCONT",
+    "SIGSTOP",
+    "SIGTSTP",
+    "SIGTTIN",
+    "SIGTTOU",
+    "SIGURG",
+    "SIGXCPU",
+    "SIGXFSZ",
+    "SIGVTALRM",
+    "SIGPROF",
+    "SIGWINCH",
+    "SIGIO",
+    "SIGPWR",
+    "SIGSYS",
+    "",
+    "",
+    "SIGRTMIN",
+    "SIGRTMIN+1",
+    "SIGRTMIN+2",
+    "SIGRTMIN+3",
+    "SIGRTMIN+4",
+    "SIGRTMIN+5",
+    "SIGRTMIN+6",
+    "SIGRTMIN+7",
+    "SIGRTMIN+8",
+    "SIGRTMIN+9",
+    "SIGRTMIN+10",
+    "SIGRTMIN+11",
+    "SIGRTMIN+12",
+    "SIGRTMIN+13",
+    "SIGRTMIN+14",
+    "SIGRTMIN+15",
+    "SIGRTMAX-14",
+    "SIGRTMAX-13",
+    "SIGRTMAX-12",
+    "SIGRTMAX-11",
+    "SIGRTMAX-10",
+    "SIGRTMAX-9",
+    "SIGRTMAX-8",
+    "SIGRTMAX-7",
+    "SIGRTMAX-6",
+    "SIGRTMAX-5",
+    "SIGRTMAX-4",
+    "SIGRTMAX-3",
+    "SIGRTMAX-2",
+    "SIGRTMAX-1",
+    "SIGRTMAX"
+};
+
+void proc_daemon(char** argv, const char* daemon_title) {
+    int argc = 0;
+    for (; argv[argc]; argc++) ;
+	char *oldargv[argc + 1];
+    for (int i = 0; i < argc; i++) {
+        oldargv[i] = new char[strlen(argv[i])];
+        memcpy(oldargv[i], argv[i], strlen(argv[i]));
+    }
+    oldargv[argc] = NULL;
+    proc_inittitle(argv);
+    pid_t pid = fork();
+    if (pid > 0) {
+        proc_settitle(daemon_title);
+        auto pids = __builtin_proc_getpidsByPpid(pid);
+        while (true) {
+            int status;
+            auto newpids = __builtin_proc_getpidsByPpid(pid);
+            pid_t newpid = waitpid(pid, &status, WNOHANG);
+            if (newpid == 0) {
+                pids = newpids;
+                usleep(100 * 1000);
+                continue;
+            }
+            std::cout << "\033[0;31m[Daemon] Process PID = " << newpid << " exited";
+            if ((status & 0x7f) == 0) {
+                std::cout << ", exit code = " << ((status >> 8) & 0xff);
+            } else {
+                std::cout << " abnormally, exit signal = " << singal_strings[status & 0x3f];
+            }
+            std::cout << ", restarting...\033[0m" << std::endl;
+            for (int i = 0; i < pids.size(); i++) {
+                int ret = kill(pids[i], SIGTERM);
+                if (ret) {
+                    if (errno == ESRCH) continue;
+                    else assert(false);
+                }
+            }
+            break;
+        }
+        execv(oldargv[0], oldargv);
+        exit(0);
+    }
 }
