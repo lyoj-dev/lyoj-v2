@@ -8,6 +8,8 @@ import { storage } from '@/settings';
 import { config } from '@/config.ts';
 import { loginAs, loginInfo } from '@/utils.ts';
 import { goto } from '@/router';
+import { useTheme } from 'vuetify';
+import { onMounted } from 'vue';
 
 const t = i18n.global.t;
 const route = useRoute();
@@ -30,6 +32,34 @@ function setLocale(val: string) {
     locale.value = val;
     storage.value.locale = val;
 }
+
+const theme = useTheme();
+function themeClick() {
+    theme.toggle();
+    localStorage.setItem("theme", theme.name.value);
+    if (theme.name.value == 'light') {
+        // storage.value.theme = 'light';
+        document.body.classList.remove('v-theme--dark');
+        document.body.classList.add('v-theme--light');
+    }
+    else {
+        // storage.value.theme = 'dark';
+        document.body.classList.remove('v-theme--light');
+        document.body.classList.add('v-theme--dark');
+    }
+}
+
+onMounted(() => {
+    var theme2 = localStorage.getItem("theme");
+    if (theme2 == 'light' && theme.name.value != 'light') theme.toggle();
+    else if (theme2 == 'dark' && theme.name.value != 'dark') theme.toggle();
+    if (theme.name.value == 'light') {
+        document.body.classList.add('v-theme--light');
+    }
+    else {
+        document.body.classList.add('v-theme--dark');
+    }
+});
 </script>
 
 <template>
@@ -88,7 +118,7 @@ function setLocale(val: string) {
             ></AppBarButton>
 
             <div class="d-flex align-center AppBar-language">
-                <v-icon icon="mdi-earth" size="small" style="margin-top: 3px;"></v-icon>
+                <v-icon icon="mdi-earth" size="small"></v-icon>
                 <p>&nbsp;</p>
                 <v-select
                     density="compact"
@@ -96,8 +126,15 @@ function setLocale(val: string) {
                     hide-details
                     :items="items"
                     :model-value="locale"
-                    @update:model-value="(val) => setLocale(val)"
+                    @update:model-value="(val: any) => setLocale(val)"
                 ></v-select>
+            </div>
+
+            <div class="d-flex align-center AppBar-language" @click="themeClick()">
+                <v-icon 
+                    :icon="theme.name.value == 'light' ? 'mdi-weather-night' : 'mdi-white-balance-sunny'"
+                    size="small"
+                ></v-icon>
             </div>
         </div>
     </div>

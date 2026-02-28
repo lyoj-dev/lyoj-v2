@@ -18,10 +18,10 @@ NProgress.configure({
 })
 
 // vuetify
-import 'vuetify/styles'
+import 'vuetify/styles/main.css'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
-import { VTimePicker } from 'vuetify/labs/components'
+// import { VTimePicker } from 'vuetify/labs/components'
 
 // vue-i18n
 import { i18n } from './i18n'
@@ -50,6 +50,6 @@ import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
     },
 };
 
-const vuetify = createVuetify({ components: { ...components, VTimePicker } })
+const vuetify = createVuetify({ components: { ...components }, theme: { defaultTheme: 'system' } })
 const app = createApp(App)
 app.use(router).use(i18n).use(vuetify).mount('#app')
