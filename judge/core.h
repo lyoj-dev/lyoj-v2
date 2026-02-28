@@ -108,14 +108,35 @@ int getpidByName(std::string name, int stpid) {
     }
 }
 
+std::string readStat(std::string path) {
+    std::ifstream fin(path);
+    if (!fin) return "";
+	std::stringstream tmp; 
+	tmp << fin.rdbuf();
+    fin.close();
+    return tmp.str();
+}
+
 std::vector<int> getpidsByPpid(int ppid) {
-    std::string pidString = system2("ps -o pid= --ppid \"" + std::to_string(ppid) + "\"");
-    auto pidStrings = explode("\n", pidString);
+    std::vector<std::string> pidStrings;
+    for (auto entry : std::filesystem::directory_iterator("/proc")) {
+        if (!entry.is_directory()) continue;
+        std::string filename = entry.path().filename();
+        int ok = true;
+        for (int i = 0; i < filename.size(); i++) ok &= isdigit(filename[i]);
+        if (!ok) continue;
+
+        std::string file = __builtin_proc_readStat("/proc/" + filename + "/stat");
+        auto info = __builtin_proc_explode(" ", file);
+        if (info.size() < 4) continue; 
+        std::string currppid = info[3];
+        if (atoi(currppid.c_str()) == ppid) pidStrings.push_back(filename);
+    }
     std::vector<int> pids = { ppid };
     for (int i = 0; i < pidStrings.size(); i++) {
         int pid = atoi(pidStrings[i].c_str());
         if (pid == 0) continue;
-        auto res = getpidsByPpid(pid);
+        auto res = __builtin_proc_getpidsByPpid(pid);
         for (int j = 0; j < res.size(); j++) pids.push_back(res[j]);
     }
     return pids;

@@ -5,6 +5,7 @@
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -235,20 +236,6 @@ const std::string singal_strings[] = {
     "SIGRTMAX"
 };
 
-std::string __builtin_proc_system2(std::string cmd) {
-    FILE *stream; 
-    char buf[1024 * 1024]; 
-    std::memset(buf, '\0', sizeof(buf));
-#if __linux__
-    stream = popen(cmd.c_str(), "r");
-// #elif __windows__
-//     stream = _popen(cmd.c_str(), "r");
-#endif
-    int k = fread(buf, sizeof(char), sizeof(buf), stream);
-    pclose(stream);
-    return std::string(buf);
-}
-
 std::vector<std::string> __builtin_proc_explode(std::string seperator, std::string source) {
 	std::string src = source; std::vector<std::string> res;
 	while (src.find(seperator) != std::string::npos) {
@@ -259,9 +246,30 @@ std::vector<std::string> __builtin_proc_explode(std::string seperator, std::stri
 	return res;
 }
 
+std::string __builtin_proc_readStat(std::string path) {
+    std::ifstream fin(path);
+    if (!fin) return "";
+	std::stringstream tmp; 
+	tmp << fin.rdbuf();
+    fin.close();
+    return tmp.str();
+}
+
 std::vector<int> __builtin_proc_getpidsByPpid(int ppid) {
-    std::string pidString = __builtin_proc_system2("ps -o pid= --ppid \"" + std::to_string(ppid) + "\"");
-    auto pidStrings = __builtin_proc_explode("\n", pidString);
+    std::vector<std::string> pidStrings;
+    for (auto entry : std::filesystem::directory_iterator("/proc")) {
+        if (!entry.is_directory()) continue;
+        std::string filename = entry.path().filename();
+        int ok = true;
+        for (int i = 0; i < filename.size(); i++) ok &= isdigit(filename[i]);
+        if (!ok) continue;
+
+        std::string file = __builtin_proc_readStat("/proc/" + filename + "/stat");
+        auto info = __builtin_proc_explode(" ", file);
+        if (info.size() < 4) continue; 
+        std::string currppid = info[3];
+        if (atoi(currppid.c_str()) == ppid) pidStrings.push_back(filename);
+    }
     std::vector<int> pids = { ppid };
     for (int i = 0; i < pidStrings.size(); i++) {
         int pid = atoi(pidStrings[i].c_str());
